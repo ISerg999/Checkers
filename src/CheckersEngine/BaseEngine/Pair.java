@@ -1,4 +1,4 @@
-package CheckersEngine;
+package CheckersEngine.BaseEngine;
 
 /**
  * Класс парных данных.

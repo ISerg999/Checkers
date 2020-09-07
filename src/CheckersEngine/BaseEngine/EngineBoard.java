@@ -1,4 +1,4 @@
-package CheckersEngine;
+package CheckersEngine.BaseEngine;
 
 import java.util.Hashtable;
 import java.util.Map;
@@ -33,16 +33,6 @@ public class EngineBoard {
 
     /**
      * Проверяет на допустимость координат.
-     * @param x кордината x игрового поля
-     * @param y координата y игрового поля
-     * @return true - допустимые координаты, false - не допустимые координаты
-     */
-    public boolean aField(short x, short y) {
-        return aField(new Pair<>(x, y));
-    }
-
-    /**
-     * Проверяет на допустимость координат.
      * @param pos объект координат
      * @return true - допустимые координаты, false - не допустимые координаты
      */
@@ -50,16 +40,6 @@ public class EngineBoard {
         if (pos.getX() < 0 || pos.getX() >= width || pos.getY() < 0 || pos.getY() >=height)
             return false;
         return true;
-    }
-
-    /**
-     * Получение фигуры по её координатам.
-     * @param x координата x игрового поля
-     * @param y координата y игрового поля
-     * @return фигура, или null
-     */
-    public IFigureBase getFigure(short x, short y) {
-        return getFigure(new Pair<>(x, y));
     }
 
     /**
@@ -76,16 +56,6 @@ public class EngineBoard {
 
     /**
      * Установка фигуру на доску.
-     * @param x      координата x игрового поля
-     * @param y      координата y игрового поля
-     * @param figure объект устанавливаемой фигуры
-     */
-    public void setFigure(short x, short y, IFigureBase figure) {
-        setFigure(new Pair<>(x, y), figure);
-    }
-
-    /**
-     * Установка фигуру на доску.
      * @param pos    координаты фигуры
      * @param figure объект устанавливаемой фигуры
      */
@@ -93,16 +63,6 @@ public class EngineBoard {
         if (aField(pos) && getFigure(pos) == null) {
             board.put(pos, figure);
         }
-    }
-
-    /**
-     * Удаляет фигуру из изгрового поля.
-     * @param x координата x игрового поля
-     * @param y координата y игрового поля
-     * @return удалённая фигура, или null, если ошибка
-     */
-    public IFigureBase removeFigure(short x, short y) {
-        return removeFigure(new Pair(x, y));
     }
 
     /**

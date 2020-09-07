@@ -1,31 +1,32 @@
-package CheckersEngine;
+package CheckersEngine.BaseEngine;
 
 import java.util.Map;
 
 public interface IFigureBase {
-    /**
-     * Задаёт цвет фигуры.
-     * @param colorFig цвет фигуры
-     */
-    void setFigureColor(short colorFig);
 
     /**
      * Задаёт тип фигуры.
      * @param typeFig  тип фигуры
      */
-    void setFigureType(short typeFig);
-
-    /**
-     * Возвращает цвет текущей фигуры.
-     * @return цвет текущей фигуры
-     */
-    short getColorFigure();
+    void setTypeFigure(ETypeFigure typeFig);
 
     /**
      * Возвращает тип текущей фигуры.
      * @return тип текущей фигуры
      */
-    short getTypeFigure();
+    ETypeFigure getTypeFigure();
+
+    /**
+     * Задаёт цвет фигуры.
+     * @param color цвет фигуры
+     */
+    void setTypeColor(ETypeColor color);
+
+    /**
+     * Возвращает цвет текущей фигуры.
+     * @return цвет текущей фигуры
+     */
+    ETypeColor getColorType();
 
     /**
      * Задание положения фигуры.
