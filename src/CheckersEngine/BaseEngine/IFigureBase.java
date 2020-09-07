@@ -1,5 +1,6 @@
 package CheckersEngine.BaseEngine;
 
+import java.util.List;
 import java.util.Map;
 
 public interface IFigureBase {
@@ -41,6 +42,15 @@ public interface IFigureBase {
      */
     void setBoard(Map<Pair<Short, Short>, IFigureBase> board);
 
-    void searchMove();
-    void searchAttack();
+    /**
+     * Поиск возможных путей движения фигуры.
+     * @return список возможных путей движения фигуры, или null, если таковых не найдено.
+     */
+    List<List<Pair<Short, Short>>> searchMove();
+
+    /**
+     * Поиск возможных атак фигуры.
+     * @return список возможных атак фигуры, или null, если таковых не найдено.
+     */
+    List<List<Pair<Short, Short>>> searchAttack();
 }

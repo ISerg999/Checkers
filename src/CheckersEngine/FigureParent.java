@@ -5,6 +5,7 @@ import CheckersEngine.BaseEngine.ETypeFigure;
 import CheckersEngine.BaseEngine.IFigureBase;
 import CheckersEngine.BaseEngine.Pair;
 
+import java.util.List;
 import java.util.Map;
 
 public class FigureParent implements IFigureBase {
@@ -51,13 +52,13 @@ public class FigureParent implements IFigureBase {
     }
 
     @Override
-    public void searchMove() {
-
+    public List<List<Pair<Short, Short>>> searchMove() {
+        return null;
     }
 
     @Override
-    public void searchAttack() {
-
+    public List<List<Pair<Short, Short>>> searchAttack() {
+        return null;
     }
 
     protected ETypeColor colorFigure = null;

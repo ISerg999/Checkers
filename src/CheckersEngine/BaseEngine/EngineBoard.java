@@ -9,6 +9,15 @@ import java.util.Map;
 public class EngineBoard {
 
     /**
+     * Определяет, идет сейчас игра или нет.
+     */
+    protected boolean stateGame;
+    /**
+     * Определяет, чей сечас ход.
+     */
+    protected ETypeColor curTypeColor;
+
+    /**
      * Конструктор.
      * @param w ширина игрового поля
      * @param h высота игрового поля
@@ -16,19 +25,77 @@ public class EngineBoard {
     public EngineBoard(int w, int h) {
         this.width = w;
         this.height = h;
+        stateGame = false;
+        setCurMoveWhite();
         board = new Hashtable<>();
     }
 
+    /**
+     * Возвращает количество полей доски в ширину.
+     * @return количество полей доски в ширину
+     */
     public int getWidth() {
         return width;
     }
 
+    /**
+     * Возвращает количество полей доски в длину.
+     * @return количество полей доски в длину
+     */
     public int getHeight() {
         return height;
     }
 
+    /**
+     * Возвращает текущее состояние игры.
+     * @return true - игра запущена, false - игра остановлена.
+     */
+    public boolean getStateGame() {
+        return stateGame;
+    }
+
+    /**
+     * Задаёт состояние игры.
+     * @param stateGame true - игра запущена, false - игра остановлена.
+     */
+    public void setStateGame(boolean stateGame) {
+        this.stateGame = stateGame;
+    }
+
+    /**
+     * Очистка всей доски.
+     */
     public void clear() {
         board.clear();
+    }
+
+    /**
+     * Устанавливет текущий ход для белых.
+     */
+    public void setCurMoveWhite() {
+        curTypeColor = ETypeColor.WHITE;
+    }
+
+    /**
+     * Устанавливает текущий ход для чёрных.
+     */
+    public void setCurMoveBlack() {
+        curTypeColor = ETypeColor.BLACK;
+    }
+
+    /**
+     * Меняет ход игрока на противоположенный.
+     */
+    public void setCurMoveNext() {
+        if (curTypeColor == ETypeColor.WHITE) setCurMoveBlack();
+        else setCurMoveWhite();
+    }
+
+    /**
+     * Подготовка к началу игры.
+     */
+    public void start() {
+        if (stateGame) return;
     }
 
     /**

@@ -41,5 +41,6 @@ public class CheckersBoard extends EngineBoard {
             board.put(new Pair<>(xi1, yi7), new FigureCheckers(ETypeColor.BLACK, xi1, yi7));
             x += 2;
         }
+        setCurMoveWhite();
     }
 }

@@ -1,16 +1,16 @@
 package CheckersEngine.BaseEngine;
 
 public enum ETypeColor {
-    WHITE((short)1),
-    BLACK((short)-1);
+    WHITE(1),
+    BLACK(-1);
 
-    ETypeColor(short color) {
-        this.color = color;
+    ETypeColor(int direction) {
+        this.direction = direction;
     }
 
-    public short getColor() {
-        return color;
+    public int getDirection() {
+        return direction;
     }
 
-    private short color;
+    private int direction;
 }
