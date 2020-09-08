@@ -16,6 +16,10 @@ public class EngineBoard {
      * Определяет, чей сечас ход.
      */
     protected ETypeColor curTypeColor;
+    /**
+     * Определяет, кто ходи за соответствующий цвет. true - игрок, false - компьютер
+     */
+    Map<ETypeColor, Boolean> whosPlaying;
 
     /**
      * Конструктор.
@@ -28,6 +32,10 @@ public class EngineBoard {
         stateGame = false;
         setCurMoveWhite();
         board = new Hashtable<>();
+        whosPlaying = new Hashtable<>();
+        for (ETypeColor it: ETypeColor.values()) {
+            whosPlaying.put(it, true);
+        }
     }
 
     /**
@@ -60,6 +68,24 @@ public class EngineBoard {
      */
     public void setStateGame(boolean stateGame) {
         this.stateGame = stateGame;
+    }
+
+    /**
+     * Определяет, кто играет за заданный цвет
+     * @param playColor игровой цвет
+     * @return игрок играющий за данный цвет true - игрок, false - компьютер
+     */
+    public boolean getPlayForColor(ETypeColor playColor) {
+        return whosPlaying.get(playColor);
+    }
+
+    /**
+     * Задаёт игрока за выбранный цвет.
+     * @param playerForColor цвет за котороый выставляется игрок
+     * @param type           игрок: true - обычный игрок, false - компьютер
+     */
+    public void setPlayerForColor(ETypeColor playerForColor, boolean type) {
+        whosPlaying.replace(playerForColor, type);
     }
 
     /**

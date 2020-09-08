@@ -80,42 +80,58 @@ public class JFMainWindow extends JFrame implements IChangeState{
 
     private JMenu createMenuFile() {
         JMenu mFile = new JMenu(resourse.getResStr("MenuName.File"));
+
         JMenuItem miOpen = new JMenuItem(resourse.getResStr("MenuName.File.Open"));
         miOpen.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, ActionEvent.CTRL_MASK));
         // miOpen.addActionListener(this);
         mFile.add(miOpen);
+        mActionMenu.put("MenuName.File.Open", miOpen);
+
         JMenuItem miSave = new JMenuItem(resourse.getResStr("MenuName.File.Save"));
         miSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.CTRL_MASK));
         // miSave.addActionListener(this);
         mFile.add(miSave);
         mActionMenu.put("MenuName.File.Save", miSave);
-        mActionMenu.put("MenuName.File.Open", miOpen);
+
         mFile.addSeparator();
+
         JMenuItem miExit = new JMenuItem(resourse.getResStr("MenuName.File.Exit"));
         miExit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, ActionEvent.ALT_MASK + ActionEvent.CTRL_MASK));
         miExit.addActionListener(actionEvent -> System.exit(0));
         mFile.add(miExit);
+
         return mFile;
     }
 
     private JMenu createMenuGame() {
         JMenu mGame = new JMenu(resourse.getResStr("MenuName.Game"));
+
         JMenuItem miStart = new JMenuItem(resourse.getResStr("MenuName.Game.Start"));
         miStart.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, ActionEvent.CTRL_MASK));
         // miStart.addActionListener(this);
         mGame.add(miStart);
         mActionMenu.put("MenuName.Game.Start", miStart);
+
+        JMenuItem miContinue = new JMenuItem(resourse.getResStr("MenuName.Game.Continue"));
+        miContinue.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.CTRL_MASK));
+        // miContinue.addActionListener(this);
+        mGame.add(miContinue);
+        mActionMenu.put("MenuName.Game.Continue", miContinue);
+
         JMenuItem miStop = new JMenuItem(resourse.getResStr("MenuName.Game.Stop"));
         miStop.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, ActionEvent.CTRL_MASK));
         // miStop.addActionListener(this);
         mGame.add(miStop);
         mActionMenu.put("MenuName.Game.Stop", miStop);
+
         mGame.addSeparator();
+
         JMenuItem miBack = new JMenuItem(resourse.getResStr("MenuName.Game.Back"));
         miBack.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, ActionEvent.CTRL_MASK));
         // miBack.addActionListener(this);
         mGame.add(miBack);
         mActionMenu.put("MenuName.Game.Back", miBack);
+
         return mGame;
     }
 
@@ -205,10 +221,8 @@ public class JFMainWindow extends JFrame implements IChangeState{
      * Действия, необходимые для перехода в состояние базового для основного окна.
      */
     private void stepToBase() {
-        String[] deactivate = {"MenuName.File.Save", "MenuName.File.Open", "MenuName.Game.Stop",
-                "MenuName.Game.Back", "MenuName.State.While.Player", "MenuName.State.While.Comp", "MenuName.State.Black.Player",
-                "MenuName.State.Black.Comp", "MenuName.Editing.Begin", "MenuName.Editing.End", "MenuName.Editing.Placemant",
-                "MenuName.Editing.Clear"
+        String[] deactivate = {
+                "MenuName.File.Save", "MenuName.File.Open", "MenuName.Game.Continue", "MenuName.Game.Stop", "MenuName.Game.Back"
         };
         for (String nm: deactivate) {
             mActionMenu.get(nm).setEnabled(false);
