@@ -37,7 +37,6 @@ public class STMControl implements IChangeState {
         newStateGame = new Hashtable<>();
 //        newStateGame.put(new Pair<>(TStateGame.BASE, TActionGame.TOBASE), TStateGame.BASE);
     }
-
     /**
      * Список изполняемых функций для текущего объекта
      */
@@ -48,7 +47,6 @@ public class STMControl implements IChangeState {
     }
 
     private CResourse resourse;
-
     /**
      * Список классов поддерживающих систему конечных автоматов.
      */

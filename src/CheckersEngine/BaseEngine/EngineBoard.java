@@ -71,6 +71,15 @@ public class EngineBoard {
     }
 
     /**
+     * Базовая инициализация играющих игроков.
+     */
+    public void initPlayerForColor() {
+        for (ETypeColor it: ETypeColor.values()) {
+            whosPlaying.replace(it, true);
+        }
+    }
+
+    /**
      * Определяет, кто играет за заданный цвет
      * @param playColor игровой цвет
      * @return игрок играющий за данный цвет true - игрок, false - компьютер

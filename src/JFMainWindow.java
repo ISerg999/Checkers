@@ -68,7 +68,7 @@ public class JFMainWindow extends JFrame implements IChangeState{
         JMenuBar mb = new JMenuBar();
         mb.add(createMenuFile());
         mb.add(createMenuGame());
-        mb.add(createMenuState());
+        mb.add(createMenuSettings());
         mb.add(createMenuEditing());
         mb.add(createMenuInfo());
         mb.setBounds(1, 1, curWidth, 24);
@@ -135,53 +135,65 @@ public class JFMainWindow extends JFrame implements IChangeState{
         return mGame;
     }
 
-    private JMenu createMenuState() {
-        JMenu mState = new JMenu(resourse.getResStr("MenuName.State"));
-        JMenuItem miWhitePlayer = new JMenuItem(resourse.getResStr("MenuName.State.While.Player"));
+    private JMenu createMenuSettings() {
+        JMenu mSettings = new JMenu(resourse.getResStr("MenuName.Settings"));
+
+        JMenuItem miWhitePlayer = new JMenuItem(resourse.getResStr("MenuName.Settings.While.Player"));
         miWhitePlayer.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_U, ActionEvent.ALT_MASK + ActionEvent.CTRL_MASK));
         // miWhitePlayer.addActionListener(this);
-        mState.add(miWhitePlayer);
-        mActionMenu.put("MenuName.State.While.Player", miWhitePlayer);
-        JMenuItem miWhiteComp = new JMenuItem(resourse.getResStr("MenuName.State.While.Comp"));
+        mSettings.add(miWhitePlayer);
+        mActionMenu.put("MenuName.Settings.While.Player", miWhitePlayer);
+
+        JMenuItem miWhiteComp = new JMenuItem(resourse.getResStr("MenuName.Settings.While.Comp"));
         miWhiteComp.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, ActionEvent.ALT_MASK + ActionEvent.CTRL_MASK));
         // miWhiteComp.addActionListener(this);
-        mState.add(miWhiteComp);
-        mActionMenu.put("MenuName.State.While.Comp", miWhiteComp);
-        mState.addSeparator();
-        JMenuItem miBlackPlayer = new JMenuItem(resourse.getResStr("MenuName.State.Black.Player"));
+        mSettings.add(miWhiteComp);
+        mActionMenu.put("MenuName.Settings.While.Comp", miWhiteComp);
+
+        mSettings.addSeparator();
+
+        JMenuItem miBlackPlayer = new JMenuItem(resourse.getResStr("MenuName.Settings.Black.Player"));
         miBlackPlayer.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_J, ActionEvent.ALT_MASK + ActionEvent.CTRL_MASK));
         // miBlackPlayer.addActionListener(this);
-        mState.add(miBlackPlayer);
-        mActionMenu.put("MenuName.State.Black.Player", miBlackPlayer);
-        JMenuItem mBlackComp = new JMenuItem(resourse.getResStr("MenuName.State.Black.Comp"));
+        mSettings.add(miBlackPlayer);
+        mActionMenu.put("MenuName.Settings.Black.Player", miBlackPlayer);
+
+        JMenuItem mBlackComp = new JMenuItem(resourse.getResStr("MenuName.Settings.Black.Comp"));
         mBlackComp.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_K, ActionEvent.ALT_MASK + ActionEvent.CTRL_MASK));
         // mBlackComp.addActionListener(this);
-        mState.add(mBlackComp);
-        mActionMenu.put("MenuName.State.Black.Comp", mBlackComp);
-        return mState;
+        mSettings.add(mBlackComp);
+        mActionMenu.put("MenuName.Settings.Black.Comp", mBlackComp);
+
+        return mSettings;
     }
 
     private JMenu createMenuEditing() {
         JMenu mEditing = new JMenu(resourse.getResStr("MenuName.Editing"));
+
         JMenuItem miBeginEdit = new JMenuItem(resourse.getResStr("MenuName.Editing.Begin"));
         miBeginEdit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, ActionEvent.ALT_MASK + ActionEvent.CTRL_MASK));
         // miBeginEdit.addActionListener(this);
         mEditing.add(miBeginEdit);
         mActionMenu.put("MenuName.Editing.Begin", miBeginEdit);
+
         JMenuItem miEndEdit = new JMenuItem(resourse.getResStr("MenuName.Editing.End"));
         miEndEdit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, ActionEvent.ALT_MASK + ActionEvent.CTRL_MASK));
         // miEndEdit.addActionListener(this);
         mEditing.add(miEndEdit);
         mActionMenu.put("MenuName.Editing.End", miEndEdit);
+
         mEditing.addSeparator();
+
         JMenuItem miPlacemantBoard = new JMenuItem(resourse.getResStr("MenuName.Editing.Placemant"));
         // miPlacemantBoard.addActionListener(this);
         mEditing.add(miPlacemantBoard);
         mActionMenu.put("MenuName.Editing.Placemant", miPlacemantBoard);
+
         JMenuItem miClearBoard = new JMenuItem(resourse.getResStr("MenuName.Editing.Clear"));
         // miClearBoard.addActionListener(this);
         mEditing.add(miClearBoard);
         mActionMenu.put("MenuName.Editing.Clear", miClearBoard);
+
         return mEditing;
     }
 
@@ -222,7 +234,8 @@ public class JFMainWindow extends JFrame implements IChangeState{
      */
     private void stepToBase() {
         String[] deactivate = {
-                "MenuName.File.Save", "MenuName.File.Open", "MenuName.Game.Continue", "MenuName.Game.Stop", "MenuName.Game.Back"
+                "MenuName.Game.Continue", "MenuName.Game.Stop", "MenuName.Game.Back", "MenuName.Settings.While.Player",
+                "MenuName.Settings.Black.Player", "MenuName.Editing.End", "MenuName.Editing.Placemant", "MenuName.Editing.Clear"
         };
         for (String nm: deactivate) {
             mActionMenu.get(nm).setEnabled(false);
