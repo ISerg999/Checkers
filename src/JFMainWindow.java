@@ -1,24 +1,39 @@
+import CheckersEngine.BaseEngine.Pair;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Hashtable;
 import java.util.Map;
 
 // implements ActionListener
-public class JFMainWindow extends JFrame {
+public class JFMainWindow extends JFrame implements IChangeState{
 
     /**
-     * Список выбираемых элементов меню, состояние которых может изменяться.
+     * Список изполняемых функций для текущего объекта
      */
-    protected Map<String, JMenuItem> mActionMenu;
+    private static final Map<Pair<TStateGame,TActionGame>, String> stateAction;
+    static {
+        stateAction = new Hashtable<>();
+//        stateAction.put(new Pair<>(TStateGame.BASE, TActionGame.TOBASE), "function");
+    }
+
     /**
      * Доступ к классу контроллера.
      */
     protected STMControl stmControl;
 
+    /**
+     * Список выбираемых элементов меню, состояние которых может изменяться.
+     */
+    protected Map<String, JMenuItem> mActionMenu;
+
     public JFMainWindow() throws HeadlessException {
         stmControl = STMControl.getInstance();
+        stmControl.addActionGame(this);
         mActionMenu = new Hashtable<>();
         createAndShowGUI();
     }
@@ -76,6 +91,7 @@ public class JFMainWindow extends JFrame {
         mFile.add(miExit);
         return mFile;
     }
+
     private JMenu createMenuGame() {
         JMenu mGame = new JMenu(stmControl.getResStr("MenuName.Game"));
         JMenuItem miStart = new JMenuItem(stmControl.getResStr("MenuName.Game.Start"));
@@ -160,10 +176,34 @@ public class JFMainWindow extends JFrame {
         return mInfo;
     }
 
+    public void makeChangesState(TStateGame newState) {
+
+    }
+
+    @Override
+    public void makeChangesState(TStateGame curStateGame, TActionGame actionGame) {
+        if (curStateGame == null) {
+            stepToBase();
+        } else {
+            Pair<TStateGame,TActionGame> p = new Pair<>(curStateGame, actionGame);
+            if (stateAction.containsKey(p)) {
+                try {
+                    Method method = this.getClass().getDeclaredMethod(stateAction.get(p));
+                    method.setAccessible(true);
+                    method.invoke(this);
+                } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    // ---------------------------- Методы обрабатывающиеся контроллером переходов состояний ---------------------------
+
     /**
      * Действия, необходимые для перехода в состояние базового для основного окна.
      */
-    public void stepToBase() {
+    private void stepToBase() {
         String[] deactivate = {"MenuName.File.Save", "MenuName.File.Open", "MenuName.Game.Continue", "MenuName.Game.Stop",
                 "MenuName.Game.Back", "MenuName.State.While.Player", "MenuName.State.While.Comp", "MenuName.State.Black.Player",
                 "MenuName.State.Black.Comp", "MenuName.Editing.Begin", "MenuName.Editing.End", "MenuName.Editing.Placemant",
@@ -173,4 +213,5 @@ public class JFMainWindow extends JFrame {
             mActionMenu.get(nm).setEnabled(false);
         }
     }
+
 }
