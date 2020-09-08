@@ -11,10 +11,8 @@ import java.util.Properties;
  */
 public class STMControl {
 
-    private static STMControl instance  = new STMControl();
-
     private STMControl() {
-//        Main.class.getResource("Resource/imgs/checkers.png"); - Доступ к пути ресурсов.
+//        Main.class.getResource("Resource/imgs/checkers.png"); - Доступ к пути ресурсов по url или получить поток ввода - .getResourceAsStream.
         property = new Properties();
         try {
             InputStream fis = Main.class.getResourceAsStream("Resource/gameres.properties");
@@ -27,8 +25,12 @@ public class STMControl {
         curStateGame = TStateGame.BASE;
     }
 
+    private static class STMControlHolder {
+        private static final STMControl INSTANCE = new STMControl();
+    }
+
     public static STMControl getInstance() {
-        return instance;
+        return STMControlHolder.INSTANCE;
     }
 
     private Properties property;
