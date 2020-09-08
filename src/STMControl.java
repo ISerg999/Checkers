@@ -1,12 +1,11 @@
 import CheckersEngine.BaseEngine.Pair;
 import CheckersEngine.CheckersBoard;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.List;
 
 /**
  * Класс управляющий игрой на основе конечных автоматов.
@@ -14,18 +13,12 @@ import java.util.*;
 public class STMControl implements IChangeState {
 
     private STMControl() {
-//        Main.class.getResource("Resource/imgs/checkers.png"); - Доступ к пути ресурсов по url или получить поток ввода - .getResourceAsStream.
-        property = new Properties();
-        try {
-            InputStream fis = Main.class.getResourceAsStream("Resource/gameres.properties");
-            System.out.println(Main.class.getResource("Resource/gameres.properties"));
-            property.load(fis);
-        } catch (IOException e) {
-            System.err.println("ОШИБКА: Файл свойств отсуствует!");
-        }
+        resourse = CResourse.getInstance();
+        resourse.addResourse("Resource/gameres.properties");
         lstChangeState = new ArrayList<>();
         checkersBoard = new CheckersBoard();
         curStateGame = null;
+        oldStateGame = null;
     }
 
     private static class STMControlHolder {
@@ -54,7 +47,7 @@ public class STMControl implements IChangeState {
 //        stateAction.put(new Pair<>(TStateGame.BASE, TActionGame.TOBASE), "function");
     }
 
-    private Properties property;
+    private CResourse resourse;
 
     /**
      * Список классов поддерживающих систему конечных автоматов.
@@ -66,48 +59,17 @@ public class STMControl implements IChangeState {
     private CheckersBoard checkersBoard;
 
     /**
-     * Текущее состояние программы.
+     * Текущее и прошлое состояние программы.
      */
-    private TStateGame curStateGame;
-
-    /**
-     * Получение значение строки из файла ресурса по ключу.
-     * @param key ключ ресурса
-     * @return получаемая строка
-     */
-    public String getResStr(String key) {
-        String res = "";
-        try {
-            res = new String(property.getProperty(key).getBytes("ISO-8859-1"), "UTF-8");
-        } catch (final UnsupportedEncodingException e) {
-            throw new RuntimeException("Encoding not supported", e);
-        }
-        return res;
-    }
-
-    /**
-     * Получение целого числа из файла ресурса по ключу.
-     * @param key ключ ресурса
-     * @return получаемое число
-     */
-    public Integer getResInt(String key) {
-        String res = property.getProperty(key);
-        return Integer.parseInt(res);
-    }
-
-    /**
-     * Получение вещественного числа двойной точности по ключу.
-     * @param key ключ
-     * @return получаемое вещественное число двойной точности
-     */
-    public Double getResDouble(String key) {
-        String res = property.getProperty(key);
-        return Double.parseDouble(res);
-    }
+    private TStateGame curStateGame, oldStateGame;
 
     public void start() {
-        new JFMainWindow();
-        makeChangesState(null, TActionGame.TOBASE);
+        EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new JFMainWindow();
+            }
+        });
     }
 
     /**
@@ -126,6 +88,19 @@ public class STMControl implements IChangeState {
         return curStateGame;
     }
 
+    /**
+     * Получение предыдущего состояния.
+     * @return предыдущее состояние
+     */
+    public TStateGame getOldStateGame() {
+        return oldStateGame;
+    }
+
+    /**
+     * Сохраняет текущее состоянияе.
+     */
+    public void saveCruStateGame() { oldStateGame = curStateGame; }
+
     @Override
     public void makeChangesState(TStateGame curStateGame, TActionGame actionGame) {
         for (IChangeState obj: lstChangeState) {
@@ -134,6 +109,9 @@ public class STMControl implements IChangeState {
         if (this.curStateGame == null) this.curStateGame = TStateGame.BASE;
         else {
             Pair<TStateGame,TActionGame> p = new Pair<>(curStateGame, actionGame);
+            if (newStateGame.containsKey(p)){
+                this.curStateGame = newStateGame.get(p);
+            }
             if (stateAction.containsKey(p)) {
                 try {
                     Method method = this.getClass().getDeclaredMethod(stateAction.get(p));
@@ -143,7 +121,6 @@ public class STMControl implements IChangeState {
                     e.printStackTrace();
                 }
             }
-            if (newStateGame.containsKey(p)) this.curStateGame = newStateGame.get(p);
         }
     }
 
