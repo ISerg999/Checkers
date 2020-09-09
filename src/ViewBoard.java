@@ -4,6 +4,8 @@ import CheckersEngine.BaseEngine.Pair;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /**
  * Класс вывода игровой доски и её элементов.
@@ -76,6 +78,39 @@ public class ViewBoard extends JPanel {
             for (int j = 0; j < 4; j++) {
                 boardSpaces[i][j] = new Pair<>(null, 0);
             }
+
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                super.mousePressed(e);
+                mouseAction(e, true);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                super.mouseReleased(e);
+                mouseAction(e, false);
+            }
+        });
+    }
+
+    /**
+     * Обработка нажатий клавишы мыши на доске.
+     * @param e       событие нажатие мыши
+     * @param isClick true - мышь нажата, false - мышь отпущена
+     */
+    protected void mouseAction(MouseEvent e, boolean isClick) {
+        Pair<Integer, Integer> pos = coordImgToBoard(e.getX(), e.getY());
+        int bx = pos.getFirst();
+        int by = pos.getSecond();
+        if (!stmControl.testCoordinateBoard(bx, by)) return;
+
+//        if (isClick) {
+//            setTypeColorFrame(1, bx, by);
+//        } else {
+//            setTypeColorFrame(0, bx, by);
+//        }
+//        repaint();
     }
 
     /**
@@ -100,13 +135,15 @@ public class ViewBoard extends JPanel {
     }
 
     /**
-     * Преобразует координаты доски в координаты экрана.
-     * @param pos координаты доски
-     * @return координаты экрана
+     * Преобразует координаты экрана в координаты доски.
+     * @param x координата x экрана
+     * @param y координата y экрана
+     * @return Pair с координатами доски
      */
-    protected Pair<Integer, Integer> coordBoardToImg(Pair<Integer, Integer> pos) {
-        Pair<Integer, Integer> resPos = new Pair<>(offsetBaseX + pos.getFirst() * spaceW, offsetBaseY + (7 - pos.getSecond()) * spaceH);
-        return resPos;
+    protected Pair<Integer, Integer> coordImgToBoard(int x, int y) {
+        int bx = (x - offsetBaseX) / spaceW;
+        int by = 7 - (y - offsetBaseY) / spaceH;
+        return new Pair<>(bx, by);
     }
 
     public void paint(Graphics g) {

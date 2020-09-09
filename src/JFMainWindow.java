@@ -3,6 +3,8 @@ import CheckersEngine.BaseEngine.ETypeFigure;
 import CheckersEngine.BaseEngine.Pair;
 
 import javax.swing.*;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.EtchedBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -35,6 +37,11 @@ public class JFMainWindow extends JFrame implements IChangeState{
      * Доступ к рисованию фигур на доске.
      */
     protected ViewBoard viewBoard;
+    /**
+     * Правая информационная панель, с её видами.
+     */
+    protected JPanel rightPanel, rCurPanel, rGameP, rEditionP;
+    protected JLabel lblBottom;
 
     /**
      * Список выбираемых элементов меню, состояние которых может изменяться.
@@ -86,6 +93,31 @@ public class JFMainWindow extends JFrame implements IChangeState{
 
         viewBoard = new ViewBoard();
         add(viewBoard);
+
+        // -------- Создание правой информационной панели. --------
+
+        // Панель по умолчанию.
+        int rPW = resourse.getResInt("Window.RightPanel.Width");
+        int rPH = resourse.getResInt("Window.RightPanel.Height");
+        rightPanel = new JPanel();
+        rightPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED),
+                BorderFactory.createEmptyBorder(25, 25, 25, 25)));
+        rightPanel.setBounds(viewBoard.getWidth() + 1, 0, rPW, rPH);
+        add(rightPanel);
+        rCurPanel = null; // Указатель на внутреннее содержимое.
+
+        // Панель игровая.
+        // TODO: Панель игровая.
+
+        // Панель редактирования.
+        // TODO: Панель редактирования.
+
+        // -------- Создание нижней информационной строки. --------
+        lblBottom = new JLabel(resourse.getResStr("Msg.Base.Info"));
+        lblBottom.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED),
+                BorderFactory.createEmptyBorder(25, 25, 25, 25)));
+        lblBottom.setBounds(1, viewBoard.getHeight() + 1, resourse.getResInt("Window.Width") - 4, 24);
+        add(lblBottom);
     }
 
     private JMenu createMenuFile() {

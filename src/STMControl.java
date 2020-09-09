@@ -22,6 +22,7 @@ public class STMControl implements IChangeState {
         checkersBoard = new CheckersBoard();
         curStateGame = null;
         oldStateGame = null;
+        isEdition = false;
     }
 
     private static class STMControlHolder {
@@ -58,6 +59,10 @@ public class STMControl implements IChangeState {
      * Класс управления игрой на доске.
      */
     private CheckersBoard checkersBoard;
+    /**
+     * Режим редактирования.
+     */
+    private boolean isEdition;
 
     /**
      * Состояния программы.
@@ -85,6 +90,17 @@ public class STMControl implements IChangeState {
         IFigureBase fb = checkersBoard.getFigure(x, y);
         if (fb == null) return null;
         return new Pair<>(fb.getTypeFigure(), fb.getColorType());
+    }
+
+    /**
+     * Проверка правильности координат.
+     * @param x координата доски x
+     * @param y координата доски y
+     * @return true - координата правильная, false - не правильная
+     */
+    public boolean testCoordinateBoard(int x, int y) {
+        if (!checkersBoard.getStateGame() && !isEdition) return false;
+        return checkersBoard.aField(x, y);
     }
 
     /**
