@@ -5,19 +5,24 @@ package CheckersEngine.BaseEngine;
  */
 public class Pair<TX, TY> {
 
-    public Pair(TX x, TY y) {
-        this.x = x;
-        this.y = y;
+    public Pair(TX first, TY second) {
+        this.first = first;
+        this.second = second;
     }
 
-    public TX getX() {
-        return x;
+    public TX getFirst() {
+        return first;
+    }
+    public TY getSecond() {
+        return second;
+    }
+    public void setFirst(TX first) {
+        this.first = first;
+    }
+    public void setSecond(TY second) {
+        this.second = second;
     }
 
-    public TY getY() {
-        return y;
-    }
-
-    private TX x;
-    private TY y;
+    private TX first;
+    private TY second;
 }

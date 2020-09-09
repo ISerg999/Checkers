@@ -1,3 +1,6 @@
+import CheckersEngine.BaseEngine.ETypeColor;
+import CheckersEngine.BaseEngine.ETypeFigure;
+import CheckersEngine.BaseEngine.IFigureBase;
 import CheckersEngine.BaseEngine.Pair;
 import CheckersEngine.CheckersBoard;
 
@@ -57,7 +60,7 @@ public class STMControl implements IChangeState {
     private CheckersBoard checkersBoard;
 
     /**
-     * Текущее и прошлое состояние программы.
+     * Состояния программы.
      */
     private TStateGame curStateGame, oldStateGame;
 
@@ -78,6 +81,19 @@ public class STMControl implements IChangeState {
         lstChangeState.add(obj);
     }
 
+    public Pair<ETypeFigure, ETypeColor> getFigureForBoard(int x, int y) {
+        IFigureBase fb = checkersBoard.getFigure(x, y);
+        if (fb == null) return null;
+        return new Pair<>(fb.getTypeFigure(), fb.getColorType());
+    }
+
+    /**
+     * Восстанавливает старое состояние.
+     */
+    public void recoverStateGame() {
+        curStateGame = oldStateGame;
+    }
+
     /**
      * Получение текущего состояния.
      * @return текущее состояние
@@ -86,36 +102,26 @@ public class STMControl implements IChangeState {
         return curStateGame;
     }
 
-    /**
-     * Получение предыдущего состояния.
-     * @return предыдущее состояние
-     */
-    public TStateGame getOldStateGame() {
-        return oldStateGame;
-    }
-
-    /**
-     * Сохраняет текущее состоянияе.
-     */
-    public void saveCruStateGame() { oldStateGame = curStateGame; }
-
     @Override
-    public void makeChangesState(TStateGame curStateGame, TActionGame actionGame) {
-        for (IChangeState obj: lstChangeState) {
-            obj.makeChangesState(this.curStateGame, actionGame);
-        }
-        if (this.curStateGame == null) this.curStateGame = TStateGame.BASE;
+    public void makeChangesState(TStateGame cs, TActionGame actionGame) {
+        oldStateGame = this.curStateGame;
+        Pair<TStateGame,TActionGame> p = new Pair<>(curStateGame, actionGame);
+        if (oldStateGame == null) curStateGame = TStateGame.BASE;
         else {
-            Pair<TStateGame,TActionGame> p = new Pair<>(curStateGame, actionGame);
-            if (newStateGame.containsKey(p)){
-                this.curStateGame = newStateGame.get(p);
+            if (newStateGame.containsKey(p)) {
+                curStateGame = newStateGame.get(p);
             }
+        }
+        for (IChangeState obj: lstChangeState) {
+            obj.makeChangesState(oldStateGame, actionGame);
+        }
+        if (oldStateGame != null) {
             if (stateAction.containsKey(p)) {
                 try {
                     Method method = this.getClass().getDeclaredMethod(stateAction.get(p));
                     method.setAccessible(true);
                     method.invoke(this);
-                } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+                }  catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
                     e.printStackTrace();
                 }
             }

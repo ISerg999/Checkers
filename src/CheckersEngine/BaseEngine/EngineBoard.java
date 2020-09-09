@@ -1,7 +1,6 @@
 package CheckersEngine.BaseEngine;
 
-import java.util.Hashtable;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Базовый класс движка.
@@ -31,8 +30,9 @@ public class EngineBoard {
         this.height = h;
         stateGame = false;
         setCurMoveWhite();
-        board = new Hashtable<>();
-        whosPlaying = new Hashtable<>();
+        board = new IFigureBase[h][w];
+        clearBoard();
+        whosPlaying = new HashMap<>();
         for (ETypeColor it: ETypeColor.values()) {
             whosPlaying.put(it, true);
         }
@@ -98,13 +98,6 @@ public class EngineBoard {
     }
 
     /**
-     * Очистка всей доски.
-     */
-    public void clear() {
-        board.clear();
-    }
-
-    /**
      * Устанавливет текущий ход для белых.
      */
     public void setCurMoveWhite() {
@@ -131,52 +124,52 @@ public class EngineBoard {
      */
     public void start() {
         if (stateGame) return;
+        // TODO: Настройка для подготовки к началу игры, после stateGame = true
     }
 
     /**
      * Проверяет на допустимость координат.
-     * @param pos объект координат
+     * @param x координата x
+     * @param y координата y
      * @return true - допустимые координаты, false - не допустимые координаты
      */
-    public boolean aField(Pair<Short, Short> pos) {
-        if (pos.getX() < 0 || pos.getX() >= width || pos.getY() < 0 || pos.getY() >=height)
+    public boolean aField(int x, int y) {
+        if (x < 0 || x >= width || y < 0 || y >=height)
             return false;
         return true;
     }
 
     /**
+     * Очистка всей доски.
+     */
+    public void clearBoard() {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                board[y][x] = null;
+            }
+        }
+    }
+
+    /**
      * Получение фигуры по её координатам.
-     * @param pos координаты фигуры
+     * @param x координата x
+     * @param y координата y
      * @return фигура, или null
      */
-    public IFigureBase getFigure(Pair<Short, Short> pos) {
-        if (aField(pos) && board.containsKey(pos)) {
-            return board.get(pos);
-        }
-        return null;
+    public IFigureBase getFigure(int x, int y) {
+        return aField(x, y) ? board[y][x]: null;
     }
 
     /**
      * Установка фигуру на доску.
-     * @param pos    координаты фигуры
-     * @param figure объект устанавливаемой фигуры
+     * @param x      координата x
+     * @param y      координата y
+     * @param figure объект устанавливаемой фигуры, или null, если её надо удалить
      */
-    public void setFigure(Pair<Short, Short> pos, IFigureBase figure) {
-        if (aField(pos) && getFigure(pos) == null) {
-            board.put(pos, figure);
+    public void setFigure(int x, int y, IFigureBase figure) {
+        if (aField(x, y)) {
+            board[y][x] = figure;
         }
-    }
-
-    /**
-     * Удаляет фигуру из изгрового поля.
-     * @param pos координаты фигуры
-     * @return удалённая фигура, или null, елси ошибка.
-     */
-    public IFigureBase removeFigure(Pair<Short, Short> pos) {
-        if (aField(pos) && getFigure(pos) != null) {
-            return board.remove(pos);
-        }
-        return null;
     }
 
     /**
@@ -187,6 +180,6 @@ public class EngineBoard {
     /**
      * Словарь состояния игрового поля.
      */
-    protected Map<Pair<Short, Short>, IFigureBase> board;
+    protected IFigureBase[][] board;
 
 }

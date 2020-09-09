@@ -1,3 +1,5 @@
+import CheckersEngine.BaseEngine.ETypeColor;
+import CheckersEngine.BaseEngine.ETypeFigure;
 import CheckersEngine.BaseEngine.Pair;
 
 import javax.swing.*;
@@ -29,6 +31,10 @@ public class JFMainWindow extends JFrame implements IChangeState{
      * Доступ к классу контроллера.
      */
     protected STMControl stmControl;
+    /**
+     * Доступ к рисованию фигур на доске.
+     */
+    protected ViewBoard viewBoard;
 
     /**
      * Список выбираемых элементов меню, состояние которых может изменяться.
@@ -76,6 +82,10 @@ public class JFMainWindow extends JFrame implements IChangeState{
         mb.setVisible(true);
         mb.repaint();
 
+        // -------- Создание панели игровой доски. --------
+
+        viewBoard = new ViewBoard();
+        add(viewBoard);
     }
 
     private JMenu createMenuFile() {
@@ -205,8 +215,16 @@ public class JFMainWindow extends JFrame implements IChangeState{
         return mInfo;
     }
 
-    public void makeChangesState(TStateGame newState) {
-
+    private void setBoardFigure()
+    {
+        int off = 1;
+        for (int y = 0; y < 8; y++) {
+            off = 1 - off;
+            for (int x = 0; x < 8; x += 2) {
+                Pair<ETypeFigure, ETypeColor> fb = stmControl.getFigureForBoard(x + off, y);
+                viewBoard.setImgFigure(fb, x, y);
+            }
+        }
     }
 
     @Override
@@ -240,6 +258,7 @@ public class JFMainWindow extends JFrame implements IChangeState{
         for (String nm: deactivate) {
             mActionMenu.get(nm).setEnabled(false);
         }
+        setBoardFigure();
     }
 
 }

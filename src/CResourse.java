@@ -123,15 +123,4 @@ public class CResourse {
         String fullName = getResStr(nameKey);
         return new ImageIcon(Main.class.getResource(fullName));
     }
-
-    public Image getImage(String nameKey) {
-        String fullName = getResStr(nameKey);
-        Image res = null;
-        try {
-            res = ImageIO.read(new URL(fullName));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return res;
-    }
 }
