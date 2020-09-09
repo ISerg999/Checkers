@@ -7,6 +7,7 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.EtchedBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -41,7 +42,14 @@ public class JFMainWindow extends JFrame implements IChangeState{
      * Правая информационная панель, с её видами.
      */
     protected JPanel rightPanel, rCurPanel, rGameP, rEditionP;
+    /**
+     * Нижняя строка информации.
+     */
     protected JLabel lblBottom;
+    /**
+     * Диалоговое окно About.
+     */
+    protected JDialog dlgAbout;
 
     /**
      * Список выбираемых элементов меню, состояние которых может изменяться.
@@ -95,29 +103,11 @@ public class JFMainWindow extends JFrame implements IChangeState{
         add(viewBoard);
 
         // -------- Создание правой информационной панели. --------
-
-        // Панель по умолчанию.
-        int rPW = resourse.getResInt("Window.RightPanel.Width");
-        int rPH = resourse.getResInt("Window.RightPanel.Height");
-        rightPanel = new JPanel();
-        rightPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED),
-                BorderFactory.createEmptyBorder(25, 25, 25, 25)));
-        rightPanel.setBounds(viewBoard.getWidth() + 1, 0, rPW, rPH);
-        add(rightPanel);
-        rCurPanel = null; // Указатель на внутреннее содержимое.
-
-        // Панель игровая.
-        // TODO: Панель игровая.
-
-        // Панель редактирования.
-        // TODO: Панель редактирования.
+        createRightPanelInfo();
 
         // -------- Создание нижней информационной строки. --------
-        lblBottom = new JLabel(resourse.getResStr("Msg.Base.Info"));
-        lblBottom.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED),
-                BorderFactory.createEmptyBorder(25, 25, 25, 25)));
-        lblBottom.setBounds(1, viewBoard.getHeight() + 1, resourse.getResInt("Window.Width") - 4, 24);
-        add(lblBottom);
+        createLabelBottom();
+
     }
 
     private JMenu createMenuFile() {
@@ -242,9 +232,42 @@ public class JFMainWindow extends JFrame implements IChangeState{
     private JMenu createMenuInfo() {
         JMenu mInfo = new JMenu(resourse.getResStr("MenuName.Info"));
         JMenuItem miInfoAbout = new JMenuItem(resourse.getResStr("MenuName.Info.About"));
-        // miInfoAbout.addActionListener(this);
+        miInfoAbout.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                JOptionPane.showMessageDialog(null, resourse.getResStr("Mag.Base.DlgAbout.Info"),
+                        resourse.getResStr("MenuName.Info.About"), JOptionPane.INFORMATION_MESSAGE);
+            }
+        });
         mInfo.add(miInfoAbout);
         return mInfo;
+    }
+
+    private void createRightPanelInfo() {
+        // Панель по умолчанию.
+        int rPW = resourse.getResInt("Window.RightPanel.Width");
+        int rPH = resourse.getResInt("Window.RightPanel.Height");
+        rightPanel = new JPanel();
+        rightPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED),
+                BorderFactory.createEmptyBorder(25, 25, 25, 25)));
+        rightPanel.setBounds(viewBoard.getWidth() + 1, 0, rPW, rPH);
+        add(rightPanel);
+        rCurPanel = null; // Указатель на внутреннее содержимое.
+
+        // Панель игровая.
+        // TODO: Панель игровая.
+
+        // Панель редактирования.
+        // TODO: Панель редактирования.
+
+    }
+
+    private void createLabelBottom() {
+        lblBottom = new JLabel(resourse.getResStr("Msg.Base.Info"));
+        lblBottom.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED),
+                BorderFactory.createEmptyBorder(25, 25, 25, 25)));
+        lblBottom.setBounds(1, viewBoard.getHeight() + 1, resourse.getResInt("Window.Width") - 4, 24);
+        add(lblBottom);
     }
 
     private void setBoardFigure()
@@ -282,7 +305,7 @@ public class JFMainWindow extends JFrame implements IChangeState{
     /**
      * Действия, необходимые для перехода в состояние базового для основного окна.
      */
-    private void stepToBase() {
+    protected void stepToBase() {
         String[] deactivate = {
                 "MenuName.Game.Continue", "MenuName.Game.Stop", "MenuName.Game.Back", "MenuName.Settings.While.Player",
                 "MenuName.Settings.Black.Player", "MenuName.Editing.End", "MenuName.Editing.Placemant", "MenuName.Editing.Clear"

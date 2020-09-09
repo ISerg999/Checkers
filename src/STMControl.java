@@ -104,13 +104,6 @@ public class STMControl implements IChangeState {
     }
 
     /**
-     * Восстанавливает старое состояние.
-     */
-    public void recoverStateGame() {
-        curStateGame = oldStateGame;
-    }
-
-    /**
      * Получение текущего состояния.
      * @return текущее состояние
      */
@@ -142,6 +135,15 @@ public class STMControl implements IChangeState {
                 }
             }
         }
+    }
+
+    // ---------------------------- Методы обрабатывающиеся контроллером переходов состояний ---------------------------
+
+    /**
+     * Восстанавливает старое состояние.
+     */
+    protected void recoverStateGame() {
+        curStateGame = oldStateGame;
     }
 
 }
