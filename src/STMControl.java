@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * Класс управляющий игрой на основе конечных автоматов.
  */
-public class STMControl implements IChangeState {
+public class STMControl{
 
     private STMControl() {
         resourse = CResourse.getInstance();
@@ -111,23 +111,35 @@ public class STMControl implements IChangeState {
         return curStateGame;
     }
 
-    @Override
-    public void makeChangesState(TStateGame cs, TActionGame actionGame) {
-        oldStateGame = this.curStateGame;
-        Pair<TStateGame,TActionGame> p = new Pair<>(curStateGame, actionGame);
-        if (oldStateGame == null) curStateGame = TStateGame.BASE;
-        else {
-            if (newStateGame.containsKey(p)) {
-                curStateGame = newStateGame.get(p);
-            }
+    /**
+     * Базовый метод управления работой программы.
+     * @param actionGame происходящий переход
+     * @param allState   зависимость перехода от состояния, true - не зависит, false - зависит
+     * @param isNotMove  нужно ли выозвращаться в старое состояние, true - возвращаться нужно, false - возвращаться не нужно
+     */
+    public void makeChangesState(TActionGame actionGame, boolean allState, boolean isNotMove) {
+
+        TStateGame selectedSG;
+        if (allState) {
+            selectedSG = TStateGame.NONE;
+        } else {
+            selectedSG = curStateGame;
+            oldStateGame = curStateGame;
         }
-        for (IChangeState obj: lstChangeState) {
-            obj.makeChangesState(oldStateGame, actionGame);
+        Pair<TStateGame,TActionGame> psg = new Pair<>(selectedSG, actionGame);
+        if (null == curStateGame) {
+            curStateGame = TStateGame.BASE;
+        } else {
+            if (newStateGame.containsKey(psg)) curStateGame = newStateGame.get(psg);
         }
-        if (oldStateGame != null) {
-            if (stateAction.containsKey(p)) {
+        for (IChangeState objSt: lstChangeState) {
+            objSt.makeChangesState(psg);
+        }
+        if (null != oldStateGame) {
+            String funName = stateAction.getOrDefault(psg, null);
+            if (null != funName) {
                 try {
-                    Method method = this.getClass().getDeclaredMethod(stateAction.get(p));
+                    Method method = this.getClass().getDeclaredMethod(funName);
                     method.setAccessible(true);
                     method.invoke(this);
                 }  catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
@@ -135,15 +147,11 @@ public class STMControl implements IChangeState {
                 }
             }
         }
+        if (isNotMove) {
+            curStateGame = oldStateGame;
+        }
     }
 
     // ---------------------------- Методы обрабатывающиеся контроллером переходов состояний ---------------------------
-
-    /**
-     * Восстанавливает старое состояние.
-     */
-    protected void recoverStateGame() {
-        curStateGame = oldStateGame;
-    }
 
 }

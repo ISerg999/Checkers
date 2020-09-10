@@ -5,6 +5,9 @@ package CheckersEngine.BaseEngine;
  */
 public class Pair<TX, TY> {
 
+    private TX first;
+    private TY second;
+
     public Pair(TX first, TY second) {
         this.first = first;
         this.second = second;
@@ -23,6 +26,17 @@ public class Pair<TX, TY> {
         this.second = second;
     }
 
-    private TX first;
-    private TY second;
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (null == obj) return false;
+        if (!(obj instanceof Pair)) return false;
+        Pair<TX, TY> newP = (Pair<TX, TY>) obj;
+        return  this.getFirst() == newP.getFirst() && this.getSecond() == newP.getSecond();
+    }
+
+    @Override
+    public int hashCode() {
+        return first.hashCode() ^ second.hashCode();
+    }
 }

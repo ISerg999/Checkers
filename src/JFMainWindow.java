@@ -23,7 +23,7 @@ public class JFMainWindow extends JFrame implements IChangeState{
     private static final Map<Pair<TStateGame,TActionGame>, String> stateAction;
     static {
         stateAction = new Hashtable<>();
-//        stateAction.put(new Pair<>(TStateGame.BASE, TActionGame.TOBASE), "function");
+        stateAction.put(new Pair<>(TStateGame.NONE, TActionGame.TOABOUT), "viewDialogAbout");
     }
 
     /**
@@ -62,7 +62,7 @@ public class JFMainWindow extends JFrame implements IChangeState{
         stmControl.addActionGame(this);
         mActionMenu = new Hashtable<>();
         createAndShowGUI();
-        stmControl.makeChangesState(null, TActionGame.TOBASE);
+        stmControl.makeChangesState(TActionGame.TOBASE, false, false);
     }
 
     /**
@@ -235,8 +235,7 @@ public class JFMainWindow extends JFrame implements IChangeState{
         miInfoAbout.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                JOptionPane.showMessageDialog(null, resourse.getResStr("Mag.Base.DlgAbout.Info"),
-                        resourse.getResStr("MenuName.Info.About"), JOptionPane.INFORMATION_MESSAGE);
+                stmControl.makeChangesState(TActionGame.TOABOUT, true, true);
             }
         });
         mInfo.add(miInfoAbout);
@@ -283,14 +282,14 @@ public class JFMainWindow extends JFrame implements IChangeState{
     }
 
     @Override
-    public void makeChangesState(TStateGame curStateGame, TActionGame actionGame) {
-        if (curStateGame == null) {
+    public void makeChangesState(Pair<TStateGame,TActionGame> pStM) {
+        if (pStM.getFirst() == null && pStM.getSecond() == TActionGame.TOBASE) {
             stepToBase();
         } else {
-            Pair<TStateGame,TActionGame> p = new Pair<>(curStateGame, actionGame);
-            if (stateAction.containsKey(p)) {
+            String funName = stateAction.getOrDefault(pStM, null);
+            if (null != funName) {
                 try {
-                    Method method = this.getClass().getDeclaredMethod(stateAction.get(p));
+                    Method method = this.getClass().getDeclaredMethod(funName);
                     method.setAccessible(true);
                     method.invoke(this);
                 } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
@@ -314,6 +313,11 @@ public class JFMainWindow extends JFrame implements IChangeState{
             mActionMenu.get(nm).setEnabled(false);
         }
         setBoardFigure();
+    }
+
+    protected void viewDialogAbout() {
+        JOptionPane.showMessageDialog(null, resourse.getResStr("Mag.Base.DlgAbout.Info"),
+                resourse.getResStr("MenuName.Info.About"), JOptionPane.INFORMATION_MESSAGE);
     }
 
 }

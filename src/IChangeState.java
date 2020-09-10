@@ -1,9 +1,12 @@
+import CheckersEngine.BaseEngine.Pair;
+
 /**
- * Интерфейс для классов упраявляемых контроллером.
+ * Интерфейс управелние работой.
  */
 public interface IChangeState {
     /**
-     * Метод изменяющий состояние на новое/
+     * Метод обрабатывающий состояния перехеода.
+     * @param pStM структура состоящая из текущего состояния и указания перехода
      */
-    void makeChangesState(TStateGame curStateGame, TActionGame actionGame);
+    void makeChangesState(Pair<TStateGame,TActionGame> pStM);
 }
