@@ -19,6 +19,10 @@ public class EngineBoard {
      * Определяет, кто ходи за соответствующий цвет. true - игрок, false - компьютер
      */
     Map<ETypeColor, Boolean> whosPlaying;
+    /**
+     * Список сделанных ходов.
+     */
+    protected ListMoveGame lstMoveGame;
 
     /**
      * Конструктор.
@@ -32,6 +36,7 @@ public class EngineBoard {
         setCurMoveWhite();
         board = new IFigureBase[h][w];
         clearBoard();
+        lstMoveGame = new ListMoveGame();
         whosPlaying = new HashMap<>();
         for (ETypeColor it: ETypeColor.values()) {
             whosPlaying.put(it, true);
