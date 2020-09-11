@@ -1,12 +1,7 @@
-import javax.imageio.ImageIO;
 import javax.swing.*;
-import java.awt.*;
-import java.awt.image.ImageObserver;
-import java.awt.image.ImageProducer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
 import java.util.*;
 import java.util.List;
 
@@ -16,8 +11,18 @@ import java.util.List;
 public class CResourse {
 //        Main.class.getResource("Resource/imgs/checkers.png"); - Доступ к пути ресурсов по url или получить поток ввода - .getResourceAsStream.
 
+    /**
+     * Класс свойств
+     */
+    private List<Properties> lstProperty;
+    /**
+     * Словарь изображений.
+     */
+    private Map<String, ImageIcon> mImage;
+
     private CResourse() {
         lstProperty = new LinkedList<>();
+        mImage = new HashMap<>();
     }
 
     private static class CResourseHolder {
@@ -27,13 +32,12 @@ public class CResourse {
         return CResourse.CResourseHolder.INSTANCE;
     }
 
-    private List<Properties> lstProperty;
-
     /**
      * Очистка ресурсов.
      */
     public void clearResourse() {
         lstProperty.clear();
+        mImage.clear();
     }
 
     /**
@@ -51,36 +55,6 @@ public class CResourse {
         lstProperty.add(0, property);
     }
 
-    /**
-     * Перекодирование получаемых строк.
-     * @param str порлученная строка
-     * @return перекодированная строка
-     */
-    private String encoding(String str) {
-        String res = "";
-        try {
-            res = new String(str.getBytes("ISO-8859-1"), "UTF-8");
-        } catch (final UnsupportedEncodingException e) {
-            throw new RuntimeException("Encoding not supported", e);
-        }
-        return res;
-    }
-
-    /**
-     * Поиск ресурса по ключу.
-     * @param key ключ ресурса
-     * @return строка ресурса
-     */
-    private String searchResource(String key) {
-        String res = null;
-        for (Properties pr: lstProperty) {
-            if (pr.containsKey(key)) {
-                res = pr.getProperty(key);
-                break;
-            }
-        }
-        return res;
-    }
     /**
      * Получение значение строки из файла ресурса по ключу.
      * @param key ключ ресурса
@@ -119,8 +93,42 @@ public class CResourse {
      * @param nameKey ключ имени иконки
      * @return изображение иконки
      */
-    public ImageIcon getIcon(String nameKey) {
-        String fullName = getResStr(nameKey);
-        return new ImageIcon(Main.class.getResource(fullName));
+    public ImageIcon getImage(String nameKey) {
+        if (!mImage.containsKey(nameKey)) {
+            String fullName = getResStr(nameKey);
+            mImage.put(nameKey, new ImageIcon(Main.class.getResource(fullName)));
+        }
+        return mImage.get(nameKey);
+    }
+
+    /**
+     * Перекодирование получаемых строк.
+     * @param str порлученная строка
+     * @return перекодированная строка
+     */
+    private String encoding(String str) {
+        String res = "";
+        try {
+            res = new String(str.getBytes("ISO-8859-1"), "UTF-8");
+        } catch (final UnsupportedEncodingException e) {
+            throw new RuntimeException("Encoding not supported", e);
+        }
+        return res;
+    }
+
+    /**
+     * Поиск ресурса по ключу.
+     * @param key ключ ресурса
+     * @return строка ресурса
+     */
+    private String searchResource(String key) {
+        String res = null;
+        for (Properties pr: lstProperty) {
+            if (pr.containsKey(key)) {
+                res = pr.getProperty(key);
+                break;
+            }
+        }
+        return res;
     }
 }

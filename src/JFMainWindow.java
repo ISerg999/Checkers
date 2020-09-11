@@ -62,7 +62,7 @@ public class JFMainWindow extends JFrame implements IChangeState{
         stmControl.addActionGame(this);
         mActionMenu = new Hashtable<>();
         createAndShowGUI();
-        stmControl.makeChangesState(TActionGame.TOBASE, false, false);
+        stmControl.makeChangesState(TActionGame.TOBASE, false);
     }
 
     /**
@@ -73,7 +73,7 @@ public class JFMainWindow extends JFrame implements IChangeState{
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(null);
-        ImageIcon icon = resourse.getIcon("Path.Icons.Window");
+        ImageIcon icon = resourse.getImage("Path.Icon.Window");
         setIconImage(icon.getImage());
         int curWidth = resourse.getResInt("Window.Width");
         int curHeight = resourse.getResInt("Window.Height");
@@ -115,13 +115,13 @@ public class JFMainWindow extends JFrame implements IChangeState{
 
         JMenuItem miOpen = new JMenuItem(resourse.getResStr("MenuName.File.Open"));
         miOpen.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, ActionEvent.CTRL_MASK));
-        // miOpen.addActionListener(this);
+        miOpen.addActionListener(actionEvent -> stmControl.makeChangesState(TActionGame.TOLOAD, true));
         mFile.add(miOpen);
         mActionMenu.put("MenuName.File.Open", miOpen);
 
         JMenuItem miSave = new JMenuItem(resourse.getResStr("MenuName.File.Save"));
         miSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.CTRL_MASK));
-        // miSave.addActionListener(this);
+        miSave.addActionListener(actionEvent -> stmControl.makeChangesState(TActionGame.TOSAVE, true));
         mFile.add(miSave);
         mActionMenu.put("MenuName.File.Save", miSave);
 
@@ -232,12 +232,7 @@ public class JFMainWindow extends JFrame implements IChangeState{
     private JMenu createMenuInfo() {
         JMenu mInfo = new JMenu(resourse.getResStr("MenuName.Info"));
         JMenuItem miInfoAbout = new JMenuItem(resourse.getResStr("MenuName.Info.About"));
-        miInfoAbout.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                stmControl.makeChangesState(TActionGame.TOABOUT, true, true);
-            }
-        });
+        miInfoAbout.addActionListener(actionEvent -> stmControl.makeChangesState(TActionGame.TOABOUT, true));
         mInfo.add(miInfoAbout);
         return mInfo;
     }
@@ -318,6 +313,7 @@ public class JFMainWindow extends JFrame implements IChangeState{
     protected void viewDialogAbout() {
         JOptionPane.showMessageDialog(null, resourse.getResStr("Mag.Base.DlgAbout.Info"),
                 resourse.getResStr("MenuName.Info.About"), JOptionPane.INFORMATION_MESSAGE);
+        stmControl.makeChangesState(TActionGame.TORETURN, true);
     }
 
 }

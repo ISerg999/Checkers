@@ -8,6 +8,14 @@ import java.util.*;
 public class EngineBoard {
 
     /**
+     * Размеры игрового поля.
+     */
+    protected int width, height;
+    /**
+     * Словарь состояния игрового поля.
+     */
+    protected IFigureBase[][] board;
+    /**
      * Определяет, идет сейчас игра или нет.
      */
     protected boolean stateGame;
@@ -176,15 +184,5 @@ public class EngineBoard {
             board[y][x] = figure;
         }
     }
-
-    /**
-     * Размеры игрового поля.
-     */
-    protected int width, height;
-
-    /**
-     * Словарь состояния игрового поля.
-     */
-    protected IFigureBase[][] board;
 
 }

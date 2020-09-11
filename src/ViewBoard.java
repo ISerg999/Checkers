@@ -25,13 +25,13 @@ public class ViewBoard extends JPanel {
      */
     protected CResourse resourse;
     /**
-     * Изображение доски
+     * Ключ изображения доски
      */
-    protected Image imgBoard;
+    protected String strBoard = "Path.Image.Board";
     /**
-     * Изображение фигур.
+     * Ключ изображения фигур.
      */
-    protected Image imgFigures;
+    protected String strFigures = "Path.Image.Figures";
     /**
      * Массив клеток доски.
      */
@@ -52,8 +52,6 @@ public class ViewBoard extends JPanel {
     public ViewBoard() {
         stmControl = STMControl.getInstance();
         resourse = CResourse.getInstance();
-        imgBoard = resourse.getIcon("Path.Img.Board").getImage();
-        imgFigures = resourse.getIcon("Path.Img.Figures").getImage();
         offsetBaseX = resourse.getResInt("Board.Margin.Left");
         offsetBaseY = resourse.getResInt("Board.Margin.Top");
         spaceW = resourse.getResInt("Board.Space.Width");
@@ -68,8 +66,8 @@ public class ViewBoard extends JPanel {
      * Создание интерфейса панели доски.
      */
     protected void createAndShowGUI() {
-        int width = imgBoard.getWidth(null);
-        int height = imgBoard.getHeight(null);
+        int width = resourse.getImage(strBoard).getImage().getWidth(null);
+        int height = resourse.getImage(strBoard).getImage().getHeight(null);
         setMinimumSize(new Dimension(width, height));
         setMaximumSize(new Dimension(width, height));
         setBounds(0, 0, width, height);
@@ -148,8 +146,9 @@ public class ViewBoard extends JPanel {
 
     public void paint(Graphics g) {
         Graphics2D g2 = (Graphics2D) g;
-        g.drawImage(imgBoard, 0, 0, null);
-        g2.drawRect(0, 0, imgBoard.getWidth(null) - 1, imgBoard.getHeight(null) - 1);
+        g.drawImage(resourse.getImage(strBoard).getImage(), 0, 0, null);
+        g2.drawRect(0, 0, resourse.getImage(strBoard).getImage().getWidth(null) - 1,
+                resourse.getImage(strBoard).getImage().getHeight(null) - 1);
 //        BufferedImage img = new BufferedImage(50, 50, BufferedImage.TYPE_INT_ARGB);
         g2.setStroke(new BasicStroke(2));
         int imgW = 60;
@@ -164,7 +163,7 @@ public class ViewBoard extends JPanel {
                 if (p != null) {
                     int iDx = p.getSecond() == ETypeColor.WHITE ? 0: 120;
                     iDx += p.getFirst() == ETypeFigure.CHECKERS ? 0: 60;
-                    g2.drawImage(imgFigures, grX + imgDX, grY + imgDY, grX + imgDX + imgW, grY + imgDY + imgH, iDx, 0, iDx + imgW, imgH, null);
+                    g2.drawImage(resourse.getImage(strFigures).getImage(), grX + imgDX, grY + imgDY, grX + imgDX + imgW, grY + imgDY + imgH, iDx, 0, iDx + imgW, imgH, null);
                 }
                 g2.drawRect(grX, grY, spaceW - 1, spaceH - 1);
             }

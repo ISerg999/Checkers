@@ -115,27 +115,25 @@ public class STMControl{
      * Базовый метод управления работой программы.
      * @param actionGame происходящий переход
      * @param allState   зависимость перехода от состояния, true - не зависит, false - зависит
-     * @param isNotMove  нужно ли выозвращаться в старое состояние, true - возвращаться нужно, false - возвращаться не нужно
      */
-    public void makeChangesState(TActionGame actionGame, boolean allState, boolean isNotMove) {
-
-        TStateGame selectedSG;
-        if (allState) {
-            selectedSG = TStateGame.NONE;
-        } else {
-            selectedSG = curStateGame;
-            oldStateGame = curStateGame;
-        }
+    public void makeChangesState(TActionGame actionGame, boolean allState) {
+        TStateGame selectedSG = allState ? TStateGame.NONE: curStateGame;
         Pair<TStateGame,TActionGame> psg = new Pair<>(selectedSG, actionGame);
-        if (null == curStateGame) {
+        if (null != curStateGame) {
+            if (TActionGame.TORETURN == actionGame) curStateGame = oldStateGame;
+            else if (newStateGame.containsKey(psg)) {
+                oldStateGame = curStateGame;
+                curStateGame = newStateGame.get(psg);
+            }
+        }
+        else {
+            oldStateGame = TStateGame.BASE;
             curStateGame = TStateGame.BASE;
-        } else {
-            if (newStateGame.containsKey(psg)) curStateGame = newStateGame.get(psg);
         }
-        for (IChangeState objSt: lstChangeState) {
-            objSt.makeChangesState(psg);
-        }
-        if (null != oldStateGame) {
+        if (TActionGame.TORETURN != actionGame) {
+            for (IChangeState objSt: lstChangeState) {
+                objSt.makeChangesState(psg);
+            }
             String funName = stateAction.getOrDefault(psg, null);
             if (null != funName) {
                 try {
@@ -146,9 +144,6 @@ public class STMControl{
                     e.printStackTrace();
                 }
             }
-        }
-        if (isNotMove) {
-            curStateGame = oldStateGame;
         }
     }
 

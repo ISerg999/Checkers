@@ -37,6 +37,8 @@ public class Pair<TX, TY> {
 
     @Override
     public int hashCode() {
-        return first.hashCode() ^ second.hashCode();
+        int a = first == null ? 0: first.hashCode();
+        int b = second == null ? 0: second.hashCode();
+        return a ^ b;
     }
 }
