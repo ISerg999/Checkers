@@ -20,7 +20,7 @@ public class ListMoveGame implements Iterable<String[]> {
 
     protected List<String[]> lstMoves;
 
-    public void ListMoveGame() {
+    public ListMoveGame() {
         lstMoves = new LinkedList<>();
         clear();
     }
@@ -36,7 +36,7 @@ public class ListMoveGame implements Iterable<String[]> {
      * Возвращает упакованный список.
      * @return упакованный список.
      */
-    public Short[] getListPack() {
+    public List<Short> getListPack() {
         int sC;
         List<Short> lstPack = new LinkedList<>();
         int sA = lstMoves.size();
@@ -64,46 +64,47 @@ public class ListMoveGame implements Iterable<String[]> {
             }
             lstPack.addAll(one);
         }
-        return (Short[]) lstPack.toArray();
+        return lstPack;
     }
 
     /**
      * Установить список ходов из упакованного списка.
      * @param lstPack упакованный список
+     * @param k       начало списка ходов
      */
-    public void setListPack(Short[] lstPack) {
+    public void setListPack(List<Short> lstPack, int k) {
         int sA, sB;
         List<String[]> newLstMoves = new LinkedList<>();
-        int lenStr = lstPack[0] << 8 + lstPack[1];
-        int k = 2;
+        int lenStr = lstPack.get(k) << 8 + lstPack.get(k + 1);
+        k += 2;
         for (int i = 0; i < lenStr; i++) {
-            int lenOne = lstPack[k++] + 1;
+            int lenOne = lstPack.get(k++) + 1;
             String[] strLstOne = new String[lenOne];
 
             String tmp = "";
-            sA = lstPack[k++];
+            sA = lstPack.get(k++);
             sB = sA & 15;
             sA = (sA >> 4) & 15;
             tmp = tmp + coordIntToStr(sB, true);
             tmp = tmp + coordIntToStr(sA, false);
             tmp = tmp + (lenOne > 1 ? ":": "-");
-            sA = lstPack[k++];
+            sA = lstPack.get(k++);
             sB = sA & 15;
             sA = (sA >> 4) & 15;
             tmp = tmp + coordIntToStr(sB, true);
             tmp = tmp + coordIntToStr(sA, false);
-            sA = lstPack[k++];
+            sA = lstPack.get(k++);
             if (sA > 0) tmp = tmp + "!";
             strLstOne[0] = tmp;
 
             for (int j = 1; j < lenOne; j++) {
                 tmp = "";
-                sA = lstPack[k++];
+                sA = lstPack.get(k++);
                 sB = sA & 15;
                 sA = (sA >> 4) & 15;
                 tmp = tmp + coordIntToStr(sB, true);
                 tmp = tmp + coordIntToStr(sA, false);
-                sA = lstPack[k++];
+                sA = lstPack.get(k++);
                 tmp = tmp + (sA > 0 ? "q": "c");
                 strLstOne[j] = tmp;
             }

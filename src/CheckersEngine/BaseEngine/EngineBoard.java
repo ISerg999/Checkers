@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * Базовый класс движка.
  */
-public class EngineBoard {
+public abstract class EngineBoard {
 
     /**
      * Размеры игрового поля.
@@ -26,7 +26,7 @@ public class EngineBoard {
     /**
      * Определяет, кто ходи за соответствующий цвет. true - игрок, false - компьютер
      */
-    Map<ETypeColor, Boolean> whosPlaying;
+    protected Map<ETypeColor, Boolean> whosPlaying;
     /**
      * Список сделанных ходов.
      */
@@ -113,9 +113,7 @@ public class EngineBoard {
     /**
      * Устанавливет текущий ход для белых.
      */
-    public void setCurMoveWhite() {
-        curTypeColor = ETypeColor.WHITE;
-    }
+    public void setCurMoveWhite() { curTypeColor = ETypeColor.WHITE; }
 
     /**
      * Устанавливает текущий ход для чёрных.
@@ -130,6 +128,22 @@ public class EngineBoard {
     public void setCurMoveNext() {
         if (curTypeColor == ETypeColor.WHITE) setCurMoveBlack();
         else setCurMoveWhite();
+    }
+
+    /**
+     * Определяет, чей сейчас ход.
+     * @return константа игрового цвета
+     */
+    public ETypeColor getCurMove() {
+        return curTypeColor;
+    }
+
+    /**
+     * Получение объекта списка ходов.
+     * @return объект списка ходов
+     */
+    public ListMoveGame getLstMoves() {
+        return lstMoveGame;
     }
 
     /**
@@ -184,5 +198,19 @@ public class EngineBoard {
             board[y][x] = figure;
         }
     }
+
+    /**
+     * Получение бинарного представления игры.
+     * @return бинарное представление игры
+     */
+    public abstract List<Short> getBinaryGame();
+
+    /**
+     * Установка игры из бинарного представления.
+     * @param binGame бинарное представление игры
+     * @param k       индекс, с какого идёт получение данных
+     * @return индекс на область лежащую за пределами полученных данных
+     */
+    public abstract int setBinaryGame(List<Short> binGame, int k);
 
 }

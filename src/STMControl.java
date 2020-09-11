@@ -1,10 +1,8 @@
-import CheckersEngine.BaseEngine.ETypeColor;
-import CheckersEngine.BaseEngine.ETypeFigure;
-import CheckersEngine.BaseEngine.IFigureBase;
-import CheckersEngine.BaseEngine.Pair;
+import CheckersEngine.BaseEngine.*;
 import CheckersEngine.CheckersBoard;
 
 import java.awt.*;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -23,6 +21,7 @@ public class STMControl{
         curStateGame = null;
         oldStateGame = null;
         isEdition = false;
+        fileName = null;
     }
 
     private static class STMControlHolder {
@@ -36,7 +35,7 @@ public class STMControl{
     /**
      * Словарь позволяющий понять новое состояние по текущему состоянию и произведенному действию.
      */
-    private static final Map<Pair<TStateGame,TActionGame>,TStateGame> newStateGame;
+    protected static final Map<Pair<TStateGame,TActionGame>,TStateGame> newStateGame;
     static {
         newStateGame = new Hashtable<>();
 //        newStateGame.put(new Pair<>(TStateGame.BASE, TActionGame.TOBASE), TStateGame.BASE);
@@ -44,10 +43,11 @@ public class STMControl{
     /**
      * Список изполняемых функций для текущего объекта
      */
-    private static final Map<Pair<TStateGame,TActionGame>, String> stateAction;
+    protected static final Map<Pair<TStateGame,TActionGame>, String> stateAction;
     static {
         stateAction = new Hashtable<>();
-//        stateAction.put(new Pair<>(TStateGame.BASE, TActionGame.TOBASE), "function");
+        stateAction.put(new Pair<>(TStateGame.NONE, TActionGame.TOSAVE), "saveBoard");
+        stateAction.put(new Pair<>(TStateGame.NONE, TActionGame.TOLOAD), "loadBoard");
     }
 
     private CResourse resourse;
@@ -63,6 +63,10 @@ public class STMControl{
      * Режим редактирования.
      */
     private boolean isEdition;
+    /**
+     * Имя файла для записи ли чтения.
+     */
+    private String fileName;
 
     /**
      * Состояния программы.
@@ -76,6 +80,14 @@ public class STMControl{
                 new JFMainWindow();
             }
         });
+    }
+
+    /**
+     * Устанавливает имя файла.
+     * @param fileName полное имя файла.
+     */
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
 
     /**
@@ -121,9 +133,9 @@ public class STMControl{
         Pair<TStateGame,TActionGame> psg = new Pair<>(selectedSG, actionGame);
         if (null != curStateGame) {
             if (TActionGame.TORETURN == actionGame) curStateGame = oldStateGame;
-            else if (newStateGame.containsKey(psg)) {
+            else {
                 oldStateGame = curStateGame;
-                curStateGame = newStateGame.get(psg);
+                if (newStateGame.containsKey(psg)) curStateGame = newStateGame.get(psg);
             }
         }
         else {
@@ -149,4 +161,49 @@ public class STMControl{
 
     // ---------------------------- Методы обрабатывающиеся контроллером переходов состояний ---------------------------
 
+    protected void saveBoard() {
+        if (null != fileName) {
+            List<Short> bin = new LinkedList<>();
+            String title = resourse.getResStr("Board.File.Title");
+            bin.addAll(checkersBoard.getBinaryGame());
+            bin.addAll(checkersBoard.getLstMoves().getListPack());
+            try (OutputStream os = new FileOutputStream(fileName);) {
+                for (byte cb: title.getBytes()) {
+                    os.write(cb);
+                }
+                for (Short code: bin) {
+                    os.write(code);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            makeChangesState(TActionGame.TOSAVEOK, true);
+        }
+    }
+
+    protected void loadBoard() {
+        if (null != fileName) {
+            int k = 0;
+            List<Short> bin = new LinkedList<>();
+            String title = resourse.getResStr("Board.File.Title");
+            try (InputStream is = new FileInputStream(fileName);) {
+                int byteRead;
+                while (((byteRead = is.read()) != -1) && k < title.length()) {
+                    if (byteRead != title.charAt(k)) {
+                        throw new IOException("Ошибка в заголовке файла");
+                    }
+                    else k++;
+                }
+                bin.add((short) byteRead);
+                while ((byteRead = is.read()) != -1) {
+                    bin.add((short) byteRead);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            k = checkersBoard.setBinaryGame(bin, 0);
+            checkersBoard.getLstMoves().setListPack(bin, k);
+            makeChangesState(TActionGame.TOLOADOK, true);
+        }
+    }
 }

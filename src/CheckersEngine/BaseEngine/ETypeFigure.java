@@ -1,6 +1,16 @@
 package CheckersEngine.BaseEngine;
 
 public enum ETypeFigure {
-    CHECKERS,
-    QUINE;
+    CHECKERS(4),
+    QUINE(8);
+
+    ETypeFigure(int direction) {
+        this.direction = direction;
+    }
+
+    public int getDirection() {
+        return direction;
+    }
+
+    private int direction;
 }

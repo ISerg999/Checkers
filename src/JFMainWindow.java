@@ -5,9 +5,9 @@ import CheckersEngine.BaseEngine.Pair;
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.EtchedBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -24,6 +24,10 @@ public class JFMainWindow extends JFrame implements IChangeState{
     static {
         stateAction = new Hashtable<>();
         stateAction.put(new Pair<>(TStateGame.NONE, TActionGame.TOABOUT), "viewDialogAbout");
+        stateAction.put(new Pair<>(TStateGame.NONE, TActionGame.TOSAVE), "viewDialogSave");
+        stateAction.put(new Pair<>(TStateGame.NONE, TActionGame.TOLOAD), "viewDialogLoad");
+        stateAction.put(new Pair<>(TStateGame.NONE, TActionGame.TOSAVEOK), "viewSaveFileOK");
+        stateAction.put(new Pair<>(TStateGame.NONE, TActionGame.TOLOADOK), "viewLoadFileOk");
     }
 
     /**
@@ -297,6 +301,16 @@ public class JFMainWindow extends JFrame implements IChangeState{
     // ---------------------------- Методы обрабатывающиеся контроллером переходов состояний ---------------------------
 
     /**
+     * Вывод диалоговых окон с простыми сообщениями.
+     * @param title заголовок
+     * @param text  содержимое
+     */
+    protected void viewDialog(String title, String text) {
+        JOptionPane.showMessageDialog(null, text, title, JOptionPane.INFORMATION_MESSAGE);
+        stmControl.makeChangesState(TActionGame.TORETURN, true);
+    }
+
+    /**
      * Действия, необходимые для перехода в состояние базового для основного окна.
      */
     protected void stepToBase() {
@@ -310,10 +324,58 @@ public class JFMainWindow extends JFrame implements IChangeState{
         setBoardFigure();
     }
 
+    /**
+     * Вывод диалогового окна: О программе.
+     */
     protected void viewDialogAbout() {
-        JOptionPane.showMessageDialog(null, resourse.getResStr("Mag.Base.DlgAbout.Info"),
-                resourse.getResStr("MenuName.Info.About"), JOptionPane.INFORMATION_MESSAGE);
+        viewDialog(resourse.getResStr("MenuName.Info.About"), resourse.getResStr("Mag.Base.DlgAbout.Info"));
+    }
+
+    /**
+     * Диалоговое окно сохранения игры.
+     */
+    protected void viewDialogSave() {
+        String fileName = null;
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Сохранение игрового файла");
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(resourse.getResStr("File.Filter.Description"),
+                resourse.getResStr("File.Filter.Extension"));
+        fileChooser.setFileFilter(filter);
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        int result = fileChooser.showSaveDialog(JFMainWindow.this);
+        if (result == JFileChooser.APPROVE_OPTION) fileName = fileChooser.getSelectedFile().getAbsolutePath();
+        stmControl.setFileName(fileName);
         stmControl.makeChangesState(TActionGame.TORETURN, true);
     }
 
+    /**
+     * Диалоговое окно загрузки игры.
+     */
+    protected void viewDialogLoad() {
+        String fileName = null;
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Загрузка игрового файла");
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(resourse.getResStr("File.Filter.Description"),
+                resourse.getResStr("File.Filter.Extension"));
+        fileChooser.setFileFilter(filter);
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        int result = fileChooser.showOpenDialog(JFMainWindow.this);
+        if (result == JFileChooser.APPROVE_OPTION) fileName = fileChooser.getSelectedFile().getAbsolutePath();
+        stmControl.setFileName(fileName);
+        stmControl.makeChangesState(TActionGame.TORETURN, true);
+    }
+
+    /**
+     * Диалоговое окно, сообщения о том, что загрузка закончилась.
+     */
+    protected void viewLoadFileOk() {
+        viewDialog("", resourse.getResStr("Msg.Base.DlgOK.Load"));
+    }
+
+    /**
+     * Диалоговое окно, сообщения о том, что сохранение закончилось.
+     */
+    protected void viewSaveFileOK() {
+        viewDialog("", resourse.getResStr("Msg.Base.DlgOK.Save"));
+    }
 }
