@@ -2,30 +2,30 @@ package CheckersEngine;
 
 import CheckersEngine.BaseEngine.ETypeColor;
 import CheckersEngine.BaseEngine.ETypeFigure;
-import CheckersEngine.BaseEngine.Pair;
+import CheckersEngine.BaseEngine.CPair;
 
 import java.util.List;
 
 /**
  * Класс контролирующий возможные ходы для шашки.
  */
-public class FigureCheckers extends FigureParent {
+public class CFigureCheckers extends CFigureParent {
 
-    public FigureCheckers(ETypeColor colorFig) {
+    public CFigureCheckers(ETypeColor colorFig) {
         super(ETypeFigure.CHECKERS, colorFig);
     }
 
-    public FigureCheckers(ETypeColor colorFig, short x, short y) {
+    public CFigureCheckers(ETypeColor colorFig, int x, int y) {
         super(ETypeFigure.CHECKERS, colorFig, x, y);
     }
 
     @Override
-    public List<List<Pair<Short, Short>>> searchMove() {
+    public List<List<CPair<Integer, Integer>>> searchMove() {
         return null;
     }
 
     @Override
-    public List<List<Pair<Short, Short>>> searchAttack() {
+    public List<List<CPair<Integer, Integer>>> searchAttack() {
         return null;
     }
 

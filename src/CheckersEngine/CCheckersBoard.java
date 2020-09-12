@@ -2,7 +2,7 @@ package CheckersEngine;
 
 import CheckersEngine.BaseEngine.ETypeColor;
 import CheckersEngine.BaseEngine.ETypeFigure;
-import CheckersEngine.BaseEngine.EngineBoard;
+import CheckersEngine.BaseEngine.CEngineBoard;
 import CheckersEngine.BaseEngine.IFigureBase;
 
 import java.util.LinkedList;
@@ -11,9 +11,9 @@ import java.util.List;
 /**
  * Класс управляющий игрой в шашки.
  */
-public class CheckersBoard extends EngineBoard {
+public class CCheckersBoard extends CEngineBoard {
 
-    public CheckersBoard() {
+    public CCheckersBoard() {
         super(8, 8);
         placementBoard();
     }
@@ -23,15 +23,15 @@ public class CheckersBoard extends EngineBoard {
      */
     public void placementBoard() {
         clearBoard();
-        short yi0 = 0, yi1 = 1, yi2 = 2, yi5 = 5, yi6 = 6, yi7 = 7;
-        for (short x = 0; x < 8; x++) {
-            short xi1 = (short) (x + 1);
-            setFigure(x, yi0, new FigureCheckers(ETypeColor.WHITE, x, yi0));
-            setFigure(xi1, yi1, new FigureCheckers(ETypeColor.WHITE, xi1, yi1));
-            setFigure(x, yi2, new FigureCheckers(ETypeColor.WHITE, x, yi2));
-            setFigure(xi1, yi5, new FigureCheckers(ETypeColor.BLACK, xi1, yi5));
-            setFigure(x, yi6, new FigureCheckers(ETypeColor.BLACK, x, yi6));
-            setFigure(xi1, yi7, new FigureCheckers(ETypeColor.BLACK, xi1, yi7));
+        int yi0 = 0, yi1 = 1, yi2 = 2, yi5 = 5, yi6 = 6, yi7 = 7;
+        for (int x = 0; x < 8; x++) {
+            int xi1 = x + 1;
+            setFigure(x, yi0, ETypeFigure.CHECKERS, ETypeColor.WHITE);
+            setFigure(xi1, yi1, ETypeFigure.CHECKERS, ETypeColor.WHITE);
+            setFigure(x, yi2, ETypeFigure.CHECKERS, ETypeColor.WHITE);
+            setFigure(xi1, yi5, ETypeFigure.CHECKERS, ETypeColor.BLACK);
+            setFigure(x, yi6, ETypeFigure.CHECKERS, ETypeColor.BLACK);
+            setFigure(xi1, yi7, ETypeFigure.CHECKERS, ETypeColor.BLACK);
         }
         setCurMoveWhite();
     }
@@ -50,18 +50,18 @@ public class CheckersBoard extends EngineBoard {
     }
 
     @Override
-    public List<Short> getBinaryGame() {
-        List<Short> bytesOut = new LinkedList<>();
-        short sizeWC = 0, sizeWQ = 0, sizeBC = 0, sizeBQ = 0;
-        List<Short> lstWC = new LinkedList<>();
-        List<Short> lstWQ = new LinkedList<>();
-        List<Short> lstBC = new LinkedList<>();
-        List<Short> lstBQ = new LinkedList<>();
-        Short tmp;
+    public List<Integer> getBinaryGame() {
+        List<Integer> bytesOut = new LinkedList<>();
+        int sizeWC = 0, sizeWQ = 0, sizeBC = 0, sizeBQ = 0;
+        List<Integer> lstWC = new LinkedList<>();
+        List<Integer> lstWQ = new LinkedList<>();
+        List<Integer> lstBC = new LinkedList<>();
+        List<Integer> lstBQ = new LinkedList<>();
+        Integer tmp;
         for (int y = 0; y < 8; y++) {
             for (int x = 0; x < 8; x++) {
                 if (null != board[y][x]) {
-                    tmp = (short) (((y << 4) + x) & 255);
+                    tmp = ((y << 4) + x) & 0xff;
                     if (board[y][x].getColorType() == ETypeColor.WHITE) {
                         if (board[y][x].getTypeFigure() == ETypeFigure.CHECKERS) {
                             sizeWC++;
@@ -91,16 +91,16 @@ public class CheckersBoard extends EngineBoard {
         bytesOut.add(sizeBQ);
         if (sizeBQ > 0) bytesOut.addAll(lstBQ);
 
-        tmp = (short) (getCurMove() == ETypeColor.WHITE ? 1: 0);
+        tmp = getCurMove() == ETypeColor.WHITE ? 1: 0;
         bytesOut.add(tmp);
-        tmp = (short) ((getPlayForColor(ETypeColor.WHITE) ? 16: 0) + (getPlayForColor(ETypeColor.BLACK) ? 1: 0));
+        tmp = (getPlayForColor(ETypeColor.WHITE) ? 0x10: 0) + (getPlayForColor(ETypeColor.BLACK) ? 0x1: 0);
         bytesOut.add(tmp);
 
         return bytesOut;
     }
 
     @Override
-    public int setBinaryGame(List<Short> binGame, int k) {
+    public int setBinaryGame(List<Integer> binGame, int k) {
         IFigureBase[][] newBoard = new IFigureBase[height][width];
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
@@ -108,16 +108,16 @@ public class CheckersBoard extends EngineBoard {
             }
         }
 
-        short sizeTC;
-        short x, y;
+        int sizeTC;
+        int x, y;
         sizeTC = binGame.get(k++);
         if (sizeTC > 0) {
             for (int i = 0; i < sizeTC; i++)
             {
                 x = binGame.get(k++);
-                y = (short) ((x >> 4) & 15);
-                x = (short) (x & 15);
-                newBoard[y][x] = new FigureCheckers(ETypeColor.WHITE, x, y);
+                y = (x >> 4) & 0xf;
+                x = x & 0xf;
+                newBoard[y][x] = new CFigureCheckers(ETypeColor.WHITE, x, y);
             }
         }
         sizeTC = binGame.get(k++);
@@ -125,9 +125,9 @@ public class CheckersBoard extends EngineBoard {
             for (int i = 0; i < sizeTC; i++)
             {
                 x = binGame.get(k++);
-                y = (short) ((x >> 4) & 15);
-                x = (short) (x & 15);
-                newBoard[y][x] = new FigureQuine(ETypeColor.WHITE, x, y);
+                y = (x >> 4) & 0xf;
+                x = x & 0xf;
+                newBoard[y][x] = new CFigureQuine(ETypeColor.WHITE, x, y);
             }
         }
         sizeTC = binGame.get(k++);
@@ -135,9 +135,9 @@ public class CheckersBoard extends EngineBoard {
             for (int i = 0; i < sizeTC; i++)
             {
                 x = binGame.get(k++);
-                y = (short) ((x >> 4) & 15);
-                x = (short) (x & 15);
-                newBoard[y][x] = new FigureCheckers(ETypeColor.BLACK, x, y);
+                y = (x >> 4) & 0xf;
+                x = x & 0xf;
+                newBoard[y][x] = new CFigureCheckers(ETypeColor.BLACK, x, y);
             }
         }
         sizeTC = binGame.get(k++);
@@ -145,17 +145,17 @@ public class CheckersBoard extends EngineBoard {
             for (int i = 0; i < sizeTC; i++)
             {
                 x = binGame.get(k++);
-                y = (short) ((x >> 4) & 15);
-                x = (short) (x & 15);
-                newBoard[y][x] = new FigureQuine(ETypeColor.BLACK, x, y);
+                y = (x >> 4) & 0xf;
+                x = x & 0xf;
+                newBoard[y][x] = new CFigureQuine(ETypeColor.BLACK, x, y);
             }
         }
         board = newBoard;
         if (binGame.get(k++) > 0) setCurMoveWhite();
         else setCurMoveBlack();
         x = binGame.get(k++);
-        y = (short) (x & 0xf0);
-        x = (short) (x & 15);
+        y = x & 0xf0;
+        x = x & 0xf;
         setPlayerForColor(ETypeColor.WHITE, y > 0);
         setPlayerForColor(ETypeColor.BLACK, x > 0);
 

@@ -1,41 +1,42 @@
 import CheckersEngine.BaseEngine.ETypeColor;
 import CheckersEngine.BaseEngine.ETypeFigure;
-import CheckersEngine.BaseEngine.Pair;
+import CheckersEngine.BaseEngine.IFigureBase;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 /**
  * Класс вывода игровой доски и её элементов.
  */
-public class ViewBoard extends JPanel {
+public class CViewBoard extends JPanel {
 
-    static final private Color[] spaceFrameColor = {
-            Color.black, new Color(255, 255, 0), new Color(0, 255, 255), new Color(255, 0, 255)
+    static final protected Color[] spaceFrameColor = {
+            Color.black,                                                                         // Стандартный.
+            new Color(CResourse.getInstance().getResInt("Board.Space.Color.Selected")),     // Выбранный.
+            new Color(CResourse.getInstance().getResInt("Board.Space.Color.Intermediate")), // Промежуточный.
+            new Color(CResourse.getInstance().getResInt("Board.Space.Color.End"))           // Конечный.
     };
-
     /**
-     * Доступ к классу контроллера.
+     * Ключ изображения доски
      */
-    protected STMControl stmControl;
+    static final protected String strBoard = "Path.Image.Board";
+    /**
+     * Ключ изображения фигур.
+     */
+    static final protected String strFigures = "Path.Image.Figures";
+
     /**
      * Доступ к классу ресурсов.
      */
     protected CResourse resourse;
     /**
-     * Ключ изображения доски
+     * Доступ к классу контроллера.
      */
-    protected String strBoard = "Path.Image.Board";
-    /**
-     * Ключ изображения фигур.
-     */
-    protected String strFigures = "Path.Image.Figures";
-    /**
-     * Массив клеток доски.
-     */
-    protected Pair<Pair<ETypeFigure, ETypeColor>, Integer>[][] boardSpaces;
+    protected CSMControl CSMControl;
     /**
      * Смещение рисуемых элементов на доске.
      */
@@ -48,10 +49,16 @@ public class ViewBoard extends JPanel {
      * Смещение вывода фигуры внутри клетки.
      */
     protected int imgDX, imgDY;
+    /**
+     * Массив клеток доски.
+     */
+    protected Color[][] boardSpacesColor;
 
-    public ViewBoard() {
-        stmControl = STMControl.getInstance();
+    public CViewBoard() {
+        CSMControl = CSMControl.getInstance();
         resourse = CResourse.getInstance();
+        boardSpacesColor = new Color[8][4];
+        clearBoardSpacesColor();
         offsetBaseX = resourse.getResInt("Board.Margin.Left");
         offsetBaseY = resourse.getResInt("Board.Margin.Top");
         spaceW = resourse.getResInt("Board.Space.Width");
@@ -71,11 +78,6 @@ public class ViewBoard extends JPanel {
         setMinimumSize(new Dimension(width, height));
         setMaximumSize(new Dimension(width, height));
         setBounds(0, 0, width, height);
-        boardSpaces = new Pair[8][4];
-        for (int i = 0; i < 8; i++)
-            for (int j = 0; j < 4; j++) {
-                boardSpaces[i][j] = new Pair<>(null, 0);
-            }
 
         addMouseListener(new MouseAdapter() {
             @Override
@@ -90,6 +92,14 @@ public class ViewBoard extends JPanel {
                 mouseAction(e, false);
             }
         });
+
+        addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                super.keyTyped(e);
+                keyAction(e);
+            }
+        });
     }
 
     /**
@@ -98,50 +108,35 @@ public class ViewBoard extends JPanel {
      * @param isClick true - мышь нажата, false - мышь отпущена
      */
     protected void mouseAction(MouseEvent e, boolean isClick) {
-        Pair<Integer, Integer> pos = coordImgToBoard(e.getX(), e.getY());
-        int bx = pos.getFirst();
-        int by = pos.getSecond();
-        if (!stmControl.testCoordinateBoard(bx, by)) return;
-
-//        if (isClick) {
-//            setTypeColorFrame(1, bx, by);
-//        } else {
-//            setTypeColorFrame(0, bx, by);
-//        }
-//        repaint();
     }
 
     /**
-     * Задаёт тип фигуры.
-     * @param typeFigure тип фигуры
-     * @param x          координата x на игровой доске
-     * @param y          координата y на игровой доске
+     * Обработка событий нажатий на клавиатуре.
+     * @param e событие клавиатуры
      */
-    public void setImgFigure(Pair<ETypeFigure, ETypeColor> typeFigure, int x, int y) {
-        boardSpaces[y][x / 2].setFirst(typeFigure);
+    protected void keyAction(KeyEvent e) {
     }
 
     /**
-     * Задёт тип цвета рамки фигуры.
-     * @param typeColorFrame тип цвета
-     * @param x              координата x на игровой доске
-     * @param y              координата y на игровой доске
+     * Цвет всех рамок переходит в базовое состояни.
      */
-    public void setTypeColorFrame(int typeColorFrame, int x, int y) {
-        if (typeColorFrame < 0 || typeColorFrame > 3) return;
-        boardSpaces[y][x / 2].setSecond(typeColorFrame);
+    protected void clearBoardSpacesColor() {
+        for (int y = 0; y < 8; y++) {
+            for (int x = 0; x < 4; x++) {
+                boardSpacesColor[y][x] = spaceFrameColor[0];
+            }
+        }
     }
 
     /**
-     * Преобразует координаты экрана в координаты доски.
-     * @param x координата x экрана
-     * @param y координата y экрана
-     * @return Pair с координатами доски
+     * Возвращает смещение в изображении фигур.
+     * @param fig объект фигуры
+     * @return смещение
      */
-    protected Pair<Integer, Integer> coordImgToBoard(int x, int y) {
-        int bx = (x - offsetBaseX) / spaceW;
-        int by = 7 - (y - offsetBaseY) / spaceH;
-        return new Pair<>(bx, by);
+    protected int figureOffsetImage(IFigureBase fig) {
+        int r = fig.getColorType() == ETypeColor.WHITE ? 0: 120;
+        r += fig.getTypeFigure() == ETypeFigure.CHECKERS ? 0: 60;
+        return r;
     }
 
     public void paint(Graphics g) {
@@ -149,20 +144,19 @@ public class ViewBoard extends JPanel {
         g.drawImage(resourse.getImage(strBoard).getImage(), 0, 0, null);
         g2.drawRect(0, 0, resourse.getImage(strBoard).getImage().getWidth(null) - 1,
                 resourse.getImage(strBoard).getImage().getHeight(null) - 1);
-//        BufferedImage img = new BufferedImage(50, 50, BufferedImage.TYPE_INT_ARGB);
+////        BufferedImage img = new BufferedImage(50, 50, BufferedImage.TYPE_INT_ARGB);
         g2.setStroke(new BasicStroke(2));
-        int imgW = 60;
-        int imgH = 60;
+        int imgW = resourse.getImage(strFigures).getImage().getWidth(null) / 4;
+        int imgH = resourse.getImage(strFigures).getImage().getHeight(null);
         for (int y = 0; y < 8; y++) {
             for (int x = 0; x < 4; x++) {
-                Pair<ETypeFigure, ETypeColor> p = boardSpaces[y][x].getFirst();
-                Color colorFrame = spaceFrameColor[boardSpaces[y][x].getSecond()];
-                g2.setColor(colorFrame);
-                int grX = offsetBaseX + (2 * x + y % 2) * spaceW;
+                int rx = 2 * x + y % 2;
+                int grX = offsetBaseX + rx * spaceW;
                 int grY = offsetBaseY + (7 - y) * spaceH;
-                if (p != null) {
-                    int iDx = p.getSecond() == ETypeColor.WHITE ? 0: 120;
-                    iDx += p.getFirst() == ETypeFigure.CHECKERS ? 0: 60;
+                g2.setColor(boardSpacesColor[y][x]);
+                IFigureBase fig = CSMControl.getBoard().getFigure(rx, y);
+                if (fig != null) {
+                    int iDx = figureOffsetImage(fig);
                     g2.drawImage(resourse.getImage(strFigures).getImage(), grX + imgDX, grY + imgDY, grX + imgDX + imgW, grY + imgDY + imgH, iDx, 0, iDx + imgW, imgH, null);
                 }
                 g2.drawRect(grX, grY, spaceW - 1, spaceH - 1);

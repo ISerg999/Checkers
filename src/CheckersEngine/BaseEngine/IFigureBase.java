@@ -34,23 +34,35 @@ public interface IFigureBase {
      * @param x координата x игрового поля
      * @param y координата y игрового поля
      */
-    void setPos(short x, short y);
+    void setPos(int x, int y);
+
+    /**
+     * Получение текущей заданной координаты x.
+     * @return координата x
+     */
+    int getX();
+
+    /**
+     * Получение текущей заданной координаты y.
+     * @return координата y
+     */
+    int getY();
 
     /**
      * Задаёт ссылку на доску в которой будет искать возможные ходы и возможные атаки.
      * @param board игровая доска
      */
-    void setBoard(Map<Pair<Short, Short>, IFigureBase> board);
+    void setBoard(Map<CPair<Integer, Integer>, IFigureBase> board);
 
     /**
      * Поиск возможных путей движения фигуры.
      * @return список возможных путей движения фигуры, или null, если таковых не найдено.
      */
-    List<List<Pair<Short, Short>>> searchMove();
+    List<List<CPair<Integer, Integer>>> searchMove();
 
     /**
      * Поиск возможных атак фигуры.
      * @return список возможных атак фигуры, или null, если таковых не найдено.
      */
-    List<List<Pair<Short, Short>>> searchAttack();
+    List<List<CPair<Integer, Integer>>> searchAttack();
 }

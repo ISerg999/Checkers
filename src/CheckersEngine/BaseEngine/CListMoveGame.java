@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 /**
  * Класс хранения ходов игры.
  */
-public class ListMoveGame implements Iterable<String[]> {
+public class CListMoveGame implements Iterable<String[]> {
 
     static protected final List<Character> validSymbol;
     static {
@@ -20,7 +20,7 @@ public class ListMoveGame implements Iterable<String[]> {
 
     protected List<String[]> lstMoves;
 
-    public ListMoveGame() {
+    public CListMoveGame() {
         lstMoves = new LinkedList<>();
         clear();
     }
@@ -36,31 +36,31 @@ public class ListMoveGame implements Iterable<String[]> {
      * Возвращает упакованный список.
      * @return упакованный список.
      */
-    public List<Short> getListPack() {
+    public List<Integer> getListPack() {
         int sC;
-        List<Short> lstPack = new LinkedList<>();
+        List<Integer> lstPack = new LinkedList<>();
         int sA = lstMoves.size();
-        int sB = sA & 255;
-        sA = (sA >> 8) & 255;
-        lstPack.add((short) sA);
-        lstPack.add((short) sB);
+        int sB = sA & 0xff;
+        sA = (sA >> 8) & 0xff;
+        lstPack.add(sA);
+        lstPack.add(sB);
         for (String[] isHalfStep: lstMoves) {
-            List<Short> one = new LinkedList<>();
+            List<Integer> one = new LinkedList<>();
             sA = isHalfStep.length - 1;
-            one.add((short) sA);
+            one.add(sA);
 
-            sA = (coordStrToInt(isHalfStep[0].substring(1, 2)) << 4 + coordStrToInt(isHalfStep[0].substring(0, 1))) & 255;
-            sB = (coordStrToInt(isHalfStep[0].substring(4, 5)) << 4 + coordStrToInt(isHalfStep[0].substring(3, 4))) & 255;
+            sA = (coordStrToInt(isHalfStep[0].substring(1, 2)) << 4 + coordStrToInt(isHalfStep[0].substring(0, 1))) & 0xff;
+            sB = (coordStrToInt(isHalfStep[0].substring(4, 5)) << 4 + coordStrToInt(isHalfStep[0].substring(3, 4))) & 0xff;
             sC = (isHalfStep[0].length() == 6) && isHalfStep[5] == "!" ? 1: 0;
-            one.add((short) sA);
-            one.add((short) sB);
-            one.add((short) sC);
+            one.add(sA);
+            one.add(sB);
+            one.add(sC);
 
             for (int i = 1; i < isHalfStep.length; i++) {
-                sA = (coordStrToInt(isHalfStep[i].substring(1, 2)) << 4 + coordStrToInt(isHalfStep[i].substring(0, 1))) & 255;
+                sA = (coordStrToInt(isHalfStep[i].substring(1, 2)) << 4 + coordStrToInt(isHalfStep[i].substring(0, 1))) & 0xff;
                 sB = isHalfStep[i].charAt(2) == 'q'? 1: 0;
-                one.add((short) sA);
-                one.add((short) sB);
+                one.add(sA);
+                one.add(sB);
             }
             lstPack.addAll(one);
         }
@@ -72,7 +72,7 @@ public class ListMoveGame implements Iterable<String[]> {
      * @param lstPack упакованный список
      * @param k       начало списка ходов
      */
-    public void setListPack(List<Short> lstPack, int k) {
+    public void setListPack(List<Integer> lstPack, int k) {
         int sA, sB;
         List<String[]> newLstMoves = new LinkedList<>();
         int lenStr = lstPack.get(k) << 8 + lstPack.get(k + 1);
@@ -83,14 +83,14 @@ public class ListMoveGame implements Iterable<String[]> {
 
             String tmp = "";
             sA = lstPack.get(k++);
-            sB = sA & 15;
-            sA = (sA >> 4) & 15;
+            sB = sA & 0xf;
+            sA = (sA >> 4) & 0xf;
             tmp = tmp + coordIntToStr(sB, true);
             tmp = tmp + coordIntToStr(sA, false);
             tmp = tmp + (lenOne > 1 ? ":": "-");
             sA = lstPack.get(k++);
-            sB = sA & 15;
-            sA = (sA >> 4) & 15;
+            sB = sA & 0xf;
+            sA = (sA >> 4) & 0xf;
             tmp = tmp + coordIntToStr(sB, true);
             tmp = tmp + coordIntToStr(sA, false);
             sA = lstPack.get(k++);
@@ -100,14 +100,15 @@ public class ListMoveGame implements Iterable<String[]> {
             for (int j = 1; j < lenOne; j++) {
                 tmp = "";
                 sA = lstPack.get(k++);
-                sB = sA & 15;
-                sA = (sA >> 4) & 15;
+                sB = sA & 0xf;
+                sA = (sA >> 4) & 0xf;
                 tmp = tmp + coordIntToStr(sB, true);
                 tmp = tmp + coordIntToStr(sA, false);
                 sA = lstPack.get(k++);
                 tmp = tmp + (sA > 0 ? "q": "c");
                 strLstOne[j] = tmp;
             }
+            newLstMoves.add(strLstOne);
         }
         lstMoves = newLstMoves;
     }
@@ -129,6 +130,12 @@ public class ListMoveGame implements Iterable<String[]> {
         }
     }
 
+    /**
+     * Преобразует числовую координату в строковую.
+     * @param a        числовая координата
+     * @param isSymbol тип строки: true - числа, false - буквы
+     * @return строковая координата
+     */
     protected String coordIntToStr(int a, boolean isSymbol) {
         int[] code = {"1".codePointAt(0), "a".codePointAt(0)};
         int t = isSymbol ? 1: 0;
@@ -136,7 +143,7 @@ public class ListMoveGame implements Iterable<String[]> {
     }
 
     /**
-     * Проверка строки на правильность формата хода.
+     * Проверка строки на правильность формата.
      * @param str   проверяемая строка
      * @param first если true, то проверяет ход игрока, иначе, если false, проверяет данные об убитых шашках.
      * @return true - проверка прошла успешна, false - проверка провалилась

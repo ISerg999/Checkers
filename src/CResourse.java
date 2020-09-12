@@ -28,8 +28,41 @@ public class CResourse {
     private static class CResourseHolder {
         private static final CResourse INSTANCE = new CResourse();
     }
+
     public static CResourse getInstance() {
         return CResourse.CResourseHolder.INSTANCE;
+    }
+
+
+    /**
+     * Перекодирование получаемых строк.
+     * @param str порлученная строка
+     * @return перекодированная строка
+     */
+    private String encoding(String str) {
+        String res = "";
+        try {
+            res = new String(str.getBytes("ISO-8859-1"), "UTF-8");
+        } catch (final UnsupportedEncodingException e) {
+            throw new RuntimeException("Encoding not supported", e);
+        }
+        return res;
+    }
+
+    /**
+     * Поиск ресурса по ключу.
+     * @param key ключ ресурса
+     * @return строка ресурса
+     */
+    private String searchResource(String key) {
+        String res = null;
+        for (Properties pr: lstProperty) {
+            if (pr.containsKey(key)) {
+                res = pr.getProperty(key);
+                break;
+            }
+        }
+        return res;
     }
 
     /**
@@ -73,7 +106,19 @@ public class CResourse {
      */
     public Integer getResInt(String key) {
         String res = searchResource(key);
-        if (res != null) return Integer.parseInt(res);
+        if (res != null){
+            res = res.toLowerCase();
+            boolean isHex = false;
+            if (res.charAt(0) == '#') {
+                isHex = true;
+                res = res.substring(1, res.length() - 1);
+            } else if (res.charAt(0) == '0' && res.charAt(1) == 'x') {
+                isHex = true;
+                res = res.substring(2, res.length() - 2);
+            }
+            if (isHex) return Integer.parseInt(res, 16);
+            else return Integer.parseInt(res);
+        }
         return null;
     }
 
@@ -101,34 +146,4 @@ public class CResourse {
         return mImage.get(nameKey);
     }
 
-    /**
-     * Перекодирование получаемых строк.
-     * @param str порлученная строка
-     * @return перекодированная строка
-     */
-    private String encoding(String str) {
-        String res = "";
-        try {
-            res = new String(str.getBytes("ISO-8859-1"), "UTF-8");
-        } catch (final UnsupportedEncodingException e) {
-            throw new RuntimeException("Encoding not supported", e);
-        }
-        return res;
-    }
-
-    /**
-     * Поиск ресурса по ключу.
-     * @param key ключ ресурса
-     * @return строка ресурса
-     */
-    private String searchResource(String key) {
-        String res = null;
-        for (Properties pr: lstProperty) {
-            if (pr.containsKey(key)) {
-                res = pr.getProperty(key);
-                break;
-            }
-        }
-        return res;
-    }
 }

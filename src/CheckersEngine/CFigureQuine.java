@@ -2,34 +2,34 @@ package CheckersEngine;
 
 import CheckersEngine.BaseEngine.ETypeColor;
 import CheckersEngine.BaseEngine.ETypeFigure;
-import CheckersEngine.BaseEngine.Pair;
+import CheckersEngine.BaseEngine.CPair;
 
 import java.util.List;
 
 /**
  * Класс контролирующий возможные ходы для дамки.
  */
-public class FigureQuine extends FigureParent {
+public class CFigureQuine extends CFigureParent {
     /**
      * Возможные направления движения.
      */
-    protected short[][] BASE_PATH_OPTION = {{-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
+    protected int[][] BASE_PATH_OPTION = {{-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
 
-    public FigureQuine(ETypeColor colorFig) {
+    public CFigureQuine(ETypeColor colorFig) {
         super(ETypeFigure.QUINE, colorFig);
     }
 
-    public FigureQuine(ETypeColor colorFig, short x, short y) {
+    public CFigureQuine(ETypeColor colorFig, int x, int y) {
         super(ETypeFigure.QUINE, colorFig, x, y);
     }
 
     @Override
-    public List<List<Pair<Short, Short>>> searchMove() {
+    public List<List<CPair<Integer, Integer>>> searchMove() {
         return null;
     }
 
     @Override
-    public List<List<Pair<Short, Short>>> searchAttack() {
+    public List<List<CPair<Integer, Integer>>> searchAttack() {
         return null;
     }
 

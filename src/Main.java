@@ -1,6 +1,6 @@
 public class Main {
     public static void main(String[] args) {
-        STMControl stmCtrl = STMControl.getInstance();
+        CSMControl stmCtrl = CSMControl.getInstance();
         stmCtrl.start();
     }
 }

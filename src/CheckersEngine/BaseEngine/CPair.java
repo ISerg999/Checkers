@@ -3,12 +3,12 @@ package CheckersEngine.BaseEngine;
 /**
  * Класс парных данных.
  */
-public class Pair<TX, TY> {
+public class CPair<TX, TY> {
 
     private TX first;
     private TY second;
 
-    public Pair(TX first, TY second) {
+    public CPair(TX first, TY second) {
         this.first = first;
         this.second = second;
     }
@@ -30,8 +30,8 @@ public class Pair<TX, TY> {
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (null == obj) return false;
-        if (!(obj instanceof Pair)) return false;
-        Pair<TX, TY> newP = (Pair<TX, TY>) obj;
+        if (!(obj instanceof CPair)) return false;
+        CPair<TX, TY> newP = (CPair<TX, TY>) obj;
         return  this.getFirst() == newP.getFirst() && this.getSecond() == newP.getSecond();
     }
 

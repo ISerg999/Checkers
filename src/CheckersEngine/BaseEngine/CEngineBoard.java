@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * Базовый класс движка.
  */
-public abstract class EngineBoard {
+public abstract class CEngineBoard {
 
     /**
      * Размеры игрового поля.
@@ -30,21 +30,26 @@ public abstract class EngineBoard {
     /**
      * Список сделанных ходов.
      */
-    protected ListMoveGame lstMoveGame;
+    protected CListMoveGame lstMoveGame;
+    /**
+     * Пул объектов фигур.
+     */
+    protected CPoolFigures pool;
 
     /**
      * Конструктор.
      * @param w ширина игрового поля
      * @param h высота игрового поля
      */
-    public EngineBoard(int w, int h) {
+    public CEngineBoard(int w, int h) {
+        pool = new CPoolFigures();
         this.width = w;
         this.height = h;
-        stateGame = false;
+        setStateGame(false);
         setCurMoveWhite();
         board = new IFigureBase[h][w];
         clearBoard();
-        lstMoveGame = new ListMoveGame();
+        lstMoveGame = new CListMoveGame();
         whosPlaying = new HashMap<>();
         for (ETypeColor it: ETypeColor.values()) {
             whosPlaying.put(it, true);
@@ -142,7 +147,7 @@ public abstract class EngineBoard {
      * Получение объекта списка ходов.
      * @return объект списка ходов
      */
-    public ListMoveGame getLstMoves() {
+    public CListMoveGame getLstMoves() {
         return lstMoveGame;
     }
 
@@ -172,7 +177,10 @@ public abstract class EngineBoard {
     public void clearBoard() {
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                board[y][x] = null;
+                if (null != board[y][x]) {
+                    pool.remove(board[y][x]);
+                    board[y][x] = null;
+                }
             }
         }
     }
@@ -189,13 +197,20 @@ public abstract class EngineBoard {
 
     /**
      * Установка фигуру на доску.
-     * @param x      координата x
-     * @param y      координата y
-     * @param figure объект устанавливаемой фигуры, или null, если её надо удалить
+     * @param x  координата x
+     * @param y  координата y
+     * @param tf тип устанавливаемой фигуры, или null, если фигуру нужно удалить.
+     * @param cf цвет устанавливаемой фигуры
      */
-    public void setFigure(int x, int y, IFigureBase figure) {
+    public void setFigure(int x, int y, ETypeFigure tf, ETypeColor cf) {
         if (aField(x, y)) {
-            board[y][x] = figure;
+            if (null != board[y][x]) {
+                pool.remove(board[y][x]);
+                board[y][x] = null;
+            }
+            if (null == tf) return;
+            board[y][x] = pool.get(tf, cf);
+            board[y][x].setPos(x, y);
         }
     }
 
@@ -203,7 +218,7 @@ public abstract class EngineBoard {
      * Получение бинарного представления игры.
      * @return бинарное представление игры
      */
-    public abstract List<Short> getBinaryGame();
+    public abstract List<Integer> getBinaryGame();
 
     /**
      * Установка игры из бинарного представления.
@@ -211,6 +226,6 @@ public abstract class EngineBoard {
      * @param k       индекс, с какого идёт получение данных
      * @return индекс на область лежащую за пределами полученных данных
      */
-    public abstract int setBinaryGame(List<Short> binGame, int k);
+    public abstract int setBinaryGame(List<Integer> binGame, int k);
 
 }

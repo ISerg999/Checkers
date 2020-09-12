@@ -1,6 +1,4 @@
-import CheckersEngine.BaseEngine.ETypeColor;
-import CheckersEngine.BaseEngine.ETypeFigure;
-import CheckersEngine.BaseEngine.Pair;
+import CheckersEngine.BaseEngine.CPair;
 
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
@@ -20,14 +18,15 @@ public class JFMainWindow extends JFrame implements IChangeState{
     /**
      * Список изполняемых функций для текущего объекта
      */
-    private static final Map<Pair<TStateGame,TActionGame>, String> stateAction;
+    private static final Map<CPair<ETStateGame, ETActionGame>, String> stateAction;
     static {
         stateAction = new Hashtable<>();
-        stateAction.put(new Pair<>(TStateGame.NONE, TActionGame.TOABOUT), "viewDialogAbout");
-        stateAction.put(new Pair<>(TStateGame.NONE, TActionGame.TOSAVE), "viewDialogSave");
-        stateAction.put(new Pair<>(TStateGame.NONE, TActionGame.TOLOAD), "viewDialogLoad");
-        stateAction.put(new Pair<>(TStateGame.NONE, TActionGame.TOSAVEOK), "viewSaveFileOK");
-        stateAction.put(new Pair<>(TStateGame.NONE, TActionGame.TOLOADOK), "viewLoadFileOk");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOABOUT), "viewDialogAbout");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVE), "viewDialogSave");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOAD), "viewDialogLoad");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVEOK), "viewSaveFileOK");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOADOK), "viewLoadFileOk");
+//        stateAction.put(new Pair<>(TStateGame.BASE, TActionGame.TOEDITING), "initEditing");
     }
 
     /**
@@ -37,11 +36,15 @@ public class JFMainWindow extends JFrame implements IChangeState{
     /**
      * Доступ к классу контроллера.
      */
-    protected STMControl stmControl;
+    protected CSMControl csmControl;
     /**
-     * Доступ к рисованию фигур на доске.
+     * Список выбираемых элементов меню, состояние которых может изменяться.
      */
-    protected ViewBoard viewBoard;
+    protected Map<String, JMenuItem> mActionMenu;
+    /**
+     * Панель изображения и управления игровой доской и фигур на ней.
+     */
+    protected CViewBoard CViewBoard;
     /**
      * Правая информационная панель, с её видами.
      */
@@ -50,23 +53,14 @@ public class JFMainWindow extends JFrame implements IChangeState{
      * Нижняя строка информации.
      */
     protected JLabel lblBottom;
-    /**
-     * Диалоговое окно About.
-     */
-    protected JDialog dlgAbout;
-
-    /**
-     * Список выбираемых элементов меню, состояние которых может изменяться.
-     */
-    protected Map<String, JMenuItem> mActionMenu;
 
     public JFMainWindow() throws HeadlessException {
         resourse = CResourse.getInstance();
-        stmControl = STMControl.getInstance();
-        stmControl.addActionGame(this);
+        csmControl = CSMControl.getInstance();
+        csmControl.addActionGame(this);
         mActionMenu = new Hashtable<>();
         createAndShowGUI();
-        stmControl.makeChangesState(TActionGame.TOBASE, false);
+        csmControl.makeChangesState(ETActionGame.TOBASE, false);
     }
 
     /**
@@ -98,34 +92,35 @@ public class JFMainWindow extends JFrame implements IChangeState{
         mb.add(createMenuInfo());
         mb.setBounds(1, 1, curWidth, 24);
         setJMenuBar(mb);
-        mb.setVisible(true);
         mb.repaint();
 
         // -------- Создание панели игровой доски. --------
-
-        viewBoard = new ViewBoard();
-        add(viewBoard);
+        CViewBoard = new CViewBoard();
+        add(CViewBoard);
 
         // -------- Создание правой информационной панели. --------
         createRightPanelInfo();
 
         // -------- Создание нижней информационной строки. --------
         createLabelBottom();
-
     }
 
+    /**
+     * Создание элементов меню: Файл.
+     * @return меню Файл
+     */
     private JMenu createMenuFile() {
         JMenu mFile = new JMenu(resourse.getResStr("MenuName.File"));
 
         JMenuItem miOpen = new JMenuItem(resourse.getResStr("MenuName.File.Open"));
         miOpen.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, ActionEvent.CTRL_MASK));
-        miOpen.addActionListener(actionEvent -> stmControl.makeChangesState(TActionGame.TOLOAD, true));
+        miOpen.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOLOAD, true));
         mFile.add(miOpen);
         mActionMenu.put("MenuName.File.Open", miOpen);
 
         JMenuItem miSave = new JMenuItem(resourse.getResStr("MenuName.File.Save"));
         miSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.CTRL_MASK));
-        miSave.addActionListener(actionEvent -> stmControl.makeChangesState(TActionGame.TOSAVE, true));
+        miSave.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOSAVE, true));
         mFile.add(miSave);
         mActionMenu.put("MenuName.File.Save", miSave);
 
@@ -139,9 +134,12 @@ public class JFMainWindow extends JFrame implements IChangeState{
         return mFile;
     }
 
+    /**
+     * Создание элементов меню: Игра
+     * @return меню Игра
+     */
     private JMenu createMenuGame() {
         JMenu mGame = new JMenu(resourse.getResStr("MenuName.Game"));
-
         JMenuItem miStart = new JMenuItem(resourse.getResStr("MenuName.Game.Start"));
         miStart.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, ActionEvent.CTRL_MASK));
         // miStart.addActionListener(this);
@@ -168,9 +166,14 @@ public class JFMainWindow extends JFrame implements IChangeState{
         mGame.add(miBack);
         mActionMenu.put("MenuName.Game.Back", miBack);
 
+
         return mGame;
     }
 
+    /**
+     * Создание элементов меню: Настройки.
+     * @return меню Настройки
+     */
     private JMenu createMenuSettings() {
         JMenu mSettings = new JMenu(resourse.getResStr("MenuName.Settings"));
 
@@ -203,12 +206,16 @@ public class JFMainWindow extends JFrame implements IChangeState{
         return mSettings;
     }
 
+    /**
+     * Создание элементов меню Редактирование.
+     * @return меню редактирование
+     */
     private JMenu createMenuEditing() {
         JMenu mEditing = new JMenu(resourse.getResStr("MenuName.Editing"));
 
         JMenuItem miBeginEdit = new JMenuItem(resourse.getResStr("MenuName.Editing.Begin"));
         miBeginEdit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, ActionEvent.ALT_MASK + ActionEvent.CTRL_MASK));
-        // miBeginEdit.addActionListener(this);
+        miBeginEdit.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOEDITING, false));
         mEditing.add(miBeginEdit);
         mActionMenu.put("MenuName.Editing.Begin", miBeginEdit);
 
@@ -233,14 +240,23 @@ public class JFMainWindow extends JFrame implements IChangeState{
         return mEditing;
     }
 
+    /**
+     * Создание элементов меню: Информация.
+     * @return меню Информация
+     */
     private JMenu createMenuInfo() {
         JMenu mInfo = new JMenu(resourse.getResStr("MenuName.Info"));
+
         JMenuItem miInfoAbout = new JMenuItem(resourse.getResStr("MenuName.Info.About"));
-        miInfoAbout.addActionListener(actionEvent -> stmControl.makeChangesState(TActionGame.TOABOUT, true));
+        miInfoAbout.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOABOUT, true));
         mInfo.add(miInfoAbout);
+
         return mInfo;
     }
 
+    /**
+     * Создание правой информационно / управляющей панели.
+     */
     private void createRightPanelInfo() {
         // Панель по умолчанию.
         int rPW = resourse.getResInt("Window.RightPanel.Width");
@@ -248,7 +264,7 @@ public class JFMainWindow extends JFrame implements IChangeState{
         rightPanel = new JPanel();
         rightPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED),
                 BorderFactory.createEmptyBorder(25, 25, 25, 25)));
-        rightPanel.setBounds(viewBoard.getWidth() + 1, 0, rPW, rPH);
+        rightPanel.setBounds(CViewBoard.getWidth() + 1, 0, rPW, rPH);
         add(rightPanel);
         rCurPanel = null; // Указатель на внутреннее содержимое.
 
@@ -260,29 +276,20 @@ public class JFMainWindow extends JFrame implements IChangeState{
 
     }
 
+    /**
+     * Нижняя информационная строка.
+     */
     private void createLabelBottom() {
         lblBottom = new JLabel(resourse.getResStr("Msg.Base.Info"));
         lblBottom.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED),
                 BorderFactory.createEmptyBorder(25, 25, 25, 25)));
-        lblBottom.setBounds(1, viewBoard.getHeight() + 1, resourse.getResInt("Window.Width") - 4, 24);
+        lblBottom.setBounds(1, CViewBoard.getHeight() + 1, resourse.getResInt("Window.Width") - 4, 24);
         add(lblBottom);
     }
 
-    private void setBoardFigure()
-    {
-        int off = 1;
-        for (int y = 0; y < 8; y++) {
-            off = 1 - off;
-            for (int x = 0; x < 8; x += 2) {
-                Pair<ETypeFigure, ETypeColor> fb = stmControl.getFigureForBoard(x + off, y);
-                viewBoard.setImgFigure(fb, x, y);
-            }
-        }
-    }
-
     @Override
-    public void makeChangesState(Pair<TStateGame,TActionGame> pStM) {
-        if (pStM.getFirst() == null && pStM.getSecond() == TActionGame.TOBASE) {
+    public void makeChangesState(CPair<ETStateGame, ETActionGame> pStM) {
+        if (pStM.getFirst() == null && pStM.getSecond() == ETActionGame.TOBASE) {
             stepToBase();
         } else {
             String funName = stateAction.getOrDefault(pStM, null);
@@ -301,27 +308,23 @@ public class JFMainWindow extends JFrame implements IChangeState{
     // ---------------------------- Методы обрабатывающиеся контроллером переходов состояний ---------------------------
 
     /**
-     * Вывод диалоговых окон с простыми сообщениями.
+     * Включение и выключение элементов меню. Обобщённый метод.
+     */
+    protected void selectedViewMenu(String[] disablMenuItems) {
+        for (JMenuItem mi: mActionMenu.values()) {
+            mi.setEnabled(true);
+        }
+        for (String nm: disablMenuItems) mActionMenu.get(nm).setEnabled(false);
+    }
+
+    /**
+     * Вывод диалоговых окон с простыми сообщениями. Обобщённый метод.
      * @param title заголовок
      * @param text  содержимое
      */
     protected void viewDialog(String title, String text) {
         JOptionPane.showMessageDialog(null, text, title, JOptionPane.INFORMATION_MESSAGE);
-        stmControl.makeChangesState(TActionGame.TORETURN, true);
-    }
-
-    /**
-     * Действия, необходимые для перехода в состояние базового для основного окна.
-     */
-    protected void stepToBase() {
-        String[] deactivate = {
-                "MenuName.Game.Continue", "MenuName.Game.Stop", "MenuName.Game.Back", "MenuName.Settings.While.Player",
-                "MenuName.Settings.Black.Player", "MenuName.Editing.End", "MenuName.Editing.Placemant", "MenuName.Editing.Clear"
-        };
-        for (String nm: deactivate) {
-            mActionMenu.get(nm).setEnabled(false);
-        }
-        setBoardFigure();
+        csmControl.makeChangesState(ETActionGame.TORETURN, true);
     }
 
     /**
@@ -329,6 +332,17 @@ public class JFMainWindow extends JFrame implements IChangeState{
      */
     protected void viewDialogAbout() {
         viewDialog(resourse.getResStr("MenuName.Info.About"), resourse.getResStr("Mag.Base.DlgAbout.Info"));
+    }
+
+    /**
+     * Действия, необходимые для перехода в состояние базового для основного окна.
+     */
+    protected void stepToBase() {
+        String[] deactivate = {
+                "MenuName.Game.Continue", "MenuName.Game.Stop", "MenuName.Game.Back",
+                "MenuName.Editing.End", "MenuName.Editing.Placemant", "MenuName.Editing.Clear"
+        };
+        selectedViewMenu(deactivate);
     }
 
     /**
@@ -344,8 +358,8 @@ public class JFMainWindow extends JFrame implements IChangeState{
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         int result = fileChooser.showSaveDialog(JFMainWindow.this);
         if (result == JFileChooser.APPROVE_OPTION) fileName = fileChooser.getSelectedFile().getAbsolutePath();
-        stmControl.setFileName(fileName);
-        stmControl.makeChangesState(TActionGame.TORETURN, true);
+        csmControl.setFileName(fileName);
+        csmControl.makeChangesState(ETActionGame.TORETURN, true);
     }
 
     /**
@@ -361,8 +375,8 @@ public class JFMainWindow extends JFrame implements IChangeState{
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         int result = fileChooser.showOpenDialog(JFMainWindow.this);
         if (result == JFileChooser.APPROVE_OPTION) fileName = fileChooser.getSelectedFile().getAbsolutePath();
-        stmControl.setFileName(fileName);
-        stmControl.makeChangesState(TActionGame.TORETURN, true);
+        csmControl.setFileName(fileName);
+        csmControl.makeChangesState(ETActionGame.TORETURN, true);
     }
 
     /**
@@ -378,4 +392,5 @@ public class JFMainWindow extends JFrame implements IChangeState{
     protected void viewSaveFileOK() {
         viewDialog("", resourse.getResStr("Msg.Base.DlgOK.Save"));
     }
+
 }

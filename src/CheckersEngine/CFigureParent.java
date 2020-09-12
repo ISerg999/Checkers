@@ -3,19 +3,24 @@ package CheckersEngine;
 import CheckersEngine.BaseEngine.ETypeColor;
 import CheckersEngine.BaseEngine.ETypeFigure;
 import CheckersEngine.BaseEngine.IFigureBase;
-import CheckersEngine.BaseEngine.Pair;
+import CheckersEngine.BaseEngine.CPair;
 
 import java.util.List;
 import java.util.Map;
 
-public class FigureParent implements IFigureBase {
+public class CFigureParent implements IFigureBase {
 
-    public FigureParent(ETypeFigure typeFig, ETypeColor colorFig) {
+    protected ETypeColor colorFigure = null;
+    protected ETypeFigure typeFigure = null;
+    protected CPair<Integer, Integer> pos = null;
+    protected Map<CPair<Integer, Integer>, IFigureBase> board = null;
+
+    public CFigureParent(ETypeFigure typeFig, ETypeColor colorFig) {
         setTypeFigure(typeFig);
         setTypeColor(colorFig);
     }
 
-    public FigureParent(ETypeFigure typeFig, ETypeColor colorFig, short x, short y) {
+    public CFigureParent(ETypeFigure typeFig, ETypeColor colorFig, int x, int y) {
         setTypeFigure(typeFig);
         setTypeColor(colorFig);
         setPos(x, y);
@@ -42,28 +47,33 @@ public class FigureParent implements IFigureBase {
     }
 
     @Override
-    public void setPos(short x, short y) {
-        pos = new Pair<>(x, y);
+    public void setPos(int x, int y) {
+        pos = new CPair<>(x, y);
     }
 
     @Override
-    public void setBoard(Map<Pair<Short, Short>, IFigureBase> board) {
+    public int getX() {
+        return pos.getFirst();
+    }
+
+    @Override
+    public int getY() {
+        return pos.getSecond();
+    }
+
+    @Override
+    public void setBoard(Map<CPair<Integer, Integer>, IFigureBase> board) {
         this.board = board;
     }
 
     @Override
-    public List<List<Pair<Short, Short>>> searchMove() {
+    public List<List<CPair<Integer, Integer>>> searchMove() {
         return null;
     }
 
     @Override
-    public List<List<Pair<Short, Short>>> searchAttack() {
+    public List<List<CPair<Integer, Integer>>> searchAttack() {
         return null;
     }
-
-    protected ETypeColor colorFigure = null;
-    protected ETypeFigure typeFigure = null;
-    protected Pair<Short, Short> pos = null;
-    protected Map<Pair<Short, Short>, IFigureBase> board = null;
 
 }

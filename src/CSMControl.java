@@ -1,5 +1,5 @@
 import CheckersEngine.BaseEngine.*;
-import CheckersEngine.CheckersBoard;
+import CheckersEngine.CCheckersBoard;
 
 import java.awt.*;
 import java.io.*;
@@ -9,33 +9,28 @@ import java.util.*;
 import java.util.List;
 
 /**
- * Класс управляющий игрой на основе конечных автоматов.
+ * Класс управляющий игрой на основе конечных автоматов. Оформлен как синглтон.
  */
-public class STMControl{
+public class CSMControl {
 
-    private STMControl() {
+    private CSMControl() {
         resourse = CResourse.getInstance();
         resourse.addResourse("Resource/gameres.properties");
         lstChangeState = new ArrayList<>();
-        checkersBoard = new CheckersBoard();
-        curStateGame = null;
-        oldStateGame = null;
-        isEdition = false;
+        checkersBoard = new CCheckersBoard();
         fileName = null;
     }
-
     private static class STMControlHolder {
-        private static final STMControl INSTANCE = new STMControl();
+        private static final CSMControl INSTANCE = new CSMControl();
     }
-
-    public static STMControl getInstance() {
+    public static CSMControl getInstance() {
         return STMControlHolder.INSTANCE;
     }
 
     /**
      * Словарь позволяющий понять новое состояние по текущему состоянию и произведенному действию.
      */
-    protected static final Map<Pair<TStateGame,TActionGame>,TStateGame> newStateGame;
+    protected static final Map<CPair<ETStateGame, ETActionGame>, ETStateGame> newStateGame;
     static {
         newStateGame = new Hashtable<>();
 //        newStateGame.put(new Pair<>(TStateGame.BASE, TActionGame.TOBASE), TStateGame.BASE);
@@ -43,43 +38,52 @@ public class STMControl{
     /**
      * Список изполняемых функций для текущего объекта
      */
-    protected static final Map<Pair<TStateGame,TActionGame>, String> stateAction;
+    protected static final Map<CPair<ETStateGame, ETActionGame>, String> stateAction;
     static {
         stateAction = new Hashtable<>();
-        stateAction.put(new Pair<>(TStateGame.NONE, TActionGame.TOSAVE), "saveBoard");
-        stateAction.put(new Pair<>(TStateGame.NONE, TActionGame.TOLOAD), "loadBoard");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVE), "saveBoard");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOAD), "loadBoard");
     }
 
+    /**
+     * Объект ресурсов.
+     */
     private CResourse resourse;
     /**
      * Список классов поддерживающих систему конечных автоматов.
      */
     List<IChangeState> lstChangeState;
     /**
+     * Состояния программы.
+     */
+    private ETStateGame curStateGame, oldStateGame;
+    /**
      * Класс управления игрой на доске.
      */
-    private CheckersBoard checkersBoard;
-    /**
-     * Режим редактирования.
-     */
-    private boolean isEdition;
+    private CCheckersBoard checkersBoard;
     /**
      * Имя файла для записи ли чтения.
      */
     private String fileName;
 
-    /**
-     * Состояния программы.
-     */
-    private TStateGame curStateGame, oldStateGame;
-
     public void start() {
-        EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new JFMainWindow();
-            }
-        });
+        EventQueue.invokeLater(() -> new JFMainWindow());
+    }
+
+    /**
+     * Добавление классов обрабаотывающих изменение состояния.
+     * @param obj класс обрабатывающий изменение состояния
+     */
+    public void addActionGame(IChangeState obj) {
+        lstChangeState.add(obj);
+    }
+
+    /**
+     * Получает ссылку на класс игры в шашки.
+     * @return
+     */
+    public CCheckersBoard getBoard() {
+        return checkersBoard;
     }
 
     /**
@@ -91,58 +95,24 @@ public class STMControl{
     }
 
     /**
-     * Добавление классов обрабаотывающих изменение состояния.
-     * @param obj класс обрабатывающий изменение состояния
-     */
-    public void addActionGame(IChangeState obj) {
-        lstChangeState.add(obj);
-    }
-
-    public Pair<ETypeFigure, ETypeColor> getFigureForBoard(int x, int y) {
-        IFigureBase fb = checkersBoard.getFigure(x, y);
-        if (fb == null) return null;
-        return new Pair<>(fb.getTypeFigure(), fb.getColorType());
-    }
-
-    /**
-     * Проверка правильности координат.
-     * @param x координата доски x
-     * @param y координата доски y
-     * @return true - координата правильная, false - не правильная
-     */
-    public boolean testCoordinateBoard(int x, int y) {
-        if (!checkersBoard.getStateGame() && !isEdition) return false;
-        return checkersBoard.aField(x, y);
-    }
-
-    /**
-     * Получение текущего состояния.
-     * @return текущее состояние
-     */
-    public TStateGame getCurStateGame() {
-        return curStateGame;
-    }
-
-    /**
      * Базовый метод управления работой программы.
      * @param actionGame происходящий переход
      * @param allState   зависимость перехода от состояния, true - не зависит, false - зависит
      */
-    public void makeChangesState(TActionGame actionGame, boolean allState) {
-        TStateGame selectedSG = allState ? TStateGame.NONE: curStateGame;
-        Pair<TStateGame,TActionGame> psg = new Pair<>(selectedSG, actionGame);
+    public void makeChangesState(ETActionGame actionGame, boolean allState) {
+        ETStateGame selectedSG = allState ? ETStateGame.NONE: curStateGame;
+        CPair<ETStateGame, ETActionGame> psg = new CPair<>(selectedSG, actionGame);
         if (null != curStateGame) {
-            if (TActionGame.TORETURN == actionGame) curStateGame = oldStateGame;
+            if (ETActionGame.TORETURN == actionGame) curStateGame = oldStateGame;
             else {
                 oldStateGame = curStateGame;
                 if (newStateGame.containsKey(psg)) curStateGame = newStateGame.get(psg);
             }
+        } else {
+            oldStateGame = ETStateGame.BASE;
+            curStateGame = ETStateGame.BASE;
         }
-        else {
-            oldStateGame = TStateGame.BASE;
-            curStateGame = TStateGame.BASE;
-        }
-        if (TActionGame.TORETURN != actionGame) {
+        if (ETActionGame.TORETURN != actionGame) {
             for (IChangeState objSt: lstChangeState) {
                 objSt.makeChangesState(psg);
             }
@@ -159,11 +129,15 @@ public class STMControl{
         }
     }
 
-    // ---------------------------- Методы обрабатывающиеся контроллером переходов состояний ---------------------------
 
+// ---------------------------- Методы обрабатывающиеся контроллером переходов состояний ---------------------------
+
+    /**
+     * Запись игрового состояния в файл.
+     */
     protected void saveBoard() {
         if (null != fileName) {
-            List<Short> bin = new LinkedList<>();
+            List<Integer> bin = new LinkedList<>();
             String title = resourse.getResStr("Board.File.Title");
             bin.addAll(checkersBoard.getBinaryGame());
             bin.addAll(checkersBoard.getLstMoves().getListPack());
@@ -171,20 +145,23 @@ public class STMControl{
                 for (byte cb: title.getBytes()) {
                     os.write(cb);
                 }
-                for (Short code: bin) {
+                for (Integer code: bin) {
                     os.write(code);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            makeChangesState(TActionGame.TOSAVEOK, true);
+            makeChangesState(ETActionGame.TOSAVEOK, true);
         }
     }
 
+    /**
+     * Чтение из файла состояния игры.
+     */
     protected void loadBoard() {
         if (null != fileName) {
             int k = 0;
-            List<Short> bin = new LinkedList<>();
+            List<Integer> bin = new LinkedList<>();
             String title = resourse.getResStr("Board.File.Title");
             try (InputStream is = new FileInputStream(fileName);) {
                 int byteRead;
@@ -194,16 +171,17 @@ public class STMControl{
                     }
                     else k++;
                 }
-                bin.add((short) byteRead);
+                bin.add(byteRead);
                 while ((byteRead = is.read()) != -1) {
-                    bin.add((short) byteRead);
+                    bin.add(byteRead);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
             k = checkersBoard.setBinaryGame(bin, 0);
             checkersBoard.getLstMoves().setListPack(bin, k);
-            makeChangesState(TActionGame.TOLOADOK, true);
+            makeChangesState(ETActionGame.TOLOADOK, true);
         }
     }
+
 }
