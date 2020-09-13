@@ -111,10 +111,10 @@ public class CResourse {
             boolean isHex = false;
             if (res.charAt(0) == '#') {
                 isHex = true;
-                res = res.substring(1, res.length() - 1);
+                res = res.substring(1);
             } else if (res.charAt(0) == '0' && res.charAt(1) == 'x') {
                 isHex = true;
-                res = res.substring(2, res.length() - 2);
+                res = res.substring(2);
             }
             if (isHex) return Integer.parseInt(res, 16);
             else return Integer.parseInt(res);

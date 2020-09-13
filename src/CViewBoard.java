@@ -1,11 +1,10 @@
+import CheckersEngine.BaseEngine.CPair;
 import CheckersEngine.BaseEngine.ETypeColor;
 import CheckersEngine.BaseEngine.ETypeFigure;
 import CheckersEngine.BaseEngine.IFigureBase;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -36,7 +35,7 @@ public class CViewBoard extends JPanel {
     /**
      * Доступ к классу контроллера.
      */
-    protected CSMControl CSMControl;
+    protected CSMControl csmControl;
     /**
      * Смещение рисуемых элементов на доске.
      */
@@ -54,8 +53,32 @@ public class CViewBoard extends JPanel {
      */
     protected Color[][] boardSpacesColor;
 
+    public CViewBoard(LayoutManager layout, boolean isDoubleBuffered) {
+        super(layout, isDoubleBuffered);
+        initViewBoard();
+    }
+
+    public CViewBoard(LayoutManager layout) {
+        super(layout);
+        initViewBoard();
+    }
+
+    public CViewBoard(boolean isDoubleBuffered) {
+        super(isDoubleBuffered);
+        initViewBoard();
+    }
+
     public CViewBoard() {
-        CSMControl = CSMControl.getInstance();
+        super();
+        initViewBoard();
+    }
+
+    /**
+     * Начальная инициализация класса.
+     */
+    protected void initViewBoard() {
+        // Базовые настройки.
+        csmControl = csmControl.getInstance();
         resourse = CResourse.getInstance();
         boardSpacesColor = new Color[8][4];
         clearBoardSpacesColor();
@@ -66,13 +89,7 @@ public class CViewBoard extends JPanel {
         imgDX = resourse.getResInt("Board.Space.Margin.Left");
         imgDY = resourse.getResInt("Board.Space.Margin.Top");
 
-        createAndShowGUI();
-    }
-
-    /**
-     * Создание интерфейса панели доски.
-     */
-    protected void createAndShowGUI() {
+        // Создание интерфейса.
         int width = resourse.getImage(strBoard).getImage().getWidth(null);
         int height = resourse.getImage(strBoard).getImage().getHeight(null);
         setMinimumSize(new Dimension(width, height));
@@ -92,14 +109,18 @@ public class CViewBoard extends JPanel {
                 mouseAction(e, false);
             }
         });
+    }
 
-        addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-                super.keyTyped(e);
-                keyAction(e);
-            }
-        });
+    /**
+     * Преобразует координаты экрана в координаты доски.
+     * @param x координата x экрана
+     * @param y координата y экрана
+     * @return Pair с координатами доски
+     */
+    protected CPair<Integer, Integer> coordImgToBoard(int x, int y) {
+        int bx = (x - offsetBaseX) / spaceW;
+        int by = 7 - (y - offsetBaseY) / spaceH;
+        return new CPair<>(bx, by);
     }
 
     /**
@@ -108,13 +129,22 @@ public class CViewBoard extends JPanel {
      * @param isClick true - мышь нажата, false - мышь отпущена
      */
     protected void mouseAction(MouseEvent e, boolean isClick) {
-    }
+        CPair<Integer, Integer> pos = coordImgToBoard(e.getX(), e.getY());
+        int bx = pos.getFirst();
+        int by = pos.getSecond();
+        if (!csmControl.getBoard().aField(bx, by)) return;
 
-    /**
-     * Обработка событий нажатий на клавиатуре.
-     * @param e событие клавиатуры
-     */
-    protected void keyAction(KeyEvent e) {
+        if (csmControl.getIsEdition()) {
+            // TODO: Обработка нажатий мыши для режима редактирования.
+            if (isClick) {
+                boardSpacesColor[by][bx / 2] = spaceFrameColor[1];
+            } else {
+                boardSpacesColor[by][bx / 2] = spaceFrameColor[0];
+            }
+            repaint();
+        } else if (csmControl.getBoard().getStateGame()) {
+            // TODO: Обработка нажатий мыши для режима игры.
+        }
     }
 
     /**
@@ -144,7 +174,7 @@ public class CViewBoard extends JPanel {
         g.drawImage(resourse.getImage(strBoard).getImage(), 0, 0, null);
         g2.drawRect(0, 0, resourse.getImage(strBoard).getImage().getWidth(null) - 1,
                 resourse.getImage(strBoard).getImage().getHeight(null) - 1);
-////        BufferedImage img = new BufferedImage(50, 50, BufferedImage.TYPE_INT_ARGB);
+//        BufferedImage img = new BufferedImage(50, 50, BufferedImage.TYPE_INT_ARGB);
         g2.setStroke(new BasicStroke(2));
         int imgW = resourse.getImage(strFigures).getImage().getWidth(null) / 4;
         int imgH = resourse.getImage(strFigures).getImage().getHeight(null);
@@ -153,12 +183,13 @@ public class CViewBoard extends JPanel {
                 int rx = 2 * x + y % 2;
                 int grX = offsetBaseX + rx * spaceW;
                 int grY = offsetBaseY + (7 - y) * spaceH;
-                g2.setColor(boardSpacesColor[y][x]);
-                IFigureBase fig = CSMControl.getBoard().getFigure(rx, y);
+                IFigureBase fig = csmControl.getBoard().getFigure(rx, y);
                 if (fig != null) {
                     int iDx = figureOffsetImage(fig);
                     g2.drawImage(resourse.getImage(strFigures).getImage(), grX + imgDX, grY + imgDY, grX + imgDX + imgW, grY + imgDY + imgH, iDx, 0, iDx + imgW, imgH, null);
                 }
+                assert (boardSpacesColor[y][x].equals(spaceFrameColor[0]));
+                g2.setColor(boardSpacesColor[y][x]);
                 g2.drawRect(grX, grY, spaceW - 1, spaceH - 1);
             }
         }

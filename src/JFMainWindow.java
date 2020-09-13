@@ -1,11 +1,11 @@
 import CheckersEngine.BaseEngine.CPair;
 
 import javax.swing.*;
-import javax.swing.border.BevelBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -26,7 +26,7 @@ public class JFMainWindow extends JFrame implements IChangeState{
         stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOAD), "viewDialogLoad");
         stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVEOK), "viewSaveFileOK");
         stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOADOK), "viewLoadFileOk");
-//        stateAction.put(new Pair<>(TStateGame.BASE, TActionGame.TOEDITING), "initEditing");
+        stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOEDITING), "initEditing");
     }
 
     /**
@@ -44,15 +44,15 @@ public class JFMainWindow extends JFrame implements IChangeState{
     /**
      * Панель изображения и управления игровой доской и фигур на ней.
      */
-    protected CViewBoard CViewBoard;
-    /**
-     * Правая информационная панель, с её видами.
-     */
-    protected JPanel rightPanel, rCurPanel, rGameP, rEditionP;
+    protected CViewBoard viewBoard;
     /**
      * Нижняя строка информации.
      */
     protected JLabel lblBottom;
+    /**
+     * Вспомогательная панель.
+     */
+    CSwitchingPanel rightPanel;
 
     public JFMainWindow() throws HeadlessException {
         resourse = CResourse.getInstance();
@@ -60,6 +60,14 @@ public class JFMainWindow extends JFrame implements IChangeState{
         csmControl.addActionGame(this);
         mActionMenu = new Hashtable<>();
         createAndShowGUI();
+        addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                super.keyTyped(e);
+                keyAction(e);
+            }
+        });
+
         csmControl.makeChangesState(ETActionGame.TOBASE, false);
     }
 
@@ -94,12 +102,12 @@ public class JFMainWindow extends JFrame implements IChangeState{
         setJMenuBar(mb);
         mb.repaint();
 
-        // -------- Создание панели игровой доски. --------
-        CViewBoard = new CViewBoard();
-        add(CViewBoard);
+        // -------- Создание игровой доски. --------
+        viewBoard = new CViewBoard();
+        add(viewBoard);
 
         // -------- Создание правой информационной панели. --------
-        createRightPanelInfo();
+        createRightPanel();
 
         // -------- Создание нижней информационной строки. --------
         createLabelBottom();
@@ -255,25 +263,20 @@ public class JFMainWindow extends JFrame implements IChangeState{
     }
 
     /**
-     * Создание правой информационно / управляющей панели.
+     * Создание правых панелей.
      */
-    private void createRightPanelInfo() {
-        // Панель по умолчанию.
-        int rPW = resourse.getResInt("Window.RightPanel.Width");
-        int rPH = resourse.getResInt("Window.RightPanel.Height");
-        rightPanel = new JPanel();
-        rightPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED),
-                BorderFactory.createEmptyBorder(25, 25, 25, 25)));
-        rightPanel.setBounds(CViewBoard.getWidth() + 1, 0, rPW, rPH);
+    private void createRightPanel() {
+        rightPanel = new CSwitchingPanel(viewBoard.getWidth() + 1, 0);
         add(rightPanel);
-        rCurPanel = null; // Указатель на внутреннее содержимое.
 
-        // Панель игровая.
-        // TODO: Панель игровая.
+        // Создание панели для режима редактирования.
+        // TODO: Создать панель для режима редактирования.
+        JPanel newPanel = new JPanel();
+        newPanel.setBackground(Color.yellow);
+        rightPanel.append(newPanel);
 
-        // Панель редактирования.
-        // TODO: Панель редактирования.
-
+        // Создание панели для режима игры.
+        // TODO: Создать панель для режима игры.
     }
 
     /**
@@ -283,8 +286,20 @@ public class JFMainWindow extends JFrame implements IChangeState{
         lblBottom = new JLabel(resourse.getResStr("Msg.Base.Info"));
         lblBottom.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED),
                 BorderFactory.createEmptyBorder(25, 25, 25, 25)));
-        lblBottom.setBounds(1, CViewBoard.getHeight() + 1, resourse.getResInt("Window.Width") - 4, 24);
+        lblBottom.setBounds(1, viewBoard.getHeight() + 1, resourse.getResInt("Window.Width") - 4, 24);
         add(lblBottom);
+    }
+
+    /**
+     * Обработка событий нажатий на клавиатуре.
+     * @param e событие клавиатуры
+     */
+    protected void keyAction(KeyEvent e) {
+        if (csmControl.getIsEdition()) {
+            // TODO: Обработка нажатий клавиш для режима редактирования.
+        } else if (csmControl.getBoard().getStateGame()) {
+            // TODO: Обработка нажатий клавиатуры для режима игры.
+        }
     }
 
     @Override
@@ -343,6 +358,8 @@ public class JFMainWindow extends JFrame implements IChangeState{
                 "MenuName.Editing.End", "MenuName.Editing.Placemant", "MenuName.Editing.Clear"
         };
         selectedViewMenu(deactivate);
+        csmControl.setIsEdition(false);
+        rightPanel.setSelectedIndex(-1);
     }
 
     /**
@@ -393,4 +410,18 @@ public class JFMainWindow extends JFrame implements IChangeState{
         viewDialog("", resourse.getResStr("Msg.Base.DlgOK.Save"));
     }
 
+    /**
+     * Инициализация при переходе в режим редактирования.
+     */
+    protected void initEditing() {
+        String[] deactivate = {
+                "MenuName.File.Save", "MenuName.File.Open", "MenuName.Game.Start", "MenuName.Game.Continue", "MenuName.Game.Stop",
+                "MenuName.Game.Back", "MenuName.Settings.While.Player", "MenuName.Settings.While.Comp", "MenuName.Settings.Black.Player",
+                "MenuName.Settings.Black.Comp", "MenuName.Editing.Begin"
+        };
+        selectedViewMenu(deactivate);
+        lblBottom.setText(resourse.getResStr("Msg.Editing.Info"));
+        csmControl.setIsEdition(true);
+        rightPanel.setSelectedIndex(0);
+    }
 }

@@ -14,6 +14,8 @@ import java.util.List;
 public class CSMControl {
 
     private CSMControl() {
+        curStateGame = null;
+        oldStateGame = null;
         resourse = CResourse.getInstance();
         resourse.addResourse("Resource/gameres.properties");
         lstChangeState = new ArrayList<>();
@@ -65,6 +67,10 @@ public class CSMControl {
      * Имя файла для записи ли чтения.
      */
     private String fileName;
+    /**
+     * Режим редактирования.
+     */
+    private boolean isEdition;
 
     public void start() {
         EventQueue.invokeLater(() -> new JFMainWindow());
@@ -92,6 +98,23 @@ public class CSMControl {
      */
     public void setFileName(String fileName) {
         this.fileName = fileName;
+    }
+
+    /**
+     * Получает состояние режима редактирования.
+     * @return режим редактирования
+     */
+    public boolean getIsEdition() {
+        return isEdition;
+    }
+
+    /**
+     * Устанавливает состояние режима редактирования.
+     * @param edition режим редактирования
+     */
+    public void setIsEdition(boolean edition) {
+        if (checkersBoard.getStateGame()) return;
+        isEdition = edition;
     }
 
     /**
