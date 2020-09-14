@@ -19,7 +19,7 @@ public class CSMControl {
         resourse = CResourse.getInstance();
         resourse.addResourse("Resource/gameres.properties");
         lstChangeState = new ArrayList<>();
-        checkersBoard = new CCheckersBoard();
+        cMoveGame = new CControlMoveGame(new CCheckersBoard());
         fileName = null;
     }
     private static class STMControlHolder {
@@ -60,10 +60,6 @@ public class CSMControl {
      */
     private ETStateGame curStateGame, oldStateGame;
     /**
-     * Класс управления игрой на доске.
-     */
-    private CCheckersBoard checkersBoard;
-    /**
      * Имя файла для записи ли чтения.
      */
     private String fileName;
@@ -71,6 +67,10 @@ public class CSMControl {
      * Режим редактирования.
      */
     private boolean isEdition;
+    /**
+     * Объект контролирующий ходы и изменения на доске.
+     */
+    private CControlMoveGame cMoveGame;
 
     public void start() {
         EventQueue.invokeLater(() -> new JFMainWindow());
@@ -85,11 +85,19 @@ public class CSMControl {
     }
 
     /**
+     * Возвращает объект контролирующий ходы и изменения на доске.
+     * @return объект контролирующий ходы и изменения на доске
+     */
+    public CControlMoveGame getCMoveGame() {
+        return cMoveGame;
+    }
+
+    /**
      * Получает ссылку на класс игры в шашки.
      * @return
      */
     public CCheckersBoard getBoard() {
-        return checkersBoard;
+        return (CCheckersBoard) cMoveGame.getBoard();
     }
 
     /**
@@ -113,7 +121,7 @@ public class CSMControl {
      * @param edition режим редактирования
      */
     public void setIsEdition(boolean edition) {
-        if (checkersBoard.getStateGame()) return;
+        if (getBoard().getStateGame()) return;
         isEdition = edition;
     }
 
@@ -153,7 +161,7 @@ public class CSMControl {
     }
 
 
-// ---------------------------- Методы обрабатывающиеся контроллером переходов состояний ---------------------------
+// ------------------------------ Методы обрабатывающиеся контроллером переходов состояний -----------------------------
 
     /**
      * Запись игрового состояния в файл.
@@ -162,9 +170,9 @@ public class CSMControl {
         if (null != fileName) {
             List<Integer> bin = new LinkedList<>();
             String title = resourse.getResStr("Board.File.Title");
-            bin.addAll(checkersBoard.getBinaryBoardFigure());
-            bin.addAll(checkersBoard.getBinaryBoardState());
-            bin.addAll(checkersBoard.getLstMoves().getListPack());
+            bin.addAll(getBoard().getBinaryBoardFigure());
+            bin.addAll(getBoard().getBinaryBoardState());
+            bin.addAll(getCMoveGame().getListBin());
             try (OutputStream os = new FileOutputStream(fileName);) {
                 for (byte cb: title.getBytes()) {
                     os.write(cb);
@@ -202,9 +210,9 @@ public class CSMControl {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            k = checkersBoard.setBinaryBoardFigure(bin, 0);
-            k = checkersBoard.setBinaryBoardState(bin, k);
-            checkersBoard.getLstMoves().setListPack(bin, k);
+            k = getBoard().setBinaryBoardFigure(bin, 0);
+            k = getBoard().setBinaryBoardState(bin, k);
+            getCMoveGame().setListBin(bin, k);
             makeChangesState(ETActionGame.TOLOADOK, true);
         }
     }

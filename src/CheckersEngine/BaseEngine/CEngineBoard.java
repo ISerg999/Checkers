@@ -28,10 +28,6 @@ public abstract class CEngineBoard {
      */
     protected Map<ETypeColor, Boolean> whosPlaying;
     /**
-     * Список сделанных ходов.
-     */
-    protected CListMoveGame lstMoveGame;
-    /**
      * Пул объектов фигур.
      */
     protected CPoolFigures pool;
@@ -49,7 +45,6 @@ public abstract class CEngineBoard {
         setCurMoveWhite();
         board = new IFigureBase[h][w];
         clearBoard();
-        lstMoveGame = new CListMoveGame();
         whosPlaying = new HashMap<>();
         for (ETypeColor it: ETypeColor.values()) {
             whosPlaying.put(it, true);
@@ -144,14 +139,6 @@ public abstract class CEngineBoard {
     }
 
     /**
-     * Получение объекта списка ходов.
-     * @return объект списка ходов
-     */
-    public CListMoveGame getLstMoves() {
-        return lstMoveGame;
-    }
-
-    /**
      * Подготовка к началу игры.
      */
     public void start() {
@@ -242,4 +229,8 @@ public abstract class CEngineBoard {
      */
     public abstract int setBinaryBoardState(List<Integer> binGame, int k);
 
+    /**
+     * Базовая разстановка фигур.
+     */
+    public abstract void placementBoard();
 }

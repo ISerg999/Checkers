@@ -12,7 +12,6 @@ import java.lang.reflect.Method;
 import java.util.Hashtable;
 import java.util.Map;
 
-// implements ActionListener
 public class JFMainWindow extends JFrame implements IChangeState{
 
     /**
@@ -270,10 +269,8 @@ public class JFMainWindow extends JFrame implements IChangeState{
         add(rightPanel);
 
         // Создание панели для режима редактирования.
-        // TODO: Создать панель для режима редактирования.
-        JPanel newPanel = new JPanel();
-        newPanel.setBackground(Color.yellow);
-        rightPanel.append(newPanel);
+        CRightPanelEdition newPanelE = new CRightPanelEdition();
+        rightPanel.append(newPanelE);
 
         // Создание панели для режима игры.
         // TODO: Создать панель для режима игры.
@@ -301,6 +298,8 @@ public class JFMainWindow extends JFrame implements IChangeState{
             // TODO: Обработка нажатий клавиатуры для режима игры.
         }
     }
+
+    // TODO: Если режим редактирования, то вызвать обработку нажатий клавиш у объекта правой панели.
 
     @Override
     public void makeChangesState(CPair<ETStateGame, ETActionGame> pStM) {

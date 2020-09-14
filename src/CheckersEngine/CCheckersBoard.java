@@ -21,12 +21,12 @@ public class CCheckersBoard extends CEngineBoard {
 
     public CCheckersBoard() {
         super(8, 8);
-        placementBoard();
     }
 
     /**
      * Базовая расстановка фигур на доске.
      */
+    @Override
     public void placementBoard() {
         clearBoard();
         int yi0 = 0, yi1 = 1, yi2 = 2, yi5 = 5, yi6 = 6, yi7 = 7;

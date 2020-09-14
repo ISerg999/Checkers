@@ -152,4 +152,12 @@ public class CSwitchingPanel extends JPanel {
         }
     }
 
+    /**
+     * Возвращает текущую выбранную панель.
+     * @return объект текущей выбранной панели, или null, если не выбрана
+     */
+    public JPanel getCurPanel() {
+        return curPanel;
+    }
+
 }
