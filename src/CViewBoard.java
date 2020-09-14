@@ -57,17 +57,14 @@ public class CViewBoard extends JPanel {
         super(layout, isDoubleBuffered);
         initViewBoard();
     }
-
     public CViewBoard(LayoutManager layout) {
         super(layout);
         initViewBoard();
     }
-
     public CViewBoard(boolean isDoubleBuffered) {
         super(isDoubleBuffered);
         initViewBoard();
     }
-
     public CViewBoard() {
         super();
         initViewBoard();

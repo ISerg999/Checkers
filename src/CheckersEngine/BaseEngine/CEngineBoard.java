@@ -215,17 +215,31 @@ public abstract class CEngineBoard {
     }
 
     /**
-     * Получение бинарного представления игры.
-     * @return бинарное представление игры
+     * Получение бинарного представления доски.
+     * @return список байтов представление доски
      */
-    public abstract List<Integer> getBinaryGame();
+    public abstract List<Integer> getBinaryBoardFigure();
 
     /**
-     * Установка игры из бинарного представления.
-     * @param binGame бинарное представление игры
-     * @param k       индекс, с какого идёт получение данных
-     * @return индекс на область лежащую за пределами полученных данных
+     * Установка представления доски из бинарного списка
+     * @param binGame список байтов
+     * @param k       индекс, с которого идёт получения данных
+     * @return указатель на область, лежащую за пределами полученных данных
      */
-    public abstract int setBinaryGame(List<Integer> binGame, int k);
+    public abstract int setBinaryBoardFigure(List<Integer> binGame, int k);
+
+    /**
+     * Получение бинарного представления игры.
+     * @return список байтов состояния игры
+     */
+    public abstract List<Integer> getBinaryBoardState();
+
+    /**
+     * Установка бпредставления состояния игры из бинарного списка.
+     * @param binGame список байтов
+     * @param k       индекс, с какого идёт получение данных
+     * @return указатель на область, лежащую за пределами полученных данных
+     */
+    public abstract int setBinaryBoardState(List<Integer> binGame, int k);
 
 }

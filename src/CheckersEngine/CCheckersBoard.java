@@ -1,17 +1,23 @@
 package CheckersEngine;
 
-import CheckersEngine.BaseEngine.ETypeColor;
-import CheckersEngine.BaseEngine.ETypeFigure;
-import CheckersEngine.BaseEngine.CEngineBoard;
-import CheckersEngine.BaseEngine.IFigureBase;
+import CheckersEngine.BaseEngine.*;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Класс управляющий игрой в шашки.
  */
 public class CCheckersBoard extends CEngineBoard {
+
+    protected final static Integer[] keysForFile = {
+            ETypeColor.WHITE.getDirection() + ETypeFigure.CHECKERS.getDirection(),
+            ETypeColor.WHITE.getDirection() + ETypeFigure.QUINE.getDirection(),
+            ETypeColor.BLACK.getDirection() + ETypeFigure.CHECKERS.getDirection(),
+            ETypeColor.BLACK.getDirection() + ETypeFigure.QUINE.getDirection()
+    };
 
     public CCheckersBoard() {
         super(8, 8);
@@ -50,115 +56,99 @@ public class CCheckersBoard extends CEngineBoard {
     }
 
     @Override
-    public List<Integer> getBinaryGame() {
+    public List<Integer> getBinaryBoardFigure() {
+        int tmp;
         List<Integer> bytesOut = new LinkedList<>();
-        int sizeWC = 0, sizeWQ = 0, sizeBC = 0, sizeBQ = 0;
-        List<Integer> lstWC = new LinkedList<>();
-        List<Integer> lstWQ = new LinkedList<>();
-        List<Integer> lstBC = new LinkedList<>();
-        List<Integer> lstBQ = new LinkedList<>();
-        Integer tmp;
+        Map<Integer, List<CPair<Integer, Integer>>> mFigures = new HashMap<>();
+        mFigures.put(keysForFile[0], new LinkedList<>());
+        mFigures.put(keysForFile[1], new LinkedList<>());
+        mFigures.put(keysForFile[2], new LinkedList<>());
+        mFigures.put(keysForFile[3], new LinkedList<>());
+
         for (int y = 0; y < 8; y++) {
             for (int x = 0; x < 8; x++) {
                 if (null != board[y][x]) {
-                    tmp = ((y << 4) + x) & 0xff;
-                    if (board[y][x].getColorType() == ETypeColor.WHITE) {
-                        if (board[y][x].getTypeFigure() == ETypeFigure.CHECKERS) {
-                            sizeWC++;
-                            lstWC.add(tmp);
-                        } else {
-                            sizeWQ++;
-                            lstWQ.add(tmp);
-                        }
-                    } else {
-                        if (board[y][x].getTypeFigure() == ETypeFigure.CHECKERS) {
-                            sizeBC++;
-                            lstBC.add(tmp);
-                        } else {
-                            sizeBQ++;
-                            lstBQ.add(tmp);
-                        }
-                    }
+                    tmp = board[y][x].getColorType().getDirection() + board[y][x].getTypeFigure().getDirection();
+                    mFigures.get(tmp).add(new CPair<>(x, y));
                 }
             }
         }
-        bytesOut.add(sizeWC);
-        if (sizeWC > 0) bytesOut.addAll(lstWC);
-        bytesOut.add(sizeWQ);
-        if (sizeWQ > 0) bytesOut.addAll(lstWQ);
-        bytesOut.add(sizeBC);
-        if (sizeBC > 0) bytesOut.addAll(lstBC);
-        bytesOut.add(sizeBQ);
-        if (sizeBQ > 0) bytesOut.addAll(lstBQ);
 
-        tmp = getCurMove() == ETypeColor.WHITE ? 1: 0;
-        bytesOut.add(tmp);
-        tmp = (getPlayForColor(ETypeColor.WHITE) ? 0x10: 0) + (getPlayForColor(ETypeColor.BLACK) ? 0x1: 0);
-        bytesOut.add(tmp);
+        for (int y = 0; y < 4; y++) {
+            List<CPair<Integer, Integer>> lstCoord = mFigures.get(keysForFile[y]);
+            bytesOut.add(lstCoord.size());
+            for (int x = 0; x < lstCoord.size(); x++) {
+                tmp = ((lstCoord.get(x).getSecond() << 4) + lstCoord.get(x).getFirst()) & 0xff;
+                bytesOut.add(tmp);
+            }
+        }
 
         return bytesOut;
-    }
+   }
 
-    @Override
-    public int setBinaryGame(List<Integer> binGame, int k) {
-        IFigureBase[][] newBoard = new IFigureBase[height][width];
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                newBoard[y][x] = null;
-            }
-        }
+   @Override
+   public int setBinaryBoardFigure(List<Integer> binGame, int k) {
+        int x, y, lenLst;
+       List<CPair<Integer, Integer>> lstCoord;
+       Map<Integer, List<CPair<Integer, Integer>>> mFigures = new HashMap<>();
+       mFigures.put(keysForFile[0], new LinkedList<>());
+       mFigures.put(keysForFile[1], new LinkedList<>());
+       mFigures.put(keysForFile[2], new LinkedList<>());
+       mFigures.put(keysForFile[3], new LinkedList<>());
 
-        int sizeTC;
-        int x, y;
-        sizeTC = binGame.get(k++);
-        if (sizeTC > 0) {
-            for (int i = 0; i < sizeTC; i++)
-            {
-                x = binGame.get(k++);
-                y = (x >> 4) & 0xf;
-                x = x & 0xf;
-                newBoard[y][x] = new CFigureCheckers(ETypeColor.WHITE, x, y);
-            }
-        }
-        sizeTC = binGame.get(k++);
-        if (sizeTC > 0) {
-            for (int i = 0; i < sizeTC; i++)
-            {
-                x = binGame.get(k++);
-                y = (x >> 4) & 0xf;
-                x = x & 0xf;
-                newBoard[y][x] = new CFigureQuine(ETypeColor.WHITE, x, y);
-            }
-        }
-        sizeTC = binGame.get(k++);
-        if (sizeTC > 0) {
-            for (int i = 0; i < sizeTC; i++)
-            {
-                x = binGame.get(k++);
-                y = (x >> 4) & 0xf;
-                x = x & 0xf;
-                newBoard[y][x] = new CFigureCheckers(ETypeColor.BLACK, x, y);
-            }
-        }
-        sizeTC = binGame.get(k++);
-        if (sizeTC > 0) {
-            for (int i = 0; i < sizeTC; i++)
-            {
-                x = binGame.get(k++);
-                y = (x >> 4) & 0xf;
-                x = x & 0xf;
-                newBoard[y][x] = new CFigureQuine(ETypeColor.BLACK, x, y);
-            }
-        }
-        board = newBoard;
-        if (binGame.get(k++) > 0) setCurMoveWhite();
-        else setCurMoveBlack();
-        x = binGame.get(k++);
-        y = x & 0xf0;
-        x = x & 0xf;
-        setPlayerForColor(ETypeColor.WHITE, y > 0);
-        setPlayerForColor(ETypeColor.BLACK, x > 0);
+       for (int j = 0; j < 4; j++) {
+           lstCoord = mFigures.get(keysForFile[j]);
+           for (lenLst = binGame.get(k++); lenLst > 0; lenLst--) {
+               x = binGame.get(k++);
+               y = (x >> 4) & 0xf;
+               x = x & 0xf;
+               lstCoord.add(new CPair<>(x, y));
+           }
+       }
 
-        return k;
-    }
+       clearBoard();
+       lstCoord = mFigures.get(keysForFile[0]);
+       for (CPair<Integer, Integer> p: lstCoord) {
+           setFigure(p.getFirst(), p.getSecond(), ETypeFigure.CHECKERS, ETypeColor.WHITE);
+       }
+       lstCoord = mFigures.get(keysForFile[1]);
+       for (CPair<Integer, Integer> p: lstCoord) {
+           setFigure(p.getFirst(), p.getSecond(), ETypeFigure.QUINE, ETypeColor.WHITE);
+       }
+       lstCoord = mFigures.get(keysForFile[2]);
+       for (CPair<Integer, Integer> p: lstCoord) {
+           setFigure(p.getFirst(), p.getSecond(), ETypeFigure.CHECKERS, ETypeColor.BLACK);
+       }
+       lstCoord = mFigures.get(keysForFile[3]);
+       for (CPair<Integer, Integer> p: lstCoord) {
+           setFigure(p.getFirst(), p.getSecond(), ETypeFigure.QUINE, ETypeColor.BLACK);
+       }
+
+       return k;
+   }
+
+   @Override
+   public List<Integer> getBinaryBoardState() {
+       List<Integer> bytesOut = new LinkedList<>();
+       int tmp = getCurMove() == ETypeColor.WHITE ? 1: 0;
+       bytesOut.add(tmp);
+       tmp = (getPlayForColor(ETypeColor.WHITE) ? 0x10: 0) + (getPlayForColor(ETypeColor.BLACK) ? 0x1: 0);
+       bytesOut.add(tmp);
+
+       return bytesOut;
+   }
+
+   @Override
+   public int setBinaryBoardState(List<Integer> binGame, int k) {
+       if (binGame.get(k++) > 0) setCurMoveWhite();
+       else setCurMoveBlack();
+       int x = binGame.get(k++);
+       int y = x & 0xf0;
+       x = x & 0xf;
+       setPlayerForColor(ETypeColor.WHITE, y > 0);
+       setPlayerForColor(ETypeColor.BLACK, x > 0);
+
+       return k;
+   }
+
 }

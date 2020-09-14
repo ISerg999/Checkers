@@ -162,7 +162,8 @@ public class CSMControl {
         if (null != fileName) {
             List<Integer> bin = new LinkedList<>();
             String title = resourse.getResStr("Board.File.Title");
-            bin.addAll(checkersBoard.getBinaryGame());
+            bin.addAll(checkersBoard.getBinaryBoardFigure());
+            bin.addAll(checkersBoard.getBinaryBoardState());
             bin.addAll(checkersBoard.getLstMoves().getListPack());
             try (OutputStream os = new FileOutputStream(fileName);) {
                 for (byte cb: title.getBytes()) {
@@ -201,7 +202,8 @@ public class CSMControl {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            k = checkersBoard.setBinaryGame(bin, 0);
+            k = checkersBoard.setBinaryBoardFigure(bin, 0);
+            k = checkersBoard.setBinaryBoardState(bin, k);
             checkersBoard.getLstMoves().setListPack(bin, k);
             makeChangesState(ETActionGame.TOLOADOK, true);
         }
