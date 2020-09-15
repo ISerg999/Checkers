@@ -35,7 +35,8 @@ public class CSMControl {
     protected static final Map<CPair<ETStateGame, ETActionGame>, ETStateGame> newStateGame;
     static {
         newStateGame = new Hashtable<>();
-//        newStateGame.put(new Pair<>(TStateGame.BASE, TActionGame.TOBASE), TStateGame.BASE);
+        newStateGame.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOEDITING), ETStateGame.EDITING);
+        newStateGame.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBASE), ETStateGame.BASE);
     }
     /**
      * Список изполняемых функций для текущего объекта

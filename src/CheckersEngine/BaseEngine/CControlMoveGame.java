@@ -63,8 +63,8 @@ public class CControlMoveGame implements Iterable<String> {
      */
     public void clearBoard() {
         board.clearBoard();
-        curGameAction = -1;
         baseState = 0;
+        curGameAction = -1;
         lstGameAction.clear();
     }
 

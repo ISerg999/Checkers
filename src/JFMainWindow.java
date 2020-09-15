@@ -26,6 +26,9 @@ public class JFMainWindow extends JFrame implements IChangeState{
         stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVEOK), "viewSaveFileOK");
         stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOADOK), "viewLoadFileOk");
         stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOEDITING), "initEditing");
+        stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBOARDPLACEMANT), "placemantBoard");
+        stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBOARDCLEAR), "clearBoard");
+        stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBASE), "stepToBase");
     }
 
     /**
@@ -52,6 +55,10 @@ public class JFMainWindow extends JFrame implements IChangeState{
      * Вспомогательная панель.
      */
     CSwitchingPanel rightPanel;
+    /**
+     * Правая панель редактирования.
+     */
+    CRightPanelEdition rPanelEdition;
 
     public JFMainWindow() throws HeadlessException {
         resourse = CResourse.getInstance();
@@ -61,8 +68,8 @@ public class JFMainWindow extends JFrame implements IChangeState{
         createAndShowGUI();
         addKeyListener(new KeyAdapter() {
             @Override
-            public void keyTyped(KeyEvent e) {
-                super.keyTyped(e);
+            public void keyPressed(KeyEvent e) {
+                super.keyPressed(e);
                 keyAction(e);
             }
         });
@@ -228,19 +235,19 @@ public class JFMainWindow extends JFrame implements IChangeState{
 
         JMenuItem miEndEdit = new JMenuItem(resourse.getResStr("MenuName.Editing.End"));
         miEndEdit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, ActionEvent.ALT_MASK + ActionEvent.CTRL_MASK));
-        // miEndEdit.addActionListener(this);
+        miEndEdit.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOBASE, false));
         mEditing.add(miEndEdit);
         mActionMenu.put("MenuName.Editing.End", miEndEdit);
 
         mEditing.addSeparator();
 
         JMenuItem miPlacemantBoard = new JMenuItem(resourse.getResStr("MenuName.Editing.Placemant"));
-        // miPlacemantBoard.addActionListener(this);
+        miPlacemantBoard.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOBOARDPLACEMANT, false));
         mEditing.add(miPlacemantBoard);
         mActionMenu.put("MenuName.Editing.Placemant", miPlacemantBoard);
 
         JMenuItem miClearBoard = new JMenuItem(resourse.getResStr("MenuName.Editing.Clear"));
-        // miClearBoard.addActionListener(this);
+        miClearBoard.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOBOARDCLEAR, false));
         mEditing.add(miClearBoard);
         mActionMenu.put("MenuName.Editing.Clear", miClearBoard);
 
@@ -269,8 +276,9 @@ public class JFMainWindow extends JFrame implements IChangeState{
         add(rightPanel);
 
         // Создание панели для режима редактирования.
-        CRightPanelEdition newPanelE = new CRightPanelEdition();
-        rightPanel.append(newPanelE);
+        rPanelEdition = new CRightPanelEdition();
+        rightPanel.append(rPanelEdition);
+        viewBoard.setPanelEdition(rPanelEdition);
 
         // Создание панели для режима игры.
         // TODO: Создать панель для режима игры.
@@ -293,13 +301,12 @@ public class JFMainWindow extends JFrame implements IChangeState{
      */
     protected void keyAction(KeyEvent e) {
         if (csmControl.getIsEdition()) {
-            // TODO: Обработка нажатий клавиш для режима редактирования.
+            rPanelEdition.keyAction(e);
+            viewBoard.keyActionEdition(e);
         } else if (csmControl.getBoard().getStateGame()) {
             // TODO: Обработка нажатий клавиатуры для режима игры.
         }
     }
-
-    // TODO: Если режим редактирования, то вызвать обработку нажатий клавиш у объекта правой панели.
 
     @Override
     public void makeChangesState(CPair<ETStateGame, ETActionGame> pStM) {
@@ -357,8 +364,10 @@ public class JFMainWindow extends JFrame implements IChangeState{
                 "MenuName.Editing.End", "MenuName.Editing.Placemant", "MenuName.Editing.Clear"
         };
         selectedViewMenu(deactivate);
+        lblBottom.setText(resourse.getResStr("Msg.Base.Info"));
         csmControl.setIsEdition(false);
         rightPanel.setSelectedIndex(-1);
+        repaint();
     }
 
     /**
@@ -399,6 +408,7 @@ public class JFMainWindow extends JFrame implements IChangeState{
      * Диалоговое окно, сообщения о том, что загрузка закончилась.
      */
     protected void viewLoadFileOk() {
+        viewBoard.repaint();
         viewDialog("", resourse.getResStr("Msg.Base.DlgOK.Load"));
     }
 
@@ -406,6 +416,7 @@ public class JFMainWindow extends JFrame implements IChangeState{
      * Диалоговое окно, сообщения о том, что сохранение закончилось.
      */
     protected void viewSaveFileOK() {
+        viewBoard.repaint();
         viewDialog("", resourse.getResStr("Msg.Base.DlgOK.Save"));
     }
 
@@ -422,5 +433,22 @@ public class JFMainWindow extends JFrame implements IChangeState{
         lblBottom.setText(resourse.getResStr("Msg.Editing.Info"));
         csmControl.setIsEdition(true);
         rightPanel.setSelectedIndex(0);
+        viewBoard.toEdition();
+    }
+
+    /**
+     * Базовая разстановка фигур на доске.
+     */
+    protected void placemantBoard() {
+        csmControl.getCMoveGame().placementBoard();
+        viewBoard.repaint();
+    }
+
+    /**
+     * Очистка доски.
+     */
+    protected void clearBoard() {
+        csmControl.getCMoveGame().clearBoard();
+        viewBoard.repaint();
     }
 }

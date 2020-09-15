@@ -5,6 +5,7 @@ import CheckersEngine.BaseEngine.IFigureBase;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -52,6 +53,11 @@ public class CViewBoard extends JPanel {
      * Массив клеток доски.
      */
     protected Color[][] boardSpacesColor;
+    /**
+     * Выбранная клетка при редактировании.
+     */
+    protected int selectedX, selectedY;
+    CRightPanelEdition rPanelEdition;
 
     public CViewBoard(LayoutManager layout, boolean isDoubleBuffered) {
         super(layout, isDoubleBuffered);
@@ -85,6 +91,7 @@ public class CViewBoard extends JPanel {
         spaceH = resourse.getResInt("Board.Space.Height");
         imgDX = resourse.getResInt("Board.Space.Margin.Left");
         imgDY = resourse.getResInt("Board.Space.Margin.Top");
+        rPanelEdition = null;
 
         // Создание интерфейса.
         int width = resourse.getImage(strBoard).getImage().getWidth(null);
@@ -106,6 +113,14 @@ public class CViewBoard extends JPanel {
                 mouseAction(e, false);
             }
         });
+    }
+
+    /**
+     * Добавляет объект правой панели редактирования.
+     * @param rPanelEdition правая панель редактирования
+     */
+    protected void setPanelEdition(CRightPanelEdition rPanelEdition) {
+        this.rPanelEdition = rPanelEdition;
     }
 
     /**
@@ -132,15 +147,29 @@ public class CViewBoard extends JPanel {
         if (!csmControl.getBoard().aField(bx, by)) return;
 
         if (csmControl.getIsEdition()) {
-            // TODO: Обработка нажатий мыши для режима редактирования.
             if (isClick) {
-                boardSpacesColor[by][bx / 2] = spaceFrameColor[1];
-            } else {
-                boardSpacesColor[by][bx / 2] = spaceFrameColor[0];
+                selectedX = bx;
+                selectedY = by;
+                if (null != rPanelEdition) {
+                    CPair<ETypeFigure, ETypeColor> cp = rPanelEdition.selectedFigure();
+                    if (null == cp) return;
+                    csmControl.getCMoveGame().setSpaceBoard(bx, by, cp.getFirst(), cp.getSecond());
+                }
             }
             repaint();
         } else if (csmControl.getBoard().getStateGame()) {
             // TODO: Обработка нажатий мыши для режима игры.
+        }
+    }
+
+    /**
+     * Обработка события нажатий на клавиатуре в режиме редактирования.
+     * @param e событие клавиатуры.
+     */
+    public void keyActionEdition(KeyEvent e) {
+        if (KeyEvent.VK_DELETE == e.getKeyCode() && selectedX >= 0 && selectedY >= 0) {
+            csmControl.getCMoveGame().setSpaceBoard(selectedX, selectedY, null, null);
+            repaint();
         }
     }
 
@@ -166,6 +195,14 @@ public class CViewBoard extends JPanel {
         return r;
     }
 
+    /**
+     * Инициализация при переходе в режим редактирования.
+     */
+    protected void toEdition() {
+        selectedX = -1;
+        selectedY = -1;
+    }
+
     public void paint(Graphics g) {
         Graphics2D g2 = (Graphics2D) g;
         g.drawImage(resourse.getImage(strBoard).getImage(), 0, 0, null);
@@ -185,8 +222,12 @@ public class CViewBoard extends JPanel {
                     int iDx = figureOffsetImage(fig);
                     g2.drawImage(resourse.getImage(strFigures).getImage(), grX + imgDX, grY + imgDY, grX + imgDX + imgW, grY + imgDY + imgH, iDx, 0, iDx + imgW, imgH, null);
                 }
-                assert (boardSpacesColor[y][x].equals(spaceFrameColor[0]));
-                g2.setColor(boardSpacesColor[y][x]);
+                if (csmControl.getIsEdition()) {
+                    if (selectedX == rx && selectedY == y) g2.setColor(spaceFrameColor[1]);
+                    else g2.setColor(spaceFrameColor[0]);
+                } else {
+                    g2.setColor(boardSpacesColor[y][x]);
+                }
                 g2.drawRect(grX, grY, spaceW - 1, spaceH - 1);
             }
         }
