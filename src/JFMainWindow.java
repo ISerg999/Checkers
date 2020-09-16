@@ -1,4 +1,5 @@
 import CheckersEngine.BaseEngine.CPair;
+import CheckersEngine.BaseEngine.ETypeColor;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
@@ -29,6 +30,10 @@ public class JFMainWindow extends JFrame implements IChangeState{
         stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBOARDPLACEMANT), "placemantBoard");
         stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBOARDCLEAR), "clearBoard");
         stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBASE), "stepToBase");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITEPLAYER), "playWhiteFromPlayer");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOBLACKPLAYER), "playBlackFromPlayer");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITECOMP), "playWhiteFromComp");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOBLACKCOMP), "playBlackFromComp");
     }
 
     /**
@@ -60,6 +65,11 @@ public class JFMainWindow extends JFrame implements IChangeState{
      */
     CRightPanelEdition rPanelEdition;
 
+    /**
+     * Текст выводимый внизу.
+     */
+    String txtMsgDown;
+
     public JFMainWindow() throws HeadlessException {
         resourse = CResourse.getInstance();
         csmControl = CSMControl.getInstance();
@@ -75,6 +85,8 @@ public class JFMainWindow extends JFrame implements IChangeState{
         });
 
         csmControl.makeChangesState(ETActionGame.TOBASE, false);
+        csmControl.makeChangesState(ETActionGame.TOWHITEPLAYER, true);
+        csmControl.makeChangesState(ETActionGame.TOBLACKPLAYER, true);
     }
 
     /**
@@ -117,6 +129,7 @@ public class JFMainWindow extends JFrame implements IChangeState{
 
         // -------- Создание нижней информационной строки. --------
         createLabelBottom();
+        setTxtMsgDown(resourse.getResStr("Msg.Base.Info"));
     }
 
     /**
@@ -193,13 +206,13 @@ public class JFMainWindow extends JFrame implements IChangeState{
 
         JMenuItem miWhitePlayer = new JMenuItem(resourse.getResStr("MenuName.Settings.While.Player"));
         miWhitePlayer.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_U, ActionEvent.ALT_MASK + ActionEvent.CTRL_MASK));
-        // miWhitePlayer.addActionListener(this);
+        miWhitePlayer.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOWHITEPLAYER, true));
         mSettings.add(miWhitePlayer);
         mActionMenu.put("MenuName.Settings.While.Player", miWhitePlayer);
 
         JMenuItem miWhiteComp = new JMenuItem(resourse.getResStr("MenuName.Settings.While.Comp"));
         miWhiteComp.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, ActionEvent.ALT_MASK + ActionEvent.CTRL_MASK));
-        // miWhiteComp.addActionListener(this);
+        miWhiteComp.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOWHITECOMP, true));
         mSettings.add(miWhiteComp);
         mActionMenu.put("MenuName.Settings.While.Comp", miWhiteComp);
 
@@ -207,13 +220,13 @@ public class JFMainWindow extends JFrame implements IChangeState{
 
         JMenuItem miBlackPlayer = new JMenuItem(resourse.getResStr("MenuName.Settings.Black.Player"));
         miBlackPlayer.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_J, ActionEvent.ALT_MASK + ActionEvent.CTRL_MASK));
-        // miBlackPlayer.addActionListener(this);
+        miBlackPlayer.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOBLACKPLAYER, true));
         mSettings.add(miBlackPlayer);
         mActionMenu.put("MenuName.Settings.Black.Player", miBlackPlayer);
 
         JMenuItem mBlackComp = new JMenuItem(resourse.getResStr("MenuName.Settings.Black.Comp"));
         mBlackComp.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_K, ActionEvent.ALT_MASK + ActionEvent.CTRL_MASK));
-        // mBlackComp.addActionListener(this);
+        mBlackComp.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOBLACKCOMP, true));
         mSettings.add(mBlackComp);
         mActionMenu.put("MenuName.Settings.Black.Comp", mBlackComp);
 
@@ -296,6 +309,14 @@ public class JFMainWindow extends JFrame implements IChangeState{
     }
 
     /**
+     * Установка содрежримого нижнего текстового поля.
+     * @param txtMsgDown текстовое содержимое
+     */
+    public void setTxtMsgDown(String txtMsgDown) {
+        this.txtMsgDown = txtMsgDown;
+    }
+
+    /**
      * Обработка событий нажатий на клавиатуре.
      * @param e событие клавиатуры
      */
@@ -306,6 +327,14 @@ public class JFMainWindow extends JFrame implements IChangeState{
         } else if (csmControl.getBoard().getStateGame()) {
             // TODO: Обработка нажатий клавиатуры для режима игры.
         }
+    }
+
+    /**
+     * Установка игрока за белых.
+     * @param isPlayer true - пользователь, false - компьютер.
+     */
+    public void setPlayFromWhite(boolean isPlayer) {
+
     }
 
     @Override
@@ -364,7 +393,7 @@ public class JFMainWindow extends JFrame implements IChangeState{
                 "MenuName.Editing.End", "MenuName.Editing.Placemant", "MenuName.Editing.Clear"
         };
         selectedViewMenu(deactivate);
-        lblBottom.setText(resourse.getResStr("Msg.Base.Info"));
+        lblBottom.setText(txtMsgDown);
         csmControl.setIsEdition(false);
         rightPanel.setSelectedIndex(-1);
         repaint();
@@ -450,5 +479,37 @@ public class JFMainWindow extends JFrame implements IChangeState{
     protected void clearBoard() {
         csmControl.getCMoveGame().clearBoard();
         viewBoard.repaint();
+    }
+
+    /**
+     * Установка игры белых за игрока.
+     */
+    protected void playWhiteFromPlayer() {
+        mActionMenu.get("MenuName.Settings.While.Player").setEnabled(false);
+        mActionMenu.get("MenuName.Settings.While.Comp").setEnabled(true);
+    }
+
+    /**
+     * Установка игры белых за компьютер.
+     */
+    protected void playWhiteFromComp() {
+        mActionMenu.get("MenuName.Settings.While.Player").setEnabled(true);
+        mActionMenu.get("MenuName.Settings.While.Comp").setEnabled(false);
+    }
+
+    /**
+     * Установка игры чёрных за игрока.
+     */
+    protected void playBlackFromPlayer() {
+        mActionMenu.get("MenuName.Settings.Black.Player").setEnabled(false);
+        mActionMenu.get("MenuName.Settings.Black.Comp").setEnabled(true);
+    }
+
+    /**
+     * Установка игры чёрных за компьютер.
+     */
+    protected void playBlackFromComp() {
+        mActionMenu.get("MenuName.Settings.Black.Player").setEnabled(true);
+        mActionMenu.get("MenuName.Settings.Black.Comp").setEnabled(false);
     }
 }

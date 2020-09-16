@@ -11,5 +11,10 @@ public enum ETActionGame {
     TOEDITING,          // Переход в режим редактирования.
     TOBOARDPLACEMANT,   // Базовая разстановка фигур на доске.
     TOBOARDCLEAR,       // Очистка доски.
+    TOWHITEPLAYER,      // Игрок играет за белых.
+    TOBLACKPLAYER,      // Игрок играет за чёрных.
+    TOWHITECOMP,        // За белых играет компьютер.
+    TOBLACKCOMP,        // За чёрных играет компьютер.
+    TOGAME,             // Переход в режим игры.
     TORETURN;           // Возвращение назад.
 }

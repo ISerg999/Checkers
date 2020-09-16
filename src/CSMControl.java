@@ -37,6 +37,8 @@ public class CSMControl {
         newStateGame = new Hashtable<>();
         newStateGame.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOEDITING), ETStateGame.EDITING);
         newStateGame.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBASE), ETStateGame.BASE);
+        newStateGame.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOGAME), ETStateGame.GAME);
+        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASE), ETStateGame.BASE);
     }
     /**
      * Список изполняемых функций для текущего объекта
@@ -46,6 +48,10 @@ public class CSMControl {
         stateAction = new Hashtable<>();
         stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVE), "saveBoard");
         stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOAD), "loadBoard");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITEPLAYER), "playWhiteFromPlayer");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOBLACKPLAYER), "playBlackFromPlayer");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITECOMP), "playWhiteFromComp");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOBLACKCOMP), "playBlackFromComp");
     }
 
     /**
@@ -218,4 +224,31 @@ public class CSMControl {
         }
     }
 
+    /**
+     * Установка игры белых за игрока.
+     */
+    protected void playWhiteFromPlayer() {
+        cMoveGame.getBoard().setPlayerForColor(ETypeColor.WHITE, true);
+    }
+
+    /**
+     * Установка игры белых за компьютер.
+     */
+    protected void playWhiteFromComp() {
+        cMoveGame.getBoard().setPlayerForColor(ETypeColor.WHITE, false);
+    }
+
+    /**
+     * Установка игры чёрных за игрока.
+     */
+    protected void playBlackFromPlayer() {
+        cMoveGame.getBoard().setPlayerForColor(ETypeColor.BLACK, true);
+    }
+
+    /**
+     * Установка игры чёрных за компьютер.
+     */
+    protected void playBlackFromComp() {
+        cMoveGame.getBoard().setPlayerForColor(ETypeColor.BLACK, false);
+    }
 }
