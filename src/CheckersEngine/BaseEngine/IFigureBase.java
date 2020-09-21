@@ -21,7 +21,7 @@ public interface IFigureBase {
      * Задаёт цвет фигуры.
      * @param color цвет фигуры
      */
-    void setTypeColor(ETypeColor color);
+    void setColorType(ETypeColor color);
 
     /**
      * Возвращает цвет текущей фигуры.
@@ -31,10 +31,9 @@ public interface IFigureBase {
 
     /**
      * Задание положения фигуры.
-     * @param x координата x игрового поля
-     * @param y координата y игрового поля
+     * @param pos позиция фигуры
      */
-    void setPos(int x, int y);
+    void setPos(CPair<Integer, Integer> pos);
 
     /**
      * Получение текущей заданной координаты x.

@@ -5,9 +5,7 @@ import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Hashtable;
@@ -29,11 +27,12 @@ public class JFMainWindow extends JFrame implements IChangeState{
         stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOEDITING), "initEditing");
         stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBOARDPLACEMANT), "placemantBoard");
         stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBOARDCLEAR), "clearBoard");
-        stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBASE), "stepToBase");
+        stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBASE), "stepToBaseFromEdition");
         stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITEPLAYER), "playWhiteFromPlayer");
         stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOBLACKPLAYER), "playBlackFromPlayer");
         stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITECOMP), "playWhiteFromComp");
         stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOBLACKCOMP), "playBlackFromComp");
+        stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOGAME), "initGameMode");
     }
 
     /**
@@ -95,7 +94,7 @@ public class JFMainWindow extends JFrame implements IChangeState{
     private void createAndShowGUI() {
         // -------- Базовая настройка. --------
 
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(null);
         ImageIcon icon = resourse.getImage("Path.Icon.Window");
         setIconImage(icon.getImage());
@@ -107,6 +106,13 @@ public class JFMainWindow extends JFrame implements IChangeState{
         setMinimumSize(new Dimension(curWidth, curHeight));
         setFont(new Font("Arial", Font.PLAIN, 10));
         setVisible(true);
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                exitWindow();
+            }
+        });
 
         // -------- Создание меню. --------
 
@@ -155,7 +161,7 @@ public class JFMainWindow extends JFrame implements IChangeState{
 
         JMenuItem miExit = new JMenuItem(resourse.getResStr("MenuName.File.Exit"));
         miExit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, ActionEvent.ALT_MASK + ActionEvent.CTRL_MASK));
-        miExit.addActionListener(actionEvent -> System.exit(0));
+        miExit.addActionListener(actionEvent -> exitWindow());
         mFile.add(miExit);
 
         return mFile;
@@ -169,7 +175,7 @@ public class JFMainWindow extends JFrame implements IChangeState{
         JMenu mGame = new JMenu(resourse.getResStr("MenuName.Game"));
         JMenuItem miStart = new JMenuItem(resourse.getResStr("MenuName.Game.Start"));
         miStart.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, ActionEvent.CTRL_MASK));
-        // miStart.addActionListener(this);
+        miStart.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOGAME, false));
         mGame.add(miStart);
         mActionMenu.put("MenuName.Game.Start", miStart);
 
@@ -316,6 +322,12 @@ public class JFMainWindow extends JFrame implements IChangeState{
         this.txtMsgDown = txtMsgDown;
     }
 
+    public void exitWindow() {
+        csmControl.getComputerGame().close();
+        System.exit(0);
+
+    }
+
     /**
      * Обработка событий нажатий на клавиатуре.
      * @param e событие клавиатуры
@@ -327,14 +339,6 @@ public class JFMainWindow extends JFrame implements IChangeState{
         } else if (csmControl.getBoard().getStateGame()) {
             // TODO: Обработка нажатий клавиатуры для режима игры.
         }
-    }
-
-    /**
-     * Установка игрока за белых.
-     * @param isPlayer true - пользователь, false - компьютер.
-     */
-    public void setPlayFromWhite(boolean isPlayer) {
-
     }
 
     @Override
@@ -463,6 +467,16 @@ public class JFMainWindow extends JFrame implements IChangeState{
         csmControl.setIsEdition(true);
         rightPanel.setSelectedIndex(0);
         viewBoard.toEdition();
+        csmControl.getCMoveGame().clearControlMove();
+    }
+
+    /**
+     * Выход из режима редактирования.
+     */
+    protected void stepToBaseFromEdition() {
+        csmControl.saveBoardGame();
+        stepToBase();
+        csmControl.getCMoveGame().clearControlMove();
     }
 
     /**
@@ -511,5 +525,23 @@ public class JFMainWindow extends JFrame implements IChangeState{
     protected void playBlackFromComp() {
         mActionMenu.get("MenuName.Settings.Black.Player").setEnabled(true);
         mActionMenu.get("MenuName.Settings.Black.Comp").setEnabled(false);
+    }
+
+    /**
+     * Переход в режим игры.
+     */
+    protected void initGameMode() {
+        String[] deactivate = {
+                "MenuName.File.Open", "MenuName.Game.Start", "MenuName.Game.Continue", "MenuName.Settings.While.Player",
+                "MenuName.Settings.While.Comp", "MenuName.Settings.Black.Player", "MenuName.Settings.Black.Comp", "MenuName.Editing.Begin",
+                "MenuName.Editing.End", "MenuName.Editing.Placemant", "MenuName.Editing.Clear"
+        };
+        selectedViewMenu(deactivate);
+        ETypeColor tc = csmControl.getBoard().getCurMove();
+        String txt = "" + (tc == ETypeColor.WHITE ?  resourse.getResStr("Msg.Game.Play.White"): resourse.getResStr("Msg.Game.Play.Black"));
+        txt = txt + " " + (csmControl.getPlayForColor(tc) ?  resourse.getResStr("Msg.Game.Play.Player"): resourse.getResStr("Msg.Game.Play.Computer"));
+        lblBottom.setText(txt);
+        rightPanel.setSelectedIndex(1);
+        csmControl.getCMoveGame().clearControlMove();
     }
 }

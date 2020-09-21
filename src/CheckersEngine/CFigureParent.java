@@ -9,21 +9,28 @@ import java.util.List;
 import java.util.Map;
 
 public class CFigureParent implements IFigureBase {
+    /**
+     * Возможные направления движения.
+     */
+    protected static final int[][] BASE_PATH_OPTION = {{-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
+    protected static final int BOARD_TOP = 7;
+    protected static final int BOARD_BOTTOM = 0;
 
     protected ETypeColor colorFigure = null;
     protected ETypeFigure typeFigure = null;
     protected CPair<Integer, Integer> pos = null;
     protected Map<CPair<Integer, Integer>, IFigureBase> board = null;
+    protected List<List<CPair<Integer, Integer>>> lstSteps;
 
     public CFigureParent(ETypeFigure typeFig, ETypeColor colorFig) {
         setTypeFigure(typeFig);
-        setTypeColor(colorFig);
+        setColorType(colorFig);
     }
 
     public CFigureParent(ETypeFigure typeFig, ETypeColor colorFig, int x, int y) {
         setTypeFigure(typeFig);
-        setTypeColor(colorFig);
-        setPos(x, y);
+        setColorType(colorFig);
+        setPos(new CPair<>(x, y));
     }
 
     @Override
@@ -37,7 +44,7 @@ public class CFigureParent implements IFigureBase {
     }
 
     @Override
-    public void setTypeColor(ETypeColor color) {
+    public void setColorType(ETypeColor color) {
         colorFigure = color;
     }
 
@@ -47,8 +54,8 @@ public class CFigureParent implements IFigureBase {
     }
 
     @Override
-    public void setPos(int x, int y) {
-        pos = new CPair<>(x, y);
+    public void setPos(CPair<Integer, Integer> pos) {
+        this.pos = pos;
     }
 
     @Override

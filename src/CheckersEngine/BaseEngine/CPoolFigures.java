@@ -36,11 +36,13 @@ public class CPoolFigures {
 
     /**
      * Получение фигуры.
-     * @param tf тип ифигуры
-     * @param cf цвет фигуры
+     * @param tf    тип ифигуры
+     * @param cf    цвет фигуры
+     * @param pos   позиция фигуры
+     * @param board доска, к которой привязывается фигура
      * @return получаемая фигура
      */
-    public IFigureBase get(ETypeFigure tf, ETypeColor cf) {
+    public IFigureBase get(ETypeFigure tf, ETypeColor cf, CPair<Integer, Integer> pos, Map<CPair<Integer, Integer>, IFigureBase> board) {
         IFigureBase res;
         int code = tf.getDirection() + cf.getDirection();
         if (hiddenFigures.get(code).size() > 0) {
@@ -53,6 +55,9 @@ public class CPoolFigures {
             }
         }
         publicFigures.get(code).add(res);
+        res.setBoard(board);
+        board.put(pos, res);
+        res.setPos(pos);
         return res;
     }
 
@@ -66,5 +71,12 @@ public class CPoolFigures {
         int code = tf.getDirection() + cf.getDirection();
         publicFigures.get(code).remove(ifb);
         hiddenFigures.get(code).add(ifb);
+    }
+
+    /**
+     * Переносит все активные фигуры в скрытые.
+     */
+    public void clear() {
+
     }
 }

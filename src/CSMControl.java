@@ -20,7 +20,14 @@ public class CSMControl {
         resourse.addResourse("Resource/gameres.properties");
         lstChangeState = new ArrayList<>();
         cMoveGame = new CControlMoveGame(new CCheckersBoard());
+//        oldBoard = new CCheckersBoard((CCheckersBoard) cMoveGame.getBoard());
+        computerGame = new CComputerGame(cMoveGame);
+        new Thread(computerGame).start();
         fileName = null;
+        whosPlaying = new HashMap<>();
+        for (ETypeColor it: ETypeColor.values()) {
+            whosPlaying.put(it, true);
+        }
     }
     private static class STMControlHolder {
         private static final CSMControl INSTANCE = new CSMControl();
@@ -38,7 +45,11 @@ public class CSMControl {
         newStateGame.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOEDITING), ETStateGame.EDITING);
         newStateGame.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBASE), ETStateGame.BASE);
         newStateGame.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOGAME), ETStateGame.GAME);
-        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASE), ETStateGame.BASE);
+        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEDRAW), ETStateGame.BASE);
+        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEWHILE), ETStateGame.BASE);
+        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEBLACK), ETStateGame.BASE);
+        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEGAMESTOP), ETStateGame.BASE);
+        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOCHANGEMOVE), ETStateGame.GAME);
     }
     /**
      * Список изполняемых функций для текущего объекта
@@ -52,6 +63,7 @@ public class CSMControl {
         stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOBLACKPLAYER), "playBlackFromPlayer");
         stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITECOMP), "playWhiteFromComp");
         stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOBLACKCOMP), "playBlackFromComp");
+        stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOGAME), "launchGameMode");
     }
 
     /**
@@ -78,6 +90,18 @@ public class CSMControl {
      * Объект контролирующий ходы и изменения на доске.
      */
     private CControlMoveGame cMoveGame;
+    /**
+     * Определяет, кто ходи за соответствующий цвет. true - игрок, false - компьютер
+     */
+    protected Map<ETypeColor, Boolean> whosPlaying;
+    /**
+     * Объект ходов компьютером.
+     */
+    protected CComputerGame computerGame;
+    /**
+     * Состояние доски до битвы.
+     */
+    protected CCheckersBoard oldBoard;
 
     public void start() {
         EventQueue.invokeLater(() -> new JFMainWindow());
@@ -89,6 +113,14 @@ public class CSMControl {
      */
     public void addActionGame(IChangeState obj) {
         lstChangeState.add(obj);
+    }
+
+    /**
+     * Возвращает объект хода за компьютер.
+     * @return объект хода за компьютер
+     */
+    public CComputerGame getComputerGame() {
+        return computerGame;
     }
 
     /**
@@ -133,6 +165,38 @@ public class CSMControl {
     }
 
     /**
+     * Определяет, кто играет за заданный цвет
+     * @param playColor игровой цвет
+     * @return игрок играющий за данный цвет true - игрок, false - компьютер
+     */
+    public boolean getPlayForColor(ETypeColor playColor) {
+        return whosPlaying.get(playColor);
+    }
+
+    /**
+     * Задаёт игрока за выбранный цвет.
+     * @param playerForColor цвет за котороый выставляется игрок
+     * @param type           игрок: true - обычный игрок, false - компьютер
+     */
+    public void setPlayerForColor(ETypeColor playerForColor, boolean type) {
+        whosPlaying.replace(playerForColor, type);
+    }
+
+    /**
+     * Сохраняет копию доски.
+     */
+    public void saveBoardGame() {
+        oldBoard = new CCheckersBoard((CCheckersBoard) cMoveGame.getBoard());
+    }
+
+    /**
+     * Восстанавливает копию доски.
+     */
+    public void restoreBoardGame() {
+        cMoveGame.setBoard(oldBoard);
+    }
+
+    /**
      * Базовый метод управления работой программы.
      * @param actionGame происходящий переход
      * @param allState   зависимость перехода от состояния, true - не зависит, false - зависит
@@ -149,6 +213,7 @@ public class CSMControl {
         } else {
             oldStateGame = ETStateGame.BASE;
             curStateGame = ETStateGame.BASE;
+            saveBoardGame();
         }
         if (ETActionGame.TORETURN != actionGame) {
             for (IChangeState objSt: lstChangeState) {
@@ -166,7 +231,6 @@ public class CSMControl {
             }
         }
     }
-
 
 // ------------------------------ Методы обрабатывающиеся контроллером переходов состояний -----------------------------
 
@@ -228,27 +292,35 @@ public class CSMControl {
      * Установка игры белых за игрока.
      */
     protected void playWhiteFromPlayer() {
-        cMoveGame.getBoard().setPlayerForColor(ETypeColor.WHITE, true);
+        setPlayerForColor(ETypeColor.WHITE, true);
     }
 
     /**
      * Установка игры белых за компьютер.
      */
     protected void playWhiteFromComp() {
-        cMoveGame.getBoard().setPlayerForColor(ETypeColor.WHITE, false);
+        setPlayerForColor(ETypeColor.WHITE, false);
     }
 
     /**
      * Установка игры чёрных за игрока.
      */
     protected void playBlackFromPlayer() {
-        cMoveGame.getBoard().setPlayerForColor(ETypeColor.BLACK, true);
+        setPlayerForColor(ETypeColor.BLACK, true);
     }
 
     /**
      * Установка игры чёрных за компьютер.
      */
     protected void playBlackFromComp() {
-        cMoveGame.getBoard().setPlayerForColor(ETypeColor.BLACK, false);
+        setPlayerForColor(ETypeColor.BLACK, false);
+    }
+
+    /**
+     * Переход в состяния игры.
+     */
+    protected void launchGameMode() {
+        restoreBoardGame();
+        getBoard().setStateGame(true);
     }
 }

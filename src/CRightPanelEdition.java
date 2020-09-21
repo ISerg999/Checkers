@@ -64,13 +64,13 @@ public class CRightPanelEdition extends JPanel {
         csmControl = csmControl.getInstance();
         resourse = CResourse.getInstance();
         selectedF = -1;
+        fullW = resourse.getResInt("Board.Space.Width");
+        fullH = resourse.getResInt("Board.Space.Height");
+        int rPW = resourse.getResInt("Window.RightPanel.Width");
+        int rPH = resourse.getResInt("Window.RightPanel.Height");
 
         // Создание интерфейса.
         setLayout(null);
-        int rPW = resourse.getResInt("Window.RightPanel.Width");
-        int rPH = resourse.getResInt("Window.RightPanel.Height");
-        fullW = resourse.getResInt("Board.Space.Width");
-        fullH = resourse.getResInt("Board.Space.Height");
         setSize(rPW, rPH);
         setBorder(BorderFactory.createCompoundBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED),
                 BorderFactory.createEmptyBorder(25, 25, 25, 25)));
@@ -80,6 +80,12 @@ public class CRightPanelEdition extends JPanel {
         lblUp.setBounds(0, 0, rPW, 32);
         lblUp.setHorizontalAlignment(JLabel.CENTER);
         add(lblUp);
+
+        // Создание нижней надписи.
+        JLabel lblDown = new JLabel(resourse.getResStr("Msg.Right.Edition.Info.Del"));
+        lblDown.setBounds(2, 66 + CResourse.getInstance().getResInt("Board.Space.Height") * 5 / 2, rPW - 4, 48);
+        lblDown.setHorizontalAlignment(JLabel.LEFT);
+        add(lblDown);
 
         addMouseListener(new MouseAdapter() {
             @Override

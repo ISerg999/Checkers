@@ -23,11 +23,23 @@ public class CCheckersBoard extends CEngineBoard {
         super(8, 8);
     }
 
+    public CCheckersBoard(CCheckersBoard old) {
+        super(8, 8);
+        clearBoard();
+        for (CPair<Integer, Integer> pos: old.board.keySet()) {
+            IFigureBase fb = old.board.get(pos);
+            setFigure(pos.getFirst(), pos.getSecond(), fb.getTypeFigure(), fb.getColorType());
+        }
+        stateGame = old.stateGame;
+        curTypeColor = old.curTypeColor;
+
+    }
+
     /**
      * Базовая расстановка фигур на доске.
      */
     @Override
-    public void placementBoard() {
+    public synchronized void placementBoard() {
         clearBoard();
         int yi0 = 0, yi1 = 1, yi2 = 2, yi5 = 5, yi6 = 6, yi7 = 7;
         for (int x = 0; x < 8; x++) {
@@ -65,13 +77,9 @@ public class CCheckersBoard extends CEngineBoard {
         mFigures.put(keysForFile[2], new LinkedList<>());
         mFigures.put(keysForFile[3], new LinkedList<>());
 
-        for (int y = 0; y < 8; y++) {
-            for (int x = 0; x < 8; x++) {
-                if (null != board[y][x]) {
-                    tmp = board[y][x].getColorType().getDirection() + board[y][x].getTypeFigure().getDirection();
-                    mFigures.get(tmp).add(new CPair<>(x, y));
-                }
-            }
+        for (CPair<Integer, Integer> pos: board.keySet()) {
+            tmp = board.get(pos).getColorType().getDirection() + board.get(pos).getTypeFigure().getDirection();
+            mFigures.get(tmp).add(pos);
         }
 
         for (int y = 0; y < 4; y++) {
@@ -87,7 +95,7 @@ public class CCheckersBoard extends CEngineBoard {
    }
 
    @Override
-   public int setBinaryBoardFigure(List<Integer> binGame, int k) {
+   public synchronized int setBinaryBoardFigure(List<Integer> binGame, int k) {
         int x, y, lenLst;
        List<CPair<Integer, Integer>> lstCoord;
        Map<Integer, List<CPair<Integer, Integer>>> mFigures = new HashMap<>();
@@ -132,21 +140,14 @@ public class CCheckersBoard extends CEngineBoard {
        List<Integer> bytesOut = new LinkedList<>();
        int tmp = getCurMove() == ETypeColor.WHITE ? 1: 0;
        bytesOut.add(tmp);
-       tmp = (getPlayForColor(ETypeColor.WHITE) ? 0x10: 0) + (getPlayForColor(ETypeColor.BLACK) ? 0x1: 0);
-       bytesOut.add(tmp);
 
        return bytesOut;
    }
 
    @Override
-   public int setBinaryBoardState(List<Integer> binGame, int k) {
+   public synchronized int setBinaryBoardState(List<Integer> binGame, int k) {
        if (binGame.get(k++) > 0) setCurMoveWhite();
        else setCurMoveBlack();
-       int x = binGame.get(k++);
-       int y = x & 0xf0;
-       x = x & 0xf;
-       setPlayerForColor(ETypeColor.WHITE, y > 0);
-       setPlayerForColor(ETypeColor.BLACK, x > 0);
 
        return k;
    }

@@ -1,5 +1,6 @@
 package CheckersEngine.BaseEngine;
 
+import CheckersEngine.CCheckersBoard;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
@@ -14,8 +15,8 @@ public class CControlMoveGame implements Iterable<String> {
 
     static protected final String CMD_REMOVE = "r";     // Удаление фигуры на доске по координатам x, y.
     static protected final String CMD_SET = "s";        // Установка фигуры на доске по координатам x, y. Фигура по её типу и цвету.
-    static protected final String CMD_MOVE = "m";       // Ход игрока: x1, y1, x2, y2, convert.
-    static protected final String CMD_ATTACK = "a";     // Атака игрока x1, y1, x2, y2, convert, list[(x, y, xt, yt)].
+    static protected final String CMD_MOVE = "m";       // Ход игрока: [[x1, y1], [x2, y2], [xc, yc]]
+    static protected final String CMD_ATTACK = "a";     // Атака игрока [[x1, y1], [x2, y2], [xc, yc], ...[[x, y], [xt, yt]]... .
 
     /**
      * Объект доски.
@@ -111,69 +112,17 @@ public class CControlMoveGame implements Iterable<String> {
     }
 
     /**
-     * Ход игрока.
-     * @param xs        координата x начальная
-     * @param ys        координата y начальная
-     * @param xe        координата x конечная
-     * @param ye        координата y конечная
-     * @param isConvert true - шашка становится дамкой, false - изменение не произошло
+     * Ход фигурой. ((x1, y1), (x2, y2), [(xc, yc)], ...[ (xf, yf), (xn, yn)). ]...): (x1, y1) - начальная позиция,
+     * (x2, y2) - конечная позиция, позиция, [(xc, yc)] - в которой фигура становиться дамкой, если null или отсутствует,
+     * то становление дамкой не происходит, (xf, tf) - координаты убиваемой фигуры, (xn, yn) - координаты куда помещается
+     * фигура во время убийства другой фигуры.
+     * @param lstFullMove список данных по атаке игрока.
      */
-    public void movePlayer(int xs, int ys, int xe, int ye, boolean isConvert) {
-        ETypeFigure tf;
-        ETypeColor tc;
-        String cmd = "" + CMD_MOVE + coordIntToStr(xs, true) + coordIntToStr(ys, false);
-        cmd = cmd + coordIntToStr(xe, true) + coordIntToStr(ye, false);
-        cmd = cmd + (isConvert ? "!": " ");
-        IFigureBase oldF = board.getFigure(xs, ys);
-        if (null == oldF) {
-            tf = null;
-            tc = null;
-        } else {
-            tf = oldF.getTypeFigure();
-            tc = oldF.getColorType();
-        }
-        cmd = cmd + convertFigureToStr(tf, tc);
-        board.setFigure(xs, ys, null, null);
-        if (isConvert) tf = ETypeFigure.QUINE;
-        board.setFigure(xe, ye, tf, tc);
-        curGameAction++;
-        lstGameAction.add(cmd);
-    }
-
-    /**
-     * Атака игрока.
-     * @param xs        координата x начальная
-     * @param ys        координата y начальная
-     * @param xe        координата x конечная
-     * @param ye        координата y конечная
-     * @param isConvert true - шашка становится дамкой, false - изменение не произошло
-     * @param lstDid    список убитых фигур и следующая клетка (xf, yf, xn, yn).
-     */
-    public void atackPlayer(int xs, int ys, int xe, int ye, boolean isConvert, List<Integer[]> lstDid) {
-        ETypeFigure tf;
-        ETypeColor tc;
-        String cmd = "" + CMD_ATTACK + coordIntToStr(xs, true) + coordIntToStr(ys, false);
-        cmd = cmd + coordIntToStr(xe, true) + coordIntToStr(ye, false);
-        cmd = cmd + (isConvert ? "!": " ");
-        IFigureBase oldF = board.getFigure(xs, ys);
-        if (null == oldF) {
-            tf = null;
-            tc = null;
-        } else {
-            tf = oldF.getTypeFigure();
-            tc = oldF.getColorType();
-        }
-        cmd = cmd + convertFigureToStr(tf, tc);
-        board.setFigure(xs, ys, null, null);
-        if (isConvert) tf = ETypeFigure.QUINE;
-        board.setFigure(xe, ye, tf, tc);
-        for (Integer[] ifc: lstDid) {
-            cmd = cmd + coordIntToStr(ifc[0], true) + coordIntToStr(ifc[1], false);
-            cmd = cmd + coordIntToStr(ifc[2], true) + coordIntToStr(ifc[3], false);
-            oldF = board.getFigure(ifc[0], ifc[1]);
-            cmd = cmd + convertFigureToStr(oldF.getTypeFigure(), oldF.getColorType());
-            board.setFigure(ifc[0], ifc[1], null, null);
-        }
+    public synchronized void gameMoveFigure(List<CPair<Integer, Integer>> lstFullMove) {
+        if (lstFullMove.size() < 2) return;
+        String cmd = "" + (lstFullMove.size() > 3 ? CMD_ATTACK: CMD_MOVE);
+        cmd = cmd + movePlayer((lstFullMove));
+        if (lstFullMove.size() > 3) cmd = cmd + atackPlayer(lstFullMove);
         curGameAction++;
         lstGameAction.add(cmd);
     }
@@ -271,6 +220,30 @@ public class CControlMoveGame implements Iterable<String> {
     }
 
     /**
+     * Возвращает заданное изменение.
+     * @param i номер изменения
+     * @return содержимое измененния
+     */
+    public String at(int i) {
+        return lstGameAction.get(i);
+    }
+
+    /**
+     * Установка новой игровой доски.
+     * @param newBoard игровая доска
+     */
+    public void setBoard(CEngineBoard newBoard) {
+        if (board == newBoard) return;
+        board = newBoard;
+    }
+
+    @NotNull
+    @Override
+    public Iterator<String> iterator() {
+        return lstGameAction.iterator();
+    }
+
+    /**
      * Преобразует числовую координату в строковую.
      * @param a        числовая координата
      * @param isSymbol тип строки: true - числа, false - буквы
@@ -358,17 +331,47 @@ public class CControlMoveGame implements Iterable<String> {
     }
 
     /**
-     * Возвращает заданное изменение.
-     * @param i номер изменения
-     * @return содержимое измененния
+     * Преобразование параметров хода.
+     * @param lstMove список координат - параметры хода.
+     * @return результат преобразования
      */
-    public String at(int i) {
-        return lstGameAction.get(i);
+    protected String movePlayer(List<CPair<Integer, Integer>> lstMove) {
+        ETypeFigure tf;
+        ETypeColor tc;
+        String cmd = "" + coordIntToStr(lstMove.get(0).getFirst(), true) + coordIntToStr(lstMove.get(0).getSecond(), false);
+        cmd = cmd + coordIntToStr(lstMove.get(1).getFirst(), true) + coordIntToStr(lstMove.get(1).getSecond(), false);
+        cmd = cmd + (lstMove.size() > 2 && null != lstMove.get(2) ? "!": " ");
+        IFigureBase oldF = board.getFigure(lstMove.get(0).getFirst(), lstMove.get(1).getSecond());
+        if (null == oldF) {
+            tf = null;
+            tc = null;
+        } else {
+            tf = oldF.getTypeFigure();
+            tc = oldF.getColorType();
+        }
+        cmd = cmd + convertFigureToStr(tf, tc);
+        board.setFigure(lstMove.get(1).getFirst(), lstMove.get(1).getSecond(), null, null);
+        if (lstMove.size() > 2 && null != lstMove.get(2)) tf = ETypeFigure.QUINE;
+        board.setFigure(lstMove.get(1).getFirst(), lstMove.get(1).getSecond(), tf, tc);
+        return cmd;
     }
 
-    @NotNull
-    @Override
-    public Iterator<String> iterator() {
-        return lstGameAction.iterator();
+    /**
+     * Преобразование параметров атаки.
+     * @param lstAtack список координат - параметры атаки с 3-й позиции.
+     * @return результат преобразования
+     */
+    protected String atackPlayer(List<CPair<Integer, Integer>> lstAtack) {
+        String cmd = "";
+        IFigureBase oldF;
+        for (int ind = 3; ind < lstAtack.size(); ind += 2) {
+            cmd = cmd + coordIntToStr(lstAtack.get(ind).getFirst(), true) + coordIntToStr(lstAtack.get(ind).getSecond(), false);
+            cmd = cmd + coordIntToStr(lstAtack.get(ind + 1).getFirst(), true) + coordIntToStr(lstAtack.get(ind + 1).getSecond(), false);
+            oldF = board.getFigure(lstAtack.get(ind).getFirst(), lstAtack.get(ind).getSecond());
+            cmd = cmd + convertFigureToStr(oldF.getTypeFigure(), oldF.getColorType());
+            board.setFigure(lstAtack.get(ind).getFirst(), lstAtack.get(ind).getSecond(), null, null);
+        }
+        return cmd;
     }
+
 }
