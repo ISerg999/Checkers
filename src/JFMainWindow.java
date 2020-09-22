@@ -63,6 +63,10 @@ public class JFMainWindow extends JFrame implements IChangeState{
      * Правая панель редактирования.
      */
     CRightPanelEdition rPanelEdition;
+    /**
+     * Правая игровая панель
+     */
+    CRightPanelGaming rPanelGaming;
 
     /**
      * Текст выводимый внизу.
@@ -300,7 +304,8 @@ public class JFMainWindow extends JFrame implements IChangeState{
         viewBoard.setPanelEdition(rPanelEdition);
 
         // Создание панели для режима игры.
-        // TODO: Создать панель для режима игры.
+        rPanelGaming = new CRightPanelGaming();
+        rightPanel.append(rPanelGaming);
     }
 
     /**
