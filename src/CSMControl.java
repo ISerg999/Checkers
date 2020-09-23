@@ -50,6 +50,8 @@ public class CSMControl {
         newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEBLACK), ETStateGame.BASE);
         newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEGAMESTOP), ETStateGame.BASE);
         newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOCHANGEMOVE), ETStateGame.GAME);
+        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TONEXTSTEPGAME), ETStateGame.GAME);
+        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TONEXTSTEPGAMEWIN), ETStateGame.GAME);
     }
     /**
      * Список изполняемых функций для текущего объекта
@@ -321,6 +323,6 @@ public class CSMControl {
      */
     protected void launchGameMode() {
         restoreBoardGame();
-        getBoard().setStateGame(true);
+        makeChangesState(ETActionGame.TONEXTSTEPGAME, false);
     }
 }

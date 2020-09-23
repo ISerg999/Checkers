@@ -16,6 +16,8 @@ public enum ETActionGame {
     TOWHITECOMP,            // За белых играет компьютер.
     TOBLACKCOMP,            // За чёрных играет компьютер.
     TOGAME,                 // Переход в режим игры.
+    TONEXTSTEPGAME,         // К следующему ходу игры.
+    TONEXTSTEPGAMEWIN,      // К следующему ходу игры для основного окна.
     TOBASEFROMGAMEDRAW,     // Конец игры. Ничья.
     TOBASEFROMGAMEWHILE,    // Конец игры. Белые выйграли.
     TOBASEFROMGAMEBLACK,    // Конец игры. Чёрные выйграли выйграли.

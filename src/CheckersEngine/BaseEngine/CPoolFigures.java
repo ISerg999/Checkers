@@ -1,5 +1,6 @@
 package CheckersEngine.BaseEngine;
 
+import CheckersEngine.CCheckersBoard;
 import CheckersEngine.CFigureCheckers;
 import CheckersEngine.CFigureQuine;
 
@@ -22,7 +23,7 @@ public class CPoolFigures {
      */
     protected Map<Integer, List<IFigureBase>> hiddenFigures;
 
-    public CPoolFigures() {
+    private CPoolFigures() {
         publicFigures = new HashMap<>();
         hiddenFigures = new HashMap<>();
         for (ETypeFigure tf: ETypeFigure.values()) {
@@ -33,6 +34,12 @@ public class CPoolFigures {
             }
         }
     }
+    private static class CPoolFiguresHolder {
+        private static final CPoolFigures INSTANCE = new CPoolFigures();
+    }
+    public static CPoolFigures getInstance() {
+        return CPoolFigures.CPoolFiguresHolder.INSTANCE;
+    }
 
     /**
      * Получение фигуры.
@@ -42,7 +49,7 @@ public class CPoolFigures {
      * @param board доска, к которой привязывается фигура
      * @return получаемая фигура
      */
-    public IFigureBase get(ETypeFigure tf, ETypeColor cf, CPair<Integer, Integer> pos, Map<CPair<Integer, Integer>, IFigureBase> board) {
+    public IFigureBase get(ETypeFigure tf, ETypeColor cf, CPair<Integer, Integer> pos, CCheckersBoard board) {
         IFigureBase res;
         int code = tf.getDirection() + cf.getDirection();
         if (hiddenFigures.get(code).size() > 0) {
@@ -56,7 +63,7 @@ public class CPoolFigures {
         }
         publicFigures.get(code).add(res);
         res.setBoard(board);
-        board.put(pos, res);
+        board.getBoard().put(pos, res);
         res.setPos(pos);
         return res;
     }
@@ -71,12 +78,5 @@ public class CPoolFigures {
         int code = tf.getDirection() + cf.getDirection();
         publicFigures.get(code).remove(ifb);
         hiddenFigures.get(code).add(ifb);
-    }
-
-    /**
-     * Переносит все активные фигуры в скрытые.
-     */
-    public void clear() {
-
     }
 }

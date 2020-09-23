@@ -1,5 +1,7 @@
 package CheckersEngine.BaseEngine;
 
+import CheckersEngine.CCheckersBoard;
+
 import java.util.List;
 import java.util.Map;
 
@@ -51,7 +53,7 @@ public interface IFigureBase {
      * Задаёт ссылку на доску в которой будет искать возможные ходы и возможные атаки.
      * @param board игровая доска
      */
-    void setBoard(Map<CPair<Integer, Integer>, IFigureBase> board);
+    void setBoard(CCheckersBoard board);
 
     /**
      * Поиск возможных путей движения фигуры.

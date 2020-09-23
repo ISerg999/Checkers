@@ -1,6 +1,5 @@
 package CheckersEngine.BaseEngine;
 
-import CheckersEngine.CCheckersBoard;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
@@ -121,7 +120,7 @@ public class CControlMoveGame implements Iterable<String> {
     public synchronized void gameMoveFigure(List<CPair<Integer, Integer>> lstFullMove) {
         if (lstFullMove.size() < 2) return;
         String cmd = "" + (lstFullMove.size() > 3 ? CMD_ATTACK: CMD_MOVE);
-        cmd = cmd + movePlayer((lstFullMove));
+        cmd = cmd + movePlayer(lstFullMove);
         if (lstFullMove.size() > 3) cmd = cmd + atackPlayer(lstFullMove);
         curGameAction++;
         lstGameAction.add(cmd);
@@ -339,9 +338,10 @@ public class CControlMoveGame implements Iterable<String> {
         ETypeFigure tf;
         ETypeColor tc;
         String cmd = "" + coordIntToStr(lstMove.get(0).getFirst(), true) + coordIntToStr(lstMove.get(0).getSecond(), false);
+        cmd = cmd + (lstMove.size() > 3 ? ":": "-");
         cmd = cmd + coordIntToStr(lstMove.get(1).getFirst(), true) + coordIntToStr(lstMove.get(1).getSecond(), false);
         cmd = cmd + (lstMove.size() > 2 && null != lstMove.get(2) ? "!": " ");
-        IFigureBase oldF = board.getFigure(lstMove.get(0).getFirst(), lstMove.get(1).getSecond());
+        IFigureBase oldF = board.getFigure(lstMove.get(0).getFirst(), lstMove.get(0).getSecond());
         if (null == oldF) {
             tf = null;
             tc = null;
@@ -350,7 +350,7 @@ public class CControlMoveGame implements Iterable<String> {
             tc = oldF.getColorType();
         }
         cmd = cmd + convertFigureToStr(tf, tc);
-        board.setFigure(lstMove.get(1).getFirst(), lstMove.get(1).getSecond(), null, null);
+        board.setFigure(lstMove.get(0).getFirst(), lstMove.get(0).getSecond(), null, null);
         if (lstMove.size() > 2 && null != lstMove.get(2)) tf = ETypeFigure.QUINE;
         board.setFigure(lstMove.get(1).getFirst(), lstMove.get(1).getSecond(), tf, tc);
         return cmd;

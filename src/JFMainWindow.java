@@ -11,7 +11,7 @@ import java.lang.reflect.Method;
 import java.util.Hashtable;
 import java.util.Map;
 
-public class JFMainWindow extends JFrame implements IChangeState{
+public class JFMainWindow extends JFrame implements IChangeState {
 
     /**
      * Список изполняемых функций для текущего объекта
@@ -24,7 +24,7 @@ public class JFMainWindow extends JFrame implements IChangeState{
         stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOAD), "viewDialogLoad");
         stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVEOK), "viewSaveFileOK");
         stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOADOK), "viewLoadFileOk");
-        stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOEDITING), "initEditing");
+        stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOEDITING), "initEditingMode");
         stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBOARDPLACEMANT), "placemantBoard");
         stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBOARDCLEAR), "clearBoard");
         stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBASE), "stepToBaseFromEdition");
@@ -33,6 +33,7 @@ public class JFMainWindow extends JFrame implements IChangeState{
         stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITECOMP), "playWhiteFromComp");
         stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOBLACKCOMP), "playBlackFromComp");
         stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOGAME), "initGameMode");
+        stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TONEXTSTEPGAMEWIN), "nextStepGame");
     }
 
     /**
@@ -202,7 +203,6 @@ public class JFMainWindow extends JFrame implements IChangeState{
         // miBack.addActionListener(this);
         mGame.add(miBack);
         mActionMenu.put("MenuName.Game.Back", miBack);
-
 
         return mGame;
     }
@@ -461,7 +461,7 @@ public class JFMainWindow extends JFrame implements IChangeState{
     /**
      * Инициализация при переходе в режим редактирования.
      */
-    protected void initEditing() {
+    protected void initEditingMode() {
         String[] deactivate = {
                 "MenuName.File.Save", "MenuName.File.Open", "MenuName.Game.Start", "MenuName.Game.Continue", "MenuName.Game.Stop",
                 "MenuName.Game.Back", "MenuName.Settings.While.Player", "MenuName.Settings.While.Comp", "MenuName.Settings.Black.Player",
@@ -471,7 +471,6 @@ public class JFMainWindow extends JFrame implements IChangeState{
         lblBottom.setText(resourse.getResStr("Msg.Editing.Info"));
         csmControl.setIsEdition(true);
         rightPanel.setSelectedIndex(0);
-        viewBoard.toEdition();
         csmControl.getCMoveGame().clearControlMove();
     }
 
@@ -548,5 +547,13 @@ public class JFMainWindow extends JFrame implements IChangeState{
         lblBottom.setText(txt);
         rightPanel.setSelectedIndex(1);
         csmControl.getCMoveGame().clearControlMove();
+    }
+
+    protected void nextStepGame() {
+        ETypeColor tc = csmControl.getBoard().getCurMove();
+        String txt = "" + (tc == ETypeColor.WHITE ?  resourse.getResStr("Msg.Game.Play.White"): resourse.getResStr("Msg.Game.Play.Black"));
+        txt = txt + " " + (csmControl.getPlayForColor(tc) ?  resourse.getResStr("Msg.Game.Play.Player"): resourse.getResStr("Msg.Game.Play.Computer"));
+        lblBottom.setText(txt);
+        repaint();
     }
 }

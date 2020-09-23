@@ -2,6 +2,7 @@ package CheckersEngine.BaseEngine;
 
 import CheckersEngine.CCheckersBoard;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -50,10 +51,10 @@ public abstract class CEngineBoard {
     public CEngineBoard(int w, int h) {
         this.width = w;
         this.height = h;
-        pool = new CPoolFigures();
+        pool = CPoolFigures.getInstance();
         board = new HashMap<>();
         curGameSteps = new HashMap<>();
-        setStateGame(false);
+        stateGame = false;
         setCurMoveWhite();
         clearBoard();
     }
@@ -83,26 +84,15 @@ public abstract class CEngineBoard {
     }
 
     /**
-     * Задаёт состояние игры.
-     * @param stateGame true - игра запущена, false - игра остановлена.
-     */
-    public synchronized void setStateGame(boolean stateGame) {
-        boolean old = stateGame;
-        this.stateGame = stateGame;
-        if (!old && stateGame) {
-            // Переход в режим игры.
-            testNewStep();
-        }
-        else if (old && !stateGame) stopGamePlay();
-    }
-
-    /**
      * Меняет ход игрока на противоположенный.
      */
     public synchronized void nextStep() {
-        if (!getStateGame()) return;
-        if (curTypeColor == ETypeColor.WHITE) curTypeColor = ETypeColor.BLACK;
-        else curTypeColor = ETypeColor.WHITE;
+        if (getStateGame()) {
+            if (curTypeColor == ETypeColor.WHITE) curTypeColor = ETypeColor.BLACK;
+            else curTypeColor = ETypeColor.WHITE;
+        } else {
+            stateGame = true;
+        }
         testNewStep();
     }
 
@@ -110,7 +100,9 @@ public abstract class CEngineBoard {
      * Очистка всей доски.
      */
     public synchronized void clearBoard() {
-        pool.clear();
+        for (CPair<Integer, Integer> pos: board.keySet()) {
+            pool.remove(board.get(pos));
+        }
         board.clear();
         setCurMoveWhite();
     }
@@ -160,6 +152,15 @@ public abstract class CEngineBoard {
     }
 
     /**
+     * Проверяет на допустимость координат.
+     * @param pos проверяемая позиция
+     * @return true - допустимые координаты, false - не допустимые координаты
+     */
+    public boolean aField(CPair<Integer, Integer> pos) {
+        return aField(pos.getFirst(), pos.getSecond());
+    }
+
+    /**
      * Получение фигуры по её координатам.
      * @param x координата x
      * @param y координата y
@@ -183,7 +184,7 @@ public abstract class CEngineBoard {
                 pool.remove(board.remove(pos));
             }
             if (null == tf) return;
-            pool.get(tf, cf, pos, board);
+            pool.get(tf, cf, pos, (CCheckersBoard) this);
         }
     }
 
@@ -229,27 +230,28 @@ public abstract class CEngineBoard {
     }
 
     /**
+     * Выход из состояния игры.
+     */
+    public synchronized void stopGamePlay() {
+        stateGame = false;
+        // TODO: Действия при окончании игры.
+    }
+
+    /**
      * Поиск возможных ходов, а также проверка на окончание игры.
      */
     protected synchronized void testNewStep() {
         analisysPossibleMoves();
         stateGameStop = analisysGameState();
         if (stateGameStop >= 0) {
-            setStateGame(false);
+            stateGame = false;
         }
-    }
-
-    /**
-     * Выход из состояния игры.
-     */
-    protected void stopGamePlay() {
-        // TODO: Действия при окончании игры.
     }
 
     /**
      * Анализ доступных ходов.
      */
-    protected synchronized void analisysPossibleMoves() {
+    public synchronized void analisysPossibleMoves() {
         curGameSteps.clear();
         // Анализ возможных атак.
         isAttack = true;
@@ -310,27 +312,47 @@ public abstract class CEngineBoard {
     }
 
     /**
-     * Проверяет на допустимость координат в режиме игры при выборе фигуры для текущего хода.
-     * @param x координата x
-     * @param y координата y
-     * @return true - допустимые координаты, false - не допустимые координаты
+     * Возвращает массив доступных стартовых ходов.
+     * @return массив стартовых ходов, или null
      */
-    public boolean startMoveGameField(int x, int y) {
-        if (!getStateGame()) return false;
-        if (aField(x, y)) {
-            if (curGameSteps.containsKey(new CPair<>(x, y))) return true;
-            else return false;
-        }
-        return false;
+    public List<CPair<Integer, Integer>> lstStartMoveGameField() {
+        if (curGameSteps.size() == 0) return null;
+        CPair<Integer, Integer>[] arraySteps = new CPair[curGameSteps.size()];
+        curGameSteps.keySet().toArray(arraySteps);
+        return Arrays.asList(arraySteps);
     }
 
     /**
-     * Получает список конечных координат для хода заданной фигурой.
+     * Возвращает массив промежуточных координат для хода заданной фигурой.
      * @param x координата x текущей фигуры
      * @param y координата y текущей фигуры
-     * @return список конечных координат или null
+     * @return массив конечных координат или null
      */
-    public List<CPair<Integer, Integer>> lstGameEndMoves(int x, int y) {
+    public List<CPair<Integer, Integer>> lstIntermediateMoveGameField(int x, int y) {
+        if (!getStateGame()) return null;
+        if (aField(x, y)) {
+            List<List<CPair<Integer, Integer>>> lstAll = curGameSteps.getOrDefault(new CPair<>(x, y), null);
+            if (null == lstAll || lstAll.size() == 0) return null;
+            List<CPair<Integer, Integer>> res = new LinkedList<>();
+            for (List<CPair<Integer, Integer>> m: lstAll) {
+                if (m.size() > 2) {
+                    for (int k = 3; k < m.size(); k += 2) {
+                        res.add(m.get(k));
+                    }
+                }
+            }
+            return res;
+        }
+        return null;
+    }
+
+    /**
+     * Возвращает массив конечных координат для хода заданной фигурой.
+     * @param x координата x текущей фигуры
+     * @param y координата y текущей фигуры
+     * @return массив конечных координат или null
+     */
+    public List<CPair<Integer, Integer>> lstEndMoveGameField(int x, int y) {
         if (!getStateGame()) return null;
         if (aField(x, y)) {
             List<List<CPair<Integer, Integer>>> lstAll = curGameSteps.getOrDefault(new CPair<>(x, y), null);
@@ -346,19 +368,15 @@ public abstract class CEngineBoard {
 
     /**
      * Возвращает список информации по текущему сделанному ходу.
-     * @param x1 координата x фигуры
-     * @param y1 координата y фигуры
-     * @param x2 координата x конечного хода
-     * @param y2 координата y конечного хода
+     * @param pos1 позиция начальная
+     * @param pos2 позиция конечная
      * @return список информации по заданному ходу
      */
-    public List<CPair<Integer, Integer>> lstGameStepInfo(int x1, int y1, int x2, int y2) {
+    public List<CPair<Integer, Integer>> lstGameStepInfo(CPair<Integer, Integer> pos1, CPair<Integer, Integer> pos2) {
         List<CPair<Integer, Integer>> res = new LinkedList<>();
-        CPair<Integer, Integer> pos = new CPair<>(x1, y1);
-        CPair<Integer, Integer> pos2 = new CPair<>(x2, y2);
-        res.add(pos);
-        if (curGameSteps.containsKey(pos)) {
-            List<List<CPair<Integer, Integer>>> lstAll = curGameSteps.get(pos);
+        res.add(pos1);
+        if (curGameSteps.containsKey(pos1)) {
+            List<List<CPair<Integer, Integer>>> lstAll = curGameSteps.get(pos1);
             for (List<CPair<Integer, Integer>> m: lstAll) {
                 if (m.get(0).equals(pos2)) {
                     res.addAll(m);

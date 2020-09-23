@@ -74,7 +74,7 @@ public class CRightPanelGaming extends JPanel  {
         int y = 40;
         boolean isLeft = true;
         for (; halfLine < csmControl.getCMoveGame().size(); halfLine++) {
-            String tmp = csmControl.getCMoveGame().at(halfLine).substring(0, 5);
+            String tmp = csmControl.getCMoveGame().at(halfLine).substring(1, 6);
             if (isLeft) g2.drawString(tmp, 35, y);
             else
             {

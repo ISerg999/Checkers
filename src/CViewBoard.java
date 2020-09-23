@@ -8,18 +8,30 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Класс вывода игровой доски и её элементов.
  */
-public class CViewBoard extends JPanel {
+public class CViewBoard extends JPanel implements IChangeState {
 
+    private static final Map<CPair<ETStateGame, ETActionGame>, String> stateAction;
+    static {
+        stateAction = new Hashtable<>();
+        stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOEDITING), "initEditingMode");
+        stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TONEXTSTEPGAME), "nextStepGame");
+    }
     static final protected Color[] spaceFrameColor = {
             Color.black,                                                                         // Стандартный.
             new Color(CResourse.getInstance().getResInt("Board.Space.Color.Selected")),     // Выбранный.
             new Color(CResourse.getInstance().getResInt("Board.Space.Color.Intermediate")), // Промежуточный.
             new Color(CResourse.getInstance().getResInt("Board.Space.Color.End"))           // Конечный.
     };
+
     /**
      * Ключ изображения доски
      */
@@ -57,7 +69,14 @@ public class CViewBoard extends JPanel {
      * Выбранная клетка при редактировании.
      */
     protected int selectedX, selectedY;
-    CRightPanelEdition rPanelEdition;
+    /**
+     * Ссылка на объект правой панели режима редактирования.
+     */
+    protected CRightPanelEdition rPanelEdition;
+    /**
+     * Начальные выбранные координаты в режиме игры.
+     */
+    protected CPair<Integer, Integer> firstPos;
 
     public CViewBoard(LayoutManager layout, boolean isDoubleBuffered) {
         super(layout, isDoubleBuffered);
@@ -76,12 +95,73 @@ public class CViewBoard extends JPanel {
         initViewBoard();
     }
 
+    public void paint(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g;
+        // Рисуем доску.
+        g.drawImage(resourse.getImage(strBoard).getImage(), 0, 0, null);
+        g2.drawRect(0, 0, resourse.getImage(strBoard).getImage().getWidth(null) - 1,
+                resourse.getImage(strBoard).getImage().getHeight(null) - 1);
+//        BufferedImage img = new BufferedImage(50, 50, BufferedImage.TYPE_INT_ARGB);
+        g2.setStroke(new BasicStroke(2));
+        int imgW = resourse.getImage(strFigures).getImage().getWidth(null) / 4;
+        int imgH = resourse.getImage(strFigures).getImage().getHeight(null);
+        // Рисуем квадраты доски и фигуры в них.
+        for (int y = 0; y < 8; y++) {
+            for (int x = 0; x < 4; x++) {
+                int rx = 2 * x + y % 2;
+                int grX = offsetBaseX + rx * spaceW;
+                int grY = offsetBaseY + (7 - y) * spaceH;
+                IFigureBase fig = csmControl.getBoard().getFigure(rx, y);
+                if (fig != null) {
+                    int iDx = figureOffsetImage(fig);
+                    g2.drawImage(resourse.getImage(strFigures).getImage(), grX + imgDX, grY + imgDY, grX + imgDX + imgW, grY + imgDY + imgH, iDx, 0, iDx + imgW, imgH, null);
+                }
+                if (csmControl.getIsEdition()) {
+                    // Рисуем цвет квадратов в режиме редактирования.
+                    if (selectedX == rx && selectedY == y) g2.setColor(spaceFrameColor[1]);
+                    else g2.setColor(spaceFrameColor[0]);
+                } else {
+                    // Рисуем цвет квадратов в других режимах.
+                    g2.setColor(boardSpacesColor[y][x]);
+                }
+                g2.drawRect(grX, grY, spaceW - 1, spaceH - 1);
+            }
+        }
+    }
+
+    /**
+     * Обработка события нажатий на клавиатуре в режиме редактирования.
+     * @param e событие клавиатуры.
+     */
+    public void keyActionEdition(KeyEvent e) {
+        if (KeyEvent.VK_DELETE == e.getKeyCode() && selectedX >= 0 && selectedY >= 0) {
+            csmControl.getCMoveGame().setSpaceBoard(selectedX, selectedY, null, null);
+            repaint();
+        }
+    }
+
+    @Override
+    public void makeChangesState(CPair<ETStateGame, ETActionGame> pStM) {
+        if (null == pStM.getFirst()) return;
+        String funName = stateAction.getOrDefault(pStM, null);
+        if (null != funName) {
+            try {
+                Method method = this.getClass().getDeclaredMethod(funName);
+                method.setAccessible(true);
+                method.invoke(this);
+            } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     /**
      * Начальная инициализация класса.
      */
     protected void initViewBoard() {
         // Базовые настройки.
         csmControl = csmControl.getInstance();
+        csmControl.addActionGame(this);
         resourse = CResourse.getInstance();
         boardSpacesColor = new Color[8][4];
         clearBoardSpacesColor();
@@ -158,18 +238,18 @@ public class CViewBoard extends JPanel {
             }
             repaint();
         } else if (csmControl.getBoard().getStateGame()) {
-            // TODO: Обработка нажатий мыши для режима игры.
-        }
-    }
-
-    /**
-     * Обработка события нажатий на клавиатуре в режиме редактирования.
-     * @param e событие клавиатуры.
-     */
-    public void keyActionEdition(KeyEvent e) {
-        if (KeyEvent.VK_DELETE == e.getKeyCode() && selectedX >= 0 && selectedY >= 0) {
-            csmControl.getCMoveGame().setSpaceBoard(selectedX, selectedY, null, null);
-            repaint();
+            if (!csmControl.getPlayForColor(csmControl.getBoard().getCurMove())) return;
+            if (!isClick) return;
+            if (csmControl.getBoard().lstStartMoveGameField().contains(pos)) {
+                firstPos = pos;
+                choiceColorFrame();
+                repaint();
+            } else if (null != firstPos && csmControl.getBoard().lstEndMoveGameField(firstPos.getFirst(), firstPos.getSecond()).contains(pos)) {
+                List<CPair<Integer, Integer>> newStep = csmControl.getBoard().lstGameStepInfo(firstPos, pos);
+                csmControl.getCMoveGame().gameMoveFigure(newStep);
+                csmControl.makeChangesState(ETActionGame.TONEXTSTEPGAME, false);
+                csmControl.makeChangesState(ETActionGame.TONEXTSTEPGAMEWIN, false);
+            }
         }
     }
 
@@ -196,40 +276,59 @@ public class CViewBoard extends JPanel {
     }
 
     /**
+     * Выбирает цвет рамки поля игры в режиме игры.
+     */
+    protected void choiceColorFrame() {
+        clearBoardSpacesColor();
+        List<CPair<Integer, Integer>> lst = csmControl.getBoard().lstStartMoveGameField();
+        if (null == lst) return;
+        for (CPair<Integer, Integer> el: lst) {
+            if (null == firstPos || (el.equals(firstPos)))
+                boardSpacesColor[el.getSecond()][el.getFirst() / 2] = spaceFrameColor[1];
+        }
+        if (null == firstPos) return;
+        lst = csmControl.getBoard().lstIntermediateMoveGameField(firstPos.getFirst(), firstPos.getSecond());
+        if (null != lst && lst.size() > 0) {
+            for (CPair<Integer, Integer> el: lst) {
+                boardSpacesColor[el.getSecond()][el.getFirst() / 2] = spaceFrameColor[2];
+            }
+        }
+        lst = csmControl.getBoard().lstEndMoveGameField(firstPos.getFirst(), firstPos.getSecond());
+        if (null != lst) {
+            for (CPair<Integer, Integer> el: lst) {
+                boardSpacesColor[el.getSecond()][el.getFirst() / 2] = spaceFrameColor[3];
+            }
+        }
+    }
+
+    // ---------------------------- Методы обрабатывающиеся контроллером переходов состояний ---------------------------
+
+    /**
      * Инициализация при переходе в режим редактирования.
      */
-    protected void toEdition() {
+    protected void initEditingMode() {
         selectedX = -1;
         selectedY = -1;
     }
 
-    public void paint(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g;
-        g.drawImage(resourse.getImage(strBoard).getImage(), 0, 0, null);
-        g2.drawRect(0, 0, resourse.getImage(strBoard).getImage().getWidth(null) - 1,
-                resourse.getImage(strBoard).getImage().getHeight(null) - 1);
-//        BufferedImage img = new BufferedImage(50, 50, BufferedImage.TYPE_INT_ARGB);
-        g2.setStroke(new BasicStroke(2));
-        int imgW = resourse.getImage(strFigures).getImage().getWidth(null) / 4;
-        int imgH = resourse.getImage(strFigures).getImage().getHeight(null);
-        for (int y = 0; y < 8; y++) {
-            for (int x = 0; x < 4; x++) {
-                int rx = 2 * x + y % 2;
-                int grX = offsetBaseX + rx * spaceW;
-                int grY = offsetBaseY + (7 - y) * spaceH;
-                IFigureBase fig = csmControl.getBoard().getFigure(rx, y);
-                if (fig != null) {
-                    int iDx = figureOffsetImage(fig);
-                    g2.drawImage(resourse.getImage(strFigures).getImage(), grX + imgDX, grY + imgDY, grX + imgDX + imgW, grY + imgDY + imgH, iDx, 0, iDx + imgW, imgH, null);
-                }
-                if (csmControl.getIsEdition()) {
-                    if (selectedX == rx && selectedY == y) g2.setColor(spaceFrameColor[1]);
-                    else g2.setColor(spaceFrameColor[0]);
-                } else {
-                    g2.setColor(boardSpacesColor[y][x]);
-                }
-                g2.drawRect(grX, grY, spaceW - 1, spaceH - 1);
-            }
+    /**
+     * Переход к следующему ходу.
+     */
+    public void nextStepGame() {
+        firstPos = null;
+        clearBoardSpacesColor();
+        csmControl.getBoard().nextStep();
+        if (csmControl.getPlayForColor(csmControl.getBoard().getCurMove())) {
+            choiceColorFrame();
         }
+        repaint();
     }
+
+    /**
+     * Выход из режима игры.
+     */
+    protected void closeGameMode() {
+        clearBoardSpacesColor();
+    }
+
 }

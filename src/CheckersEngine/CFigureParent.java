@@ -19,8 +19,13 @@ public class CFigureParent implements IFigureBase {
     protected ETypeColor colorFigure = null;
     protected ETypeFigure typeFigure = null;
     protected CPair<Integer, Integer> pos = null;
-    protected Map<CPair<Integer, Integer>, IFigureBase> board = null;
+    protected CCheckersBoard board = null;
     protected List<List<CPair<Integer, Integer>>> lstSteps;
+
+    protected boolean tstCoord(int x, int y) {
+        if (x < 0 || x > 7 || y < 0 || y > 7) return false;
+        return true;
+    }
 
     public CFigureParent(ETypeFigure typeFig, ETypeColor colorFig) {
         setTypeFigure(typeFig);
@@ -69,7 +74,7 @@ public class CFigureParent implements IFigureBase {
     }
 
     @Override
-    public void setBoard(Map<CPair<Integer, Integer>, IFigureBase> board) {
+    public void setBoard(CCheckersBoard board) {
         this.board = board;
     }
 
