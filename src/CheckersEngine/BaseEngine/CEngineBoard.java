@@ -2,7 +2,6 @@ package CheckersEngine.BaseEngine;
 
 import CheckersEngine.CCheckersBoard;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -17,182 +16,177 @@ public abstract class CEngineBoard {
     /**
      * Словарь состояния игрового поля.
      */
-    protected Map<CPair<Integer, Integer>, IFigureBase> board;
-    /**
-     * Пул объектов фигур.
-     */
-    protected CPoolFigures pool;
+    protected Map<CPair<Integer, Integer>, CPair<ETypeFigure, ETypeColor>> board;
     /**
      * Определяет, идет сейчас игра или нет.
      */
-    protected boolean stateGame;
+    protected boolean gameOn;
     /**
      * Определяет, чей сечас ход.
      */
-    protected ETypeColor curTypeColor;
-    /**
-     * Состояния окончания игры (-1 - игра не закончена, 0 - ничья, 1 - выйграли белые, 2 - выйграли чёрные
-     */
-    protected int stateGameStop;
+    protected ETypeColor curMove;
     /**
      * Словарь возможных текущих ходов фигурами во время игры.
      */
-    protected Map<CPair<Integer, Integer>, List<List<CPair<Integer, Integer>>>> curGameSteps;
+    protected Map<CPair<Integer, Integer>, List<List<CPair<Integer, Integer>>>> possibleCurrentMoves;
     /**
-     * Определяет, являются ли возможные текущии ходы фигуров атакой или ходом.
+     * Метод для обратной связи, указывает об окончании игры.
      */
-    protected boolean isAttack;
+    protected ICallableStopGame callableStopGame;
+    /**
+     * Состояние окончания игры. 0 - ничья, 1 - выйграли белые, 2 - выйграли чёрные, -1 - всё остальное.
+     */
+    protected int endState;
+    protected CFactoryFigure factoryFigure;
 
     /**
      * Конструктор.
-     * @param w ширина игрового поля
-     * @param h высота игрового поля
+     * @param width ширина игрового поля
+     * @param height высота игрового поля
      */
-    public CEngineBoard(int w, int h) {
-        this.width = w;
-        this.height = h;
-        pool = CPoolFigures.getInstance();
+    public CEngineBoard(int width, int height) {
+        this.width = width;
+        this.height = height;
         board = new HashMap<>();
-        curGameSteps = new HashMap<>();
-        stateGame = false;
-        setCurMoveWhite();
+        gameOn = false;
+        possibleCurrentMoves = new HashMap<>();
+        curMove = ETypeColor.WHITE;
+        callableStopGame = null;
+        endState = -1;
+        factoryFigure = CFactoryFigure.getInstance();
+    }
+
+    public CEngineBoard(CEngineBoard old) {
+        board = new HashMap<>();
         clearBoard();
-    }
-
-    /**
-     * Возвращает количество полей доски в ширину.
-     * @return количество полей доски в ширину
-     */
-    public int getWidth() {
-        return width;
-    }
-
-    /**
-     * Возвращает количество полей доски в длину.
-     * @return количество полей доски в длину
-     */
-    public int getHeight() {
-        return height;
+        for (CPair<Integer, Integer> oldPos: old.board.keySet()) {
+            CPair<Integer, Integer> pos = new CPair<>(oldPos.getFirst(), oldPos.getSecond());
+            CPair<ETypeFigure, ETypeColor> figure = new CPair<>(old.board.get(oldPos).getFirst(), old.board.get(oldPos).getSecond());
+            board.put(pos, figure);
+        }
+        width = old.width;
+        height = old.height;
+        gameOn = old.gameOn;
+        curMove = old.curMove;
+        possibleCurrentMoves = new HashMap<>();
+        callableStopGame = old.callableStopGame;
+        endState = old.endState;
+        factoryFigure = CFactoryFigure.getInstance();
     }
 
     /**
      * Возвращает текущее состояние игры.
-     * @return true - игра запущена, false - игра остановлена.
+     * @return true - игра запущена, false - игра остановлена
      */
-    public boolean getStateGame() {
-        return stateGame;
-    }
-
-    /**
-     * Меняет ход игрока на противоположенный.
-     */
-    public synchronized void nextStep() {
-        if (getStateGame()) {
-            if (curTypeColor == ETypeColor.WHITE) curTypeColor = ETypeColor.BLACK;
-            else curTypeColor = ETypeColor.WHITE;
-        } else {
-            stateGame = true;
-        }
-        testNewStep();
+    public boolean getGameOn() {
+        return gameOn;
     }
 
     /**
      * Очистка всей доски.
      */
     public synchronized void clearBoard() {
-        for (CPair<Integer, Integer> pos: board.keySet()) {
-            pool.remove(board.get(pos));
-        }
         board.clear();
-        setCurMoveWhite();
     }
 
     /**
      * Возвращает словарь доски.
      * @return словарь доски
      */
-    public Map<CPair<Integer, Integer>, IFigureBase> getBoard() {
+    public Map<CPair<Integer, Integer>, CPair<ETypeFigure, ETypeColor>> getBoard() {
         return board;
     }
 
     /**
-     * Устанавливет текущий ход для белых.
+     * Установить текущий ход белых.
      */
-    public void setCurMoveWhite() {
-        if (stateGame) return;
-        curTypeColor = ETypeColor.WHITE;
+    public void setMoveWhile() {
+        if (gameOn) return;
+        curMove = ETypeColor.WHITE;
     }
 
     /**
-     * Устанавливает текущий ход для чёрных.
+     * Установить текущий ход чёрных.
      */
-    public void setCurMoveBlack(){
-        if (stateGame) return;
-        curTypeColor = ETypeColor.BLACK;
+    public void setMoveBlack() {
+        if (gameOn) return;
+        curMove = ETypeColor.BLACK;
     }
 
     /**
-     * Определяет, чей сейчас ход.
-     * @return константа игрового цвета
+     * Возвращает чей текущий ход.
+     * @return текущий ход
      */
-    public ETypeColor getCurMove() {
-        return curTypeColor;
+    public ETypeColor getCurrentMove() {
+        return curMove;
     }
 
     /**
-     * Проверяет на допустимость координат.
-     * @param x координата x
-     * @param y координата y
-     * @return true - допустимые координаты, false - не допустимые координаты
+     * Меняет ход игрока на противоположенный.
      */
-    public boolean aField(int x, int y) {
-        if (x < 0 || x >= width || y < 0 || y >=height)
-            return false;
-        return true;
-    }
-
-    /**
-     * Проверяет на допустимость координат.
-     * @param pos проверяемая позиция
-     * @return true - допустимые координаты, false - не допустимые координаты
-     */
-    public boolean aField(CPair<Integer, Integer> pos) {
-        return aField(pos.getFirst(), pos.getSecond());
-    }
-
-    /**
-     * Получение фигуры по её координатам.
-     * @param x координата x
-     * @param y координата y
-     * @return фигура, или null
-     */
-    public IFigureBase getFigure(int x, int y) {
-        return aField(x, y) ? board.get(new CPair<>(x, y)): null;
-    }
-
-    /**
-     * Установка фигуру на доску.
-     * @param x  координата x
-     * @param y  координата y
-     * @param tf тип устанавливаемой фигуры, или null, если фигуру нужно удалить.
-     * @param cf цвет устанавливаемой фигуры
-     */
-    public synchronized void setFigure(int x, int y, ETypeFigure tf, ETypeColor cf) {
-        if (aField(x, y)) {
-            CPair<Integer, Integer> pos = new CPair<>(x, y);
-            if (null != board.getOrDefault(pos, null)) {
-                pool.remove(board.remove(pos));
-            }
-            if (null == tf) return;
-            pool.get(tf, cf, pos, (CCheckersBoard) this);
+    public synchronized void reverseCurrentMove() {
+        if (gameOn) {
+            curMove = curMove.neg();
+        } else {
+            gameOn = true;
         }
+        testNewStep();
+    }
+
+    /**
+     * Получение содержимое клетки доски по заданным координатам.
+     * @param x координата x
+     * @param y координата y
+     * @return содержимое клетки доски
+     */
+    public CPair<ETypeFigure, ETypeColor> getF(int x, int y) {
+        return getF(new CPair<>(x, y));
+    }
+
+    /**
+     * Получение содержимое клетки доски по заданным координатам.
+     * @param pos положение на доске
+     * @return содержимое клетки доски
+     */
+    public CPair<ETypeFigure, ETypeColor> getF(CPair<Integer, Integer> pos) {
+        return board.getOrDefault(pos,null);
+    }
+
+    /**
+     * Установка фигуры на игровой доске.
+     * @param x      положение по x
+     * @param y      положение по y
+     * @param figure устанавливаемая фигура, или null, если удалить
+     */
+    public void setF(int x, int y, CPair<ETypeFigure, ETypeColor> figure) {
+        setF(new CPair<>(x, y), figure);
+    }
+
+    /**
+     * Установка фигуры на игровой доске.
+     * @param pos    положение на игровой доске
+     * @param figure устанавливаемая фигура, или null, если удалить
+     */
+    public synchronized void setF(CPair<Integer, Integer> pos, CPair<ETypeFigure, ETypeColor> figure) {
+        if (null != board.getOrDefault(pos, null)) board.remove(pos);
+        if (null != figure) {
+            board.put(pos, figure);
+        }
+    }
+
+    /**
+     * Установка метода обратной связи.
+     * @param callableStopGame метод обратной связи
+     */
+    public void setCallableStopGame(ICallableStopGame callableStopGame) {
+        this.callableStopGame = callableStopGame;
     }
 
     /**
      * Получение бинарного представления доски.
      * @return список байтов представление доски
      */
-    public abstract List<Integer> getBinaryBoardFigure();
+    public abstract List<Integer> getBinaryRepresentationBoard();
 
     /**
      * Установка представления доски из бинарного списка
@@ -200,21 +194,21 @@ public abstract class CEngineBoard {
      * @param k       индекс, с которого идёт получения данных
      * @return указатель на область, лежащую за пределами полученных данных
      */
-    public abstract int setBinaryBoardFigure(List<Integer> binGame, int k);
+    public abstract int setBinaryRepresentationBoard(List<Integer> binGame, int k);
 
     /**
-     * Получение бинарного представления игры.
-     * @return список байтов состояния игры
+     * Получение бинарного представления параметров игры.
+     * @return бинарное представление параметров игры
      */
-    public abstract List<Integer> getBinaryBoardState();
+    public abstract List<Integer> getBinaryParametrsGame();
 
     /**
-     * Установка бпредставления состояния игры из бинарного списка.
+     * Установка бинарного представления игры.
      * @param binGame список байтов
      * @param k       индекс, с какого идёт получение данных
      * @return указатель на область, лежащую за пределами полученных данных
      */
-    public abstract int setBinaryBoardState(List<Integer> binGame, int k);
+    public abstract int setBinaryParametrsGame(List<Integer> binGame, int k);
 
     /**
      * Базовая разстановка фигур.
@@ -222,18 +216,18 @@ public abstract class CEngineBoard {
     public abstract void placementBoard();
 
     /**
-     * Состояние окончание игры. (0 - ничья, 1 - выйграли белые, 2 - выйграли чёрные).
+     * Состояние окончание игры. (0 - ничья, 1 - выйграли белые, 2 - выйграли чёрные, -1 - всё остальное).
      * @return состояние окончание игры
      */
-    public int getStateGameStop() {
-        return stateGameStop;
+    public int getEndState() {
+        return endState;
     }
 
     /**
      * Выход из состояния игры.
      */
     public synchronized void stopGamePlay() {
-        stateGame = false;
+        gameOn = false;
         // TODO: Действия при окончании игры.
     }
 
@@ -242,9 +236,14 @@ public abstract class CEngineBoard {
      */
     protected synchronized void testNewStep() {
         analisysPossibleMoves();
-        stateGameStop = analisysGameState();
-        if (stateGameStop >= 0) {
-            stateGame = false;
+        endState = analisysEndState();
+        if (endState >= 0) {
+            gameOn = false;
+            if (null != callableStopGame) {
+                ETypeColor tc = null;
+                if (endState > 0) tc = endState == 1 ? ETypeColor.WHITE: ETypeColor.BLACK;
+                callableStopGame.endStateGame(tc);
+            }
         }
     }
 
@@ -252,28 +251,26 @@ public abstract class CEngineBoard {
      * Анализ доступных ходов.
      */
     public synchronized void analisysPossibleMoves() {
-        curGameSteps.clear();
+        possibleCurrentMoves.clear();
         // Анализ возможных атак.
-        isAttack = true;
         for (CPair<Integer, Integer> pos: board.keySet()) {
-            IFigureBase fb = board.get(pos);
-            if (fb.getColorType() == getCurMove()) {
-                List<List<CPair<Integer, Integer>>> tmp = fb.searchAttack();
+            CPair<ETypeFigure, ETypeColor> figure = board.get(pos);
+            if (figure.getSecond() == curMove) {
+                List<List<CPair<Integer, Integer>>> tmp = factoryFigure.getFigure(figure.getFirst()).searchAttack(board, pos);
                 if (tmp.size() > 0) {
-                    curGameSteps.put(new CPair<>(fb.getX(), fb.getY()), tmp);
+                    possibleCurrentMoves.put(pos, tmp);
                 }
             }
         }
 
-        if (0 == curGameSteps.size()) {
+        if (0 == possibleCurrentMoves.size()) {
             // Анализ возможных ходов.
-            isAttack = false;
             for (CPair<Integer, Integer> pos: board.keySet()) {
-                IFigureBase fb = board.get(pos);
-                if (fb.getColorType() == getCurMove()) {
-                    List<List<CPair<Integer, Integer>>> tmp = fb.searchMove();
+                CPair<ETypeFigure, ETypeColor> figure = board.get(pos);
+                if (figure.getSecond() == curMove) {
+                    List<List<CPair<Integer, Integer>>> tmp = factoryFigure.getFigure(figure.getFirst()).searchMove(board, pos);
                     if (tmp.size() > 0) {
-                        curGameSteps.put(new CPair<>(fb.getX(), fb.getY()), tmp);
+                        possibleCurrentMoves.put(pos, tmp);
                     }
                 }
             }
@@ -285,29 +282,30 @@ public abstract class CEngineBoard {
      * Количество найденных ходов.
      * @return количество найденных ходов
      */
-    public int sizeGameSteps() {
-        return curGameSteps.size();
+    public int sizePossibleCurrentMoves() {
+        return possibleCurrentMoves.size();
     }
 
     /**
      * Анализ конечного игрового состояния.
      * @return 0 - ничья, 1 - выйграли белые, 2 - выйграли чёрные, меньше нуля - все остальные состояния.
      */
-    public synchronized int analisysGameState() {
-        if (!getStateGame()) return -1;
+    public synchronized int analisysEndState() {
+        if (!gameOn) return -1;
         int countW = 0, countB = 0;
         for (CPair<Integer, Integer> pos: board.keySet()) {
-            IFigureBase fb = board.get(pos);
-            if (fb.getColorType() == ETypeColor.BLACK) countB++;
+            CPair<ETypeFigure, ETypeColor> figure = board.get(pos);
+            if (ETypeColor.BLACK == figure.getSecond()) countB++;
             else countW++;
         }
-        int count = getCurMove() == ETypeColor.BLACK ? countW: countB;
-        if (count > 0 && curGameSteps.size() > 0) return -1;
         if (countB == 0) return 1;
         if (countW == 0) return 2;
-        CCheckersBoard newState = new CCheckersBoard((CCheckersBoard) this);
-        newState.nextStep();
-        if (sizeGameSteps() == 0 && newState.sizeGameSteps() == 0) return 0;
+        int count = ETypeColor.BLACK == curMove ? countW: countB;
+        if (count > 0 && possibleCurrentMoves.size() > 0) return -1;
+        CEngineBoard nextBoard = new CCheckersBoard((CCheckersBoard) this);
+        nextBoard.setCallableStopGame(null);
+        nextBoard.reverseCurrentMove();
+        if (0 == possibleCurrentMoves.size() && 0 == nextBoard.sizePossibleCurrentMoves()) return 0;
         return -1;
     }
 
@@ -316,9 +314,10 @@ public abstract class CEngineBoard {
      * @return массив стартовых ходов, или null
      */
     public List<CPair<Integer, Integer>> lstStartMoveGameField() {
-        if (curGameSteps.size() == 0) return null;
-        CPair<Integer, Integer>[] arraySteps = new CPair[curGameSteps.size()];
-        curGameSteps.keySet().toArray(arraySteps);
+        if (!gameOn) return null;
+        if (0 == possibleCurrentMoves.size()) return null;
+        CPair<Integer, Integer>[] arraySteps = new CPair[possibleCurrentMoves.size()];
+        possibleCurrentMoves.keySet().toArray(arraySteps);
         return Arrays.asList(arraySteps);
     }
 
@@ -329,9 +328,9 @@ public abstract class CEngineBoard {
      * @return массив конечных координат или null
      */
     public List<CPair<Integer, Integer>> lstIntermediateMoveGameField(int x, int y) {
-        if (!getStateGame()) return null;
-        if (aField(x, y)) {
-            List<List<CPair<Integer, Integer>>> lstAll = curGameSteps.getOrDefault(new CPair<>(x, y), null);
+        if (!gameOn) return null;
+        if (factoryFigure.aPosition(x, y)) {
+            List<List<CPair<Integer, Integer>>> lstAll = possibleCurrentMoves.getOrDefault(new CPair<>(x, y), null);
             if (null == lstAll || lstAll.size() == 0) return null;
             List<CPair<Integer, Integer>> res = new LinkedList<>();
             for (List<CPair<Integer, Integer>> m: lstAll) {
@@ -353,9 +352,9 @@ public abstract class CEngineBoard {
      * @return массив конечных координат или null
      */
     public List<CPair<Integer, Integer>> lstEndMoveGameField(int x, int y) {
-        if (!getStateGame()) return null;
-        if (aField(x, y)) {
-            List<List<CPair<Integer, Integer>>> lstAll = curGameSteps.getOrDefault(new CPair<>(x, y), null);
+        if (!gameOn) return null;
+        if (factoryFigure.aPosition(x, y)) {
+            List<List<CPair<Integer, Integer>>> lstAll = possibleCurrentMoves.getOrDefault(new CPair<>(x, y), null);
             if (null == lstAll || lstAll.size() == 0) return null;
             List<CPair<Integer, Integer>> res = new LinkedList<>();
             for (List<CPair<Integer, Integer>> m: lstAll) {
@@ -375,8 +374,8 @@ public abstract class CEngineBoard {
     public List<CPair<Integer, Integer>> lstGameStepInfo(CPair<Integer, Integer> pos1, CPair<Integer, Integer> pos2) {
         List<CPair<Integer, Integer>> res = new LinkedList<>();
         res.add(pos1);
-        if (curGameSteps.containsKey(pos1)) {
-            List<List<CPair<Integer, Integer>>> lstAll = curGameSteps.get(pos1);
+        if (possibleCurrentMoves.containsKey(pos1)) {
+            List<List<CPair<Integer, Integer>>> lstAll = possibleCurrentMoves.get(pos1);
             for (List<CPair<Integer, Integer>> m: lstAll) {
                 if (m.get(0).equals(pos2)) {
                     res.addAll(m);

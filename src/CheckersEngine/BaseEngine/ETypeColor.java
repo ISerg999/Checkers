@@ -12,5 +12,9 @@ public enum ETypeColor {
         return direction;
     }
 
+    public ETypeColor neg() {
+        return this == ETypeColor.WHITE ? ETypeColor.BLACK: ETypeColor.WHITE;
+    }
+
     private int direction;
 }
