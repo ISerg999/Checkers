@@ -243,19 +243,19 @@ public class CSMControl {
         if (null != fileName) {
             List<Integer> bin = new LinkedList<>();
             String title = resourse.getResStr("Board.File.Title");
-            bin.addAll(getBoard().getBinaryBoardFigure());
-            bin.addAll(getBoard().getBinaryBoardState());
-            bin.addAll(getCMoveGame().getListBin());
-            try (OutputStream os = new FileOutputStream(fileName);) {
-                for (byte cb: title.getBytes()) {
-                    os.write(cb);
-                }
-                for (Integer code: bin) {
-                    os.write(code);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+//            bin.addAll(getBoard().getBinaryBoardFigure());
+//            bin.addAll(getBoard().getBinaryBoardState());
+//            bin.addAll(getCMoveGame().getListBin());
+//            try (OutputStream os = new FileOutputStream(fileName);) {
+//                for (byte cb: title.getBytes()) {
+//                    os.write(cb);
+//                }
+//                for (Integer code: bin) {
+//                    os.write(code);
+//                }
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
             makeChangesState(ETActionGame.TOSAVEOK, true);
         }
     }
@@ -268,24 +268,24 @@ public class CSMControl {
             int k = 0;
             List<Integer> bin = new LinkedList<>();
             String title = resourse.getResStr("Board.File.Title");
-            try (InputStream is = new FileInputStream(fileName);) {
-                int byteRead;
-                while (((byteRead = is.read()) != -1) && k < title.length()) {
-                    if (byteRead != title.charAt(k)) {
-                        throw new IOException("Ошибка в заголовке файла");
-                    }
-                    else k++;
-                }
-                bin.add(byteRead);
-                while ((byteRead = is.read()) != -1) {
-                    bin.add(byteRead);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            k = getBoard().setBinaryBoardFigure(bin, 0);
-            k = getBoard().setBinaryBoardState(bin, k);
-            getCMoveGame().setListBin(bin, k);
+//            try (InputStream is = new FileInputStream(fileName);) {
+//                int byteRead;
+//                while (((byteRead = is.read()) != -1) && k < title.length()) {
+//                    if (byteRead != title.charAt(k)) {
+//                        throw new IOException("Ошибка в заголовке файла");
+//                    }
+//                    else k++;
+//                }
+//                bin.add(byteRead);
+//                while ((byteRead = is.read()) != -1) {
+//                    bin.add(byteRead);
+//                }
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//            k = getBoard().setBinaryBoardFigure(bin, 0);
+//            k = getBoard().setBinaryBoardState(bin, k);
+//            getCMoveGame().setListBin(bin, k);
             makeChangesState(ETActionGame.TOLOADOK, true);
         }
     }

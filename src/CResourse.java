@@ -10,29 +10,37 @@ import java.util.List;
  */
 public class CResourse {
 //        Main.class.getResource("Resource/imgs/checkers.png"); - Доступ к пути ресурсов по url или получить поток ввода - .getResourceAsStream.
+    private CResourse() {
+        lstProperty = new LinkedList<>();
+        cacheImage = new HashMap<>();
+        cacheText = new HashMap<>();
+        cacheInt = new HashMap<>();
+        cacheDouble = new HashMap<>();
+    }
+    private static class CResourseHolder {
+        private static final CResourse INSTANCE = new CResourse();
+    }
+    public static CResourse getInstance() {
+        return CResourse.CResourseHolder.INSTANCE;
+    }
 
     /**
      * Класс свойств
      */
     private List<Properties> lstProperty;
     /**
-     * Словарь изображений.
+     * Словарь запрашиваемых изображений.
      */
-    private Map<String, ImageIcon> mImage;
-
-    private CResourse() {
-        lstProperty = new LinkedList<>();
-        mImage = new HashMap<>();
-    }
-
-    private static class CResourseHolder {
-        private static final CResourse INSTANCE = new CResourse();
-    }
-
-    public static CResourse getInstance() {
-        return CResourse.CResourseHolder.INSTANCE;
-    }
-
+    private Map<String, ImageIcon> cacheImage;
+    /**
+     * Словарь запрашиваемых строк.
+     */
+    private Map<String, String> cacheText;
+    /**
+     * Словарь запрашиваемых чисел.
+     */
+    private Map<String, Integer> cacheInt;
+    private Map<String, Double> cacheDouble;
 
     /**
      * Перекодирование получаемых строк.
@@ -70,7 +78,10 @@ public class CResourse {
      */
     public void clearResourse() {
         lstProperty.clear();
-        mImage.clear();
+        cacheImage.clear();
+        cacheText.clear();
+        cacheInt.clear();
+        cacheDouble.clear();
     }
 
     /**
@@ -85,6 +96,10 @@ public class CResourse {
         } catch (IOException e) {
             System.err.println("ОШИБКА: Файл свойств отсуствует!");
         }
+        cacheImage.clear();
+        cacheText.clear();
+        cacheInt.clear();
+        cacheDouble.clear();
         lstProperty.add(0, property);
     }
 
@@ -94,9 +109,13 @@ public class CResourse {
      * @return получаемая строка
      */
     public String getResStr(String key) {
-        String res = searchResource(key);
-        if (res != null) res = encoding(res);
-        return res;
+        if (!cacheText.containsKey(key)) {
+            String res = searchResource(key);
+            if (null == res) return null;
+            res = encoding(res);
+            cacheText.put(key, res);
+        }
+        return cacheText.get(key);
     }
 
     /**
@@ -105,8 +124,10 @@ public class CResourse {
      * @return получаемое число
      */
     public Integer getResInt(String key) {
-        String res = searchResource(key);
-        if (res != null){
+        if (!cacheInt.containsKey(key)) {
+            Integer rI;
+            String res = searchResource(key);
+            if (null == res) return null;
             res = res.toLowerCase();
             boolean isHex = false;
             if (res.charAt(0) == '#') {
@@ -116,10 +137,11 @@ public class CResourse {
                 isHex = true;
                 res = res.substring(2);
             }
-            if (isHex) return Integer.parseInt(res, 16);
-            else return Integer.parseInt(res);
+            if (isHex) rI = Integer.parseInt(res, 16);
+            else rI = Integer.parseInt(res);
+            cacheInt.put(key, rI);
         }
-        return null;
+        return cacheInt.get(key);
     }
 
     /**
@@ -128,9 +150,12 @@ public class CResourse {
      * @return получаемое вещественное число двойной точности
      */
     public Double getResDouble(String key) {
-        String res = searchResource(key);
-        if (res != null) return Double.parseDouble(res);
-        return null;
+        if (!cacheDouble.containsKey(key)) {
+            String res = searchResource(key);
+            if (null == res) return null;
+            cacheDouble.put(key, Double.parseDouble(res));
+        }
+        return cacheDouble.get(key);
     }
 
     /**
@@ -139,11 +164,11 @@ public class CResourse {
      * @return изображение иконки
      */
     public ImageIcon getImage(String nameKey) {
-        if (!mImage.containsKey(nameKey)) {
+        if (!cacheImage.containsKey(nameKey)) {
             String fullName = getResStr(nameKey);
-            mImage.put(nameKey, new ImageIcon(Main.class.getResource(fullName)));
+            cacheImage.put(nameKey, new ImageIcon(Main.class.getResource(fullName)));
         }
-        return mImage.get(nameKey);
+        return cacheImage.get(nameKey);
     }
 
 }

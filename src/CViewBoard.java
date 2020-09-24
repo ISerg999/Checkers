@@ -248,7 +248,8 @@ public class CViewBoard extends JPanel implements IChangeState {
                 List<CPair<Integer, Integer>> newStep = csmControl.getBoard().lstGameStepInfo(firstPos, pos);
                 csmControl.getCMoveGame().gameMoveFigure(newStep);
                 csmControl.makeChangesState(ETActionGame.TONEXTSTEPGAME, false);
-                csmControl.makeChangesState(ETActionGame.TONEXTSTEPGAMEWIN, false);
+                if (csmControl.getBoard().getStateGame())
+                    csmControl.makeChangesState(ETActionGame.TONEXTSTEPGAMEWIN, false);
             }
         }
     }
@@ -318,8 +319,15 @@ public class CViewBoard extends JPanel implements IChangeState {
         firstPos = null;
         clearBoardSpacesColor();
         csmControl.getBoard().nextStep();
-        if (csmControl.getPlayForColor(csmControl.getBoard().getCurMove())) {
-            choiceColorFrame();
+        if (csmControl.getBoard().getStateGame()) {
+            if (csmControl.getPlayForColor(csmControl.getBoard().getCurMove())) {
+                choiceColorFrame();
+            }
+        } else {
+            int r = csmControl.getBoard().getStateGameStop();
+            if (r == 0) csmControl.makeChangesState(ETActionGame.TOBASEFROMGAMEDRAW, false);
+            else if (r == 1) csmControl.makeChangesState(ETActionGame.TOBASEFROMGAMEWHILE, false);
+            else if (r == 2) csmControl.makeChangesState(ETActionGame.TOBASEFROMGAMEBLACK, false);
         }
         repaint();
     }

@@ -1,1 +1,1 @@
-# Checkers v0.4
+# Checkers v0.5

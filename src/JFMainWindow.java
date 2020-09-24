@@ -34,6 +34,11 @@ public class JFMainWindow extends JFrame implements IChangeState {
         stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOBLACKCOMP), "playBlackFromComp");
         stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOGAME), "initGameMode");
         stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TONEXTSTEPGAMEWIN), "nextStepGame");
+        stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEDRAW), "endGameFromDraw");
+        stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEWHILE), "endGameFromWinWhile");
+        stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEBLACK), "endGameFromWinBlack");
+        stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEGAMESTOP), "endGameFromStop");
+
     }
 
     /**
@@ -192,7 +197,7 @@ public class JFMainWindow extends JFrame implements IChangeState {
 
         JMenuItem miStop = new JMenuItem(resourse.getResStr("MenuName.Game.Stop"));
         miStop.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, ActionEvent.CTRL_MASK));
-        // miStop.addActionListener(this);
+        miStop.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOBASEGAMESTOP, false));
         mGame.add(miStop);
         mActionMenu.put("MenuName.Game.Stop", miStop);
 
@@ -555,5 +560,25 @@ public class JFMainWindow extends JFrame implements IChangeState {
         txt = txt + " " + (csmControl.getPlayForColor(tc) ?  resourse.getResStr("Msg.Game.Play.Player"): resourse.getResStr("Msg.Game.Play.Computer"));
         lblBottom.setText(txt);
         repaint();
+    }
+
+    protected void endGameFromDraw() {
+        viewDialog(resourse.getResStr("Msg.GameOver.Title"), resourse.getResStr("Msg.GameOver.Draw"));
+        stepToBase();
+    }
+
+    protected void endGameFromWinWhile() {
+        viewDialog(resourse.getResStr("Msg.GameOver.Title"), resourse.getResStr("Msg.GameOver.While"));
+        stepToBase();
+    }
+
+    protected void endGameFromWinBlack() {
+        viewDialog(resourse.getResStr("Msg.GameOver.Title"), resourse.getResStr("Msg.GameOver.Black"));
+        stepToBase();
+    }
+
+    protected void endGameFromStop() {
+        viewDialog(resourse.getResStr("Msg.GameOver.Title"), resourse.getResStr("Msg.GameOver.FromPlayer"));
+        stepToBase();
     }
 }
