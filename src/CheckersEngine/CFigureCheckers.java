@@ -1,95 +1,89 @@
 package CheckersEngine;
 
-import CheckersEngine.BaseEngine.ETypeColor;
-import CheckersEngine.BaseEngine.ETypeFigure;
-import CheckersEngine.BaseEngine.CPair;
-import CheckersEngine.BaseEngine.IFigureBase;
+import CheckersEngine.BaseEngine.*;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Класс контролирующий возможные ходы для шашки.
  */
 public class CFigureCheckers extends CFigureParent {
 
-    public CFigureCheckers(ETypeColor colorFig) {
-        super(ETypeFigure.CHECKERS, colorFig);
-    }
-    public CFigureCheckers(ETypeColor colorFig, int x, int y) {
-        super(ETypeFigure.CHECKERS, colorFig, x, y);
-    }
+    /**
+     * Линии превращения шашаек в дамки.
+     */
+    protected static final int BOARD_TOP = 7;
+    protected static final int BOARD_BOTTOM = 0;
 
-    protected int testMove(int x, int y, CCheckersBoard tmpBoard) {
-        if (null == tmpBoard) tmpBoard = board;
-        if (!tstCoord(x, y)) return -1;
-        int maxp = colorFigure == ETypeColor.BLACK ? BOARD_BOTTOM: BOARD_TOP;
-        if (null == tmpBoard.getBoard().getOrDefault(new CPair<>(x, y), null)) {
-            return maxp == y ? 1: 0;
+    /**
+     * Провекра положения для шашки.
+     * @param pos   позиция шашки
+     * @param board игровая доска
+     * @param tc    текущий цвет фигуры
+     * @return результат проверки, если отрицательное, то поле занято, если 0, то позиция свободна, шашка остаётся шашкой, если 1, то позиция свободна, шашка становится дамкой.
+     */
+    protected int testMove(CPair<Integer, Integer> pos, Map<CPair<Integer, Integer>, CPair<ETypeFigure, ETypeColor>> board, ETypeColor tc) {
+        if (!CFactoryFigure.getInstance().aPosition(pos)) return -1;
+        int maxp = tc == ETypeColor.BLACK ? BOARD_BOTTOM: BOARD_TOP;
+        if (null == board.getOrDefault(pos, null)) {
+            return maxp == pos.getSecond() ? 1: 0;
         }
         return -1;
     }
 
     @Override
-    public List<List<CPair<Integer, Integer>>> searchMove() {
+    public List<List<CPair<Integer, Integer>>> searchMove(Map<CPair<Integer, Integer>, CPair<ETypeFigure, ETypeColor>> board, CPair<Integer, Integer> pos) {
+        ETypeColor tc = board.get(pos).getSecond();
+        List<List<CPair<Integer, Integer>>> lstSteps = new LinkedList<>();
         CPair<Integer, Integer> newPos;
-        lstSteps = new LinkedList<>();
         List<CPair<Integer, Integer>> oneStep;
-        int is = colorFigure == ETypeColor.BLACK ? 0: 2;
-        int x = pos.getFirst() + BASE_PATH_OPTION[is][0];
-        int y = pos.getSecond() + BASE_PATH_OPTION[is][1];
-        int r = testMove(x, y, null);
-        if (r >= 0) {
-            newPos = new CPair<>(x, y);
-            oneStep = new LinkedList<>();
-            oneStep.add(newPos);
-            oneStep.add(r > 0 ? newPos: null);
-            lstSteps.add(oneStep);
-        }
-        is++;
-        x = pos.getFirst() + BASE_PATH_OPTION[is][0];
-        y = pos.getSecond() + BASE_PATH_OPTION[is][1];
-        r = testMove(x, y, null);
-        if (r >= 0) {
-            newPos = new CPair<>(x, y);
-            oneStep = new LinkedList<>();
-            oneStep.add(newPos);
-            oneStep.add(r > 0 ? newPos: null);
-            lstSteps.add(oneStep);
+        int x, y, r;
+        int is = tc == ETypeColor.BLACK ? 0: 2;
+        for (int tis = 0; tis < 2; tis++) {
+            x = pos.getFirst() + BASE_PATH_OPTION[is + tis][0];
+            y = pos.getSecond() + BASE_PATH_OPTION[is + tis][1];
+            r = testMove(new CPair<>(x, y), board, tc);
+            if (r >= 0) {
+                newPos = new CPair<>(x, y);
+                oneStep = new LinkedList<>();
+                oneStep.add(newPos);
+                oneStep.add(r > 0 ? newPos: null);
+                lstSteps.add(oneStep);
+            }
         }
         return lstSteps;
     }
 
     @Override
-    public List<List<CPair<Integer, Integer>>> searchAttack() {
-        lstSteps = new LinkedList<>();
-        List<CPair<Integer, Integer>> tmpOneStep, oneStep = new LinkedList<>();
+    public List<List<CPair<Integer, Integer>>> searchAttack(Map<CPair<Integer, Integer>, CPair<ETypeFigure, ETypeColor>> board, CPair<Integer, Integer> pos) {
+        ETypeColor tc = board.get(pos).getSecond();
+        CStackBoardMove stack = new CStackBoardMove();
+        List<List<CPair<Integer, Integer>>> tmpLstSteps, lstSteps = new LinkedList<>();
+        Map<CPair<Integer, Integer>, CPair<ETypeFigure, ETypeColor>> curBoard, tmpBoard;
+        ETypeFigure tf;
+        CPair<Integer, Integer> curPos, nextPos, endPos;
+        List<CPair<Integer, Integer>> oneStep, tmpOneStep;
         boolean isTest;
-        CPair<Integer, Integer> curPos, nextPos, endPos, tmpPos;
-        List<CCheckersBoard> stackBoard = new LinkedList<>(); // Стек досок.
-        List<CPair<Integer, Integer>> stackPos = new LinkedList<>(); // Стек текущих позиций.
-        List<List<CPair<Integer, Integer>>> stackOneStep = new LinkedList<>(); // Стек возможных атак.
-        CCheckersBoard tmpBoard, curBoard = new CCheckersBoard(board);
-        stackBoard.add(0, curBoard);
-        stackPos.add(0, pos);
-        stackOneStep.add(0, oneStep);
-        while (stackBoard.size() > 0) {
-            curBoard = stackBoard.remove(0);
-            curPos = stackPos.remove(0);
-            oneStep = stackOneStep.remove(0);
-            if (ETypeFigure.QUINE == curBoard.getFigure(curPos.getFirst(), curPos.getSecond()).getTypeFigure()) {
-                List<List<CPair<Integer, Integer>>> tmpLstSteps;
-                tmpLstSteps = curBoard.getFigure(curPos.getFirst(), curPos.getSecond()).searchAttack();
+        stack.push(board, pos, new LinkedList<>());
+        while (stack.size() > 0) {
+            curBoard = stack.getBoard();
+            curPos = stack.getPos();
+            oneStep = stack.getOneStep();
+            stack.pop();
+            if (ETypeFigure.QUINE == curBoard.get(curPos).getFirst()) {
+                // Атака фигуры как дамки.
+                tmpLstSteps = CFactoryFigure.getInstance().getFigure(ETypeFigure.QUINE).searchAttack(curBoard, curPos);
                 if (tmpLstSteps.size() > 0) {
-                    // Дальше фигура атакует как дамка.
                     for (List<CPair<Integer, Integer>> elOneStep: tmpLstSteps) {
+                        if (null == elOneStep || 0 == elOneStep.size()) continue;
                         tmpOneStep = new LinkedList<>();
-                        tmpOneStep.add(elOneStep.remove(0));
-                        elOneStep.remove(0);
-                        tmpPos = new CPair<>(elOneStep.get(0).getFirst(), elOneStep.get(0).getSecond());
-                        tmpOneStep.add(tmpPos);
+                        tmpOneStep.add(elOneStep.get(elOneStep.size() - 1));
+                        tmpOneStep.add(oneStep.get(oneStep.size() - 1));
                         tmpOneStep.addAll(oneStep);
-                        tmpOneStep.addAll(elOneStep);
+                        tmpOneStep.addAll(elOneStep.subList(2, elOneStep.size()));
                         lstSteps.add(tmpOneStep);
                     }
                 }
@@ -97,29 +91,26 @@ public class CFigureCheckers extends CFigureParent {
                 isTest = true;
                 for (int[] delta: BASE_PATH_OPTION) {
                     nextPos = new CPair<>(curPos.getFirst() + delta[0], curPos.getSecond() + delta[1]);
-                    if (board.aField(nextPos) && null != curBoard.getBoard().getOrDefault(nextPos, null) && board.getCurMove() != curBoard.getBoard().get(nextPos).getColorType()) {
+                    if (CFactoryFigure.getInstance().aPosition(nextPos) && null != curBoard.getOrDefault(nextPos, null) && tc != curBoard.get(nextPos).getSecond()) {
                         endPos = new CPair<>(nextPos.getFirst() + delta[0], nextPos.getSecond() + delta[1]);
-                        if (board.aField(endPos) && null == curBoard.getBoard().getOrDefault(endPos, null)) {
+                        if (CFactoryFigure.getInstance().aPosition(endPos) && null == curBoard.getOrDefault(endPos, null)) {
                             isTest = false;
-                            tmpBoard = new CCheckersBoard(curBoard);
-                            ETypeFigure tfg = 1 == testMove(endPos.getFirst(), endPos.getSecond(), tmpBoard) ? ETypeFigure.QUINE: ETypeFigure.CHECKERS;
-                            tmpBoard.setFigure(curPos.getFirst(), curPos.getSecond(), null, null);
-                            tmpBoard.setFigure(nextPos.getFirst(), nextPos.getSecond(), null, null);
-                            tmpBoard.setFigure(endPos.getFirst(), endPos.getSecond(), tfg, colorFigure);
-                            stackBoard.add(0, tmpBoard);
+                            tmpBoard = new HashMap<>(curBoard);
+                            tf = 1 == testMove(endPos, tmpBoard, tc) ? ETypeFigure.QUINE: ETypeFigure.CHECKERS;
+                            tmpBoard.remove(curPos);
+                            tmpBoard.remove(nextPos);
+                            tmpBoard.put(endPos, new CPair<>(tf, tc));
                             tmpOneStep = new LinkedList<>(oneStep);
                             tmpOneStep.add(nextPos);
                             tmpOneStep.add(endPos);
-                            stackOneStep.add(0, tmpOneStep);
-                            stackPos.add(0, endPos);
+                            stack.push(tmpBoard, endPos, tmpOneStep);
                         }
                     }
                 }
                 if (isTest) {
                     if (oneStep.size() > 0) {
-                        tmpPos = oneStep.get(oneStep.size() - 1);
                         tmpOneStep = new LinkedList<>();
-                        tmpOneStep.add(tmpPos);
+                        tmpOneStep.add(oneStep.get(oneStep.size() - 1));
                         tmpOneStep.add(null);
                         tmpOneStep.addAll(oneStep);
                         lstSteps.add(tmpOneStep);
@@ -129,5 +120,6 @@ public class CFigureCheckers extends CFigureParent {
         }
         return lstSteps;
     }
+
 
 }

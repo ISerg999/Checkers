@@ -1,4 +1,6 @@
 import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -14,6 +16,7 @@ public class CResourse {
         lstProperty = new LinkedList<>();
         cacheImage = new HashMap<>();
         cacheText = new HashMap<>();
+        cacheListStr = new HashMap<>();
         cacheInt = new HashMap<>();
         cacheDouble = new HashMap<>();
     }
@@ -37,9 +40,16 @@ public class CResourse {
      */
     private Map<String, String> cacheText;
     /**
+     * Словарь запрашиваемых списков строк.
+     */
+    private Map<String, List<String>> cacheListStr;
+    /**
      * Словарь запрашиваемых чисел.
      */
     private Map<String, Integer> cacheInt;
+    /**
+     * Словарь запрашиваемых вещественных чисел.
+     */
     private Map<String, Double> cacheDouble;
 
     /**
@@ -80,6 +90,7 @@ public class CResourse {
         lstProperty.clear();
         cacheImage.clear();
         cacheText.clear();
+        cacheListStr.clear();
         cacheInt.clear();
         cacheDouble.clear();
     }
@@ -116,6 +127,32 @@ public class CResourse {
             cacheText.put(key, res);
         }
         return cacheText.get(key);
+    }
+
+    /**
+     * Возвращает список строк находящийся уже в памяти.
+     * @param key ключ ресурса
+     * @return список строк, или null, если в памяти его нет
+     */
+    public List<String> getListStr(String key) {
+        if (!cacheListStr.containsKey(key)) return null;
+        return cacheListStr.get(key);
+    }
+
+    /**
+     * Возвращает список строк.
+     * @param key   ключ ресурса
+     * @param delim разделитель
+     * @return список строк или null
+     */
+    public List<String> getListStr(String key, String delim) {
+        if (!cacheListStr.containsKey(key)) {
+            String res = searchResource(key);
+            if (null == res) return null;
+            res = encoding(res);
+            cacheListStr.put(key, Arrays.asList(res.split(delim)));
+        }
+        return cacheListStr.get(key);
     }
 
     /**
@@ -171,4 +208,30 @@ public class CResourse {
         return cacheImage.get(nameKey);
     }
 
+    /**
+     * Создание отдельных еденичных изображений, взятых из одного большого изображения.
+     * @param nameMultiImg  ключ ресурсов на основное, большое изображение
+     * @param namePreffix   ключ ресурсов на имена ключей отдельных изображений разделенных пробелом
+     * @param namePositions ключ ресурсов на прямоугольные области еденичных изображений
+     */
+    public void createMultiImage(String nameMultiImg, String namePreffix, String namePositions) {
+        String fullName = getResStr(nameMultiImg);
+        ImageIcon fullImage = new ImageIcon(Main.class.getResource(fullName));
+        List<String> fullPreffixs = getListStr(namePreffix, " ");
+        if (null == fullPreffixs) return;
+        List<String> fullStringRect = getListStr(namePositions, " ");
+        if (null == fullStringRect) return;
+        int k = 0;
+        for (String pref: fullPreffixs) {
+            Integer x = Integer.parseInt(fullStringRect.get(k++));
+            Integer y = Integer.parseInt(fullStringRect.get(k++));
+            Integer w = Integer.parseInt(fullStringRect.get(k++));
+            Integer h = Integer.parseInt(fullStringRect.get(k++));
+            BufferedImage bImg = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+            Graphics g = bImg.getGraphics();
+            g.drawImage(fullImage.getImage(), 0, 0, w, h, x, y, x + w, y + h, null);
+            g.dispose();
+            cacheImage.put(pref, new ImageIcon(fullImage.getImage()));
+        }
+    }
 }

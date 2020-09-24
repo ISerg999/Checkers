@@ -1,35 +1,28 @@
 package CheckersEngine;
 
-import CheckersEngine.BaseEngine.ETypeColor;
-import CheckersEngine.BaseEngine.ETypeFigure;
-import CheckersEngine.BaseEngine.CPair;
-import CheckersEngine.BaseEngine.IFigureBase;
+import CheckersEngine.BaseEngine.*;
 
-import javax.swing.*;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Класс контролирующий возможные ходы для дамки.
  */
 public class CFigureQuine extends CFigureParent {
-    public CFigureQuine(ETypeColor colorFig) {
-        super(ETypeFigure.QUINE, colorFig);
-    }
-    public CFigureQuine(ETypeColor colorFig, int x, int y) {
-        super(ETypeFigure.QUINE, colorFig, x, y);
-    }
 
     @Override
-    public List<List<CPair<Integer, Integer>>> searchMove() {
-        lstSteps = new LinkedList<>();
+    public List<List<CPair<Integer, Integer>>> searchMove(Map<CPair<Integer, Integer>, CPair<ETypeFigure, ETypeColor>> board, CPair<Integer, Integer> pos) {
+        List<List<CPair<Integer, Integer>>> lstSteps = new LinkedList<>();
         List<CPair<Integer, Integer>> oneStep;
+        int x, y, new_x, new_y;
         for (int is = 0; is < BASE_PATH_OPTION.length; is++) {
-            int x = pos.getFirst();
-            int y = pos.getSecond();
-            int new_x = x + BASE_PATH_OPTION[is][0];
-            int new_y = y + BASE_PATH_OPTION[is][1];
-            while (null == board.getBoard().getOrDefault(new CPair<>(new_x, new_y), null) && tstCoord(new_x, new_y)) {
+            x = pos.getFirst();
+            y = pos.getSecond();
+            new_x = x + BASE_PATH_OPTION[is][0];
+            new_y = y + BASE_PATH_OPTION[is][1];
+            while (CFactoryFigure.getInstance().aPosition(new_x, new_y) && null == board.getOrDefault(new CPair<>(new_x, new_y), null)) {
                 x = new_x;
                 y = new_y;
                 new_x = x + BASE_PATH_OPTION[is][0];
@@ -44,54 +37,46 @@ public class CFigureQuine extends CFigureParent {
     }
 
     @Override
-    public List<List<CPair<Integer, Integer>>> searchAttack() {
-        lstSteps = new LinkedList<>();
-        List<CPair<Integer, Integer>> tmpOneStep, oneStep = new LinkedList<>();
+    public List<List<CPair<Integer, Integer>>> searchAttack(Map<CPair<Integer, Integer>, CPair<ETypeFigure, ETypeColor>> board, CPair<Integer, Integer> pos) {
+        ETypeColor tc = board.get(pos).getSecond();
+        CStackBoardMove stack = new CStackBoardMove();
+        List<List<CPair<Integer, Integer>>> lstSteps = new LinkedList<>();
+        Map<CPair<Integer, Integer>, CPair<ETypeFigure, ETypeColor>> curBoard, tmpBoard;
+        CPair<Integer, Integer> curPos, nextPos, endPos;
+        List<CPair<Integer, Integer>> oneStep, tmpOneStep;
         boolean isTest;
-        CPair<Integer, Integer> curPos, nextPos, endPos, tmpPos;
-        List<CCheckersBoard> stackBoard = new LinkedList<>(); // Стек досок.
-        List<CPair<Integer, Integer>> stackPos = new LinkedList<>(); // Стек текущих позиций.
-        List<List<CPair<Integer, Integer>>> stackOneStep = new LinkedList<>(); // Стек возможных атак.
-        CCheckersBoard tmpBoard, curBoard = new CCheckersBoard(board);
-        stackBoard.add(0, curBoard);
-        stackPos.add(0, pos);
-        stackOneStep.add(0, oneStep);
-        while (stackBoard.size() > 0) {
-            curBoard = stackBoard.remove(0);
-            curPos = stackPos.remove(0);
-            oneStep = stackOneStep.remove(0);
+        stack.push(board, pos, new LinkedList<>());
+        while (stack.size() > 0) {
+            curBoard = stack.getBoard();
+            curPos = stack.getPos();
+            oneStep = stack.getOneStep();
+            stack.pop();
             isTest = true;
             for (int[] delta: BASE_PATH_OPTION) {
                 nextPos = new CPair<>(curPos.getFirst() + delta[0], curPos.getSecond() + delta[1]);
-                while (board.aField(nextPos) && null == curBoard.getBoard().getOrDefault(nextPos, null))
-                {
-                    int tx = nextPos.getFirst() + delta[0];
-                    int ty = nextPos.getSecond() + delta[1];
-                    nextPos.setFirst(tx);
-                    nextPos.setSecond(ty);
+                while (CFactoryFigure.getInstance().aPosition(nextPos) && null == curBoard.getOrDefault(nextPos, null)) {
+                    nextPos.setFirst(nextPos.getFirst() + delta[0]);
+                    nextPos.setSecond(nextPos.getSecond() + delta[1]);
                 }
-                if (board.aField(nextPos) && null != curBoard.getBoard().getOrDefault(nextPos, null) && board.getCurMove() != curBoard.getBoard().get(nextPos).getColorType()) {
+                if (CFactoryFigure.getInstance().aPosition(nextPos) && null != curBoard.getOrDefault(nextPos, null) && tc != curBoard.get(nextPos).getSecond()) {
                     endPos = new CPair<>(nextPos.getFirst() + delta[0], nextPos.getSecond() + delta[1]);
-                    if (board.aField(endPos) && null == curBoard.getBoard().getOrDefault(endPos, null)) {
+                    if (CFactoryFigure.getInstance().aPosition(endPos) && null == curBoard.getOrDefault(endPos, null)) {
                         isTest = false;
-                        tmpBoard = new CCheckersBoard(curBoard);
-                        tmpBoard.setFigure(curPos.getFirst(), curPos.getSecond(), null, null);
-                        tmpBoard.setFigure(nextPos.getFirst(), nextPos.getSecond(), null, null);
-                        tmpBoard.setFigure(endPos.getFirst(), endPos.getSecond(), typeFigure, colorFigure);
-                        stackBoard.add(0, tmpBoard);
+                        tmpBoard = new HashMap<>(curBoard);
+                        tmpBoard.remove(curPos);
+                        tmpBoard.remove(nextPos);
+                        tmpBoard.put(endPos, new CPair<>(ETypeFigure.QUINE, tc));
                         tmpOneStep = new LinkedList<>(oneStep);
                         tmpOneStep.add(nextPos);
                         tmpOneStep.add(endPos);
-                        stackOneStep.add(0, tmpOneStep);
-                        stackPos.add(0, endPos);
+                        stack.push(tmpBoard, endPos, tmpOneStep);
                     }
                 }
             }
             if (isTest) {
                 if (oneStep.size() > 0) {
-                    tmpPos = oneStep.get(oneStep.size() - 1);
                     tmpOneStep = new LinkedList<>();
-                    tmpOneStep.add(tmpPos);
+                    tmpOneStep.add(oneStep.get(oneStep.size() - 1));
                     tmpOneStep.add(null);
                     tmpOneStep.addAll(oneStep);
                     lstSteps.add(tmpOneStep);

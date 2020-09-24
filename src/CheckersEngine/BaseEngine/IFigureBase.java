@@ -1,69 +1,26 @@
 package CheckersEngine.BaseEngine;
 
-import CheckersEngine.CCheckersBoard;
-
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Интерфейс классов игровых фигур.
+ */
 public interface IFigureBase {
+    /**
+     * Алгоритм поиска возможных ходов данной фигурой.
+     * @param board объект игровой доски
+     * @param pos   позиция фигуры
+     * @return список списоков ходов (по 2 параметра: 1-й: конечные координаты, 2-й: если null, то фигура не изменилась, иначе координаты изменения)
+     */
+    List<List<CPair<Integer, Integer>>> searchMove(Map<CPair<Integer, Integer>, CPair<ETypeFigure, ETypeColor>> board, CPair<Integer, Integer> pos);
 
     /**
-     * Задаёт тип фигуры.
-     * @param typeFig  тип фигуры
+     * Алгоритм поиска возможных атак данной фигурой.
+     * @param board объект игровой доски
+     * @param pos   позиция фигуры
+     * @return список списокв атак (по 2 + n параметров: 1-й: конечные координаты, 2-й: если null, то фигура не изменилась, иначе координаты изменения,
+     * остальные по 2 координаты: первая из них - координаты снимаемой фигуры, вторые - координаты за ней)
      */
-    void setTypeFigure(ETypeFigure typeFig);
-
-    /**
-     * Возвращает тип текущей фигуры.
-     * @return тип текущей фигуры
-     */
-    ETypeFigure getTypeFigure();
-
-    /**
-     * Задаёт цвет фигуры.
-     * @param color цвет фигуры
-     */
-    void setColorType(ETypeColor color);
-
-    /**
-     * Возвращает цвет текущей фигуры.
-     * @return цвет текущей фигуры
-     */
-    ETypeColor getColorType();
-
-    /**
-     * Задание положения фигуры.
-     * @param pos позиция фигуры
-     */
-    void setPos(CPair<Integer, Integer> pos);
-
-    /**
-     * Получение текущей заданной координаты x.
-     * @return координата x
-     */
-    int getX();
-
-    /**
-     * Получение текущей заданной координаты y.
-     * @return координата y
-     */
-    int getY();
-
-    /**
-     * Задаёт ссылку на доску в которой будет искать возможные ходы и возможные атаки.
-     * @param board игровая доска
-     */
-    void setBoard(CCheckersBoard board);
-
-    /**
-     * Поиск возможных путей движения фигуры.
-     * @return список возможных путей движения фигуры, или null, если таковых не найдено.
-     */
-    List<List<CPair<Integer, Integer>>> searchMove();
-
-    /**
-     * Поиск возможных атак фигуры.
-     * @return список возможных атак фигуры, или null, если таковых не найдено.
-     */
-    List<List<CPair<Integer, Integer>>> searchAttack();
+    List<List<CPair<Integer, Integer>>> searchAttack(Map<CPair<Integer, Integer>, CPair<ETypeFigure, ETypeColor>> board, CPair<Integer, Integer> pos);
 }

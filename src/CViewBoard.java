@@ -1,7 +1,6 @@
 import CheckersEngine.BaseEngine.CPair;
 import CheckersEngine.BaseEngine.ETypeColor;
 import CheckersEngine.BaseEngine.ETypeFigure;
-import CheckersEngine.BaseEngine.IFigureBase;
 
 import javax.swing.*;
 import java.awt.*;
