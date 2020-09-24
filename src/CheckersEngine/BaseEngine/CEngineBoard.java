@@ -55,7 +55,6 @@ public abstract class CEngineBoard {
         endState = -1;
         factoryFigure = CFactoryFigure.getInstance();
     }
-
     public CEngineBoard(CEngineBoard old) {
         board = new HashMap<>();
         clearBoard();
@@ -131,6 +130,13 @@ public abstract class CEngineBoard {
             gameOn = true;
         }
         testNewStep();
+    }
+
+    /**
+     * Меняет ход игрока на предыдущий.
+     */
+    public synchronized void backCurrentMove() {
+        curMove = curMove.neg();
     }
 
     /**
@@ -234,7 +240,7 @@ public abstract class CEngineBoard {
     /**
      * Поиск возможных ходов, а также проверка на окончание игры.
      */
-    protected synchronized void testNewStep() {
+    public synchronized void testNewStep() {
         analisysPossibleMoves();
         endState = analisysEndState();
         if (endState >= 0) {

@@ -29,17 +29,11 @@ public class CControlMoveGame implements Iterable<String> {
      * Указатель на текущее изменение.
      */
     protected int curGameAction;
-    /**
-     * Базовое состояние доски.
-     * 0 - очищино, 1 - начальная расстановка.
-     */
-    protected int baseState;
 
     public CControlMoveGame(CEngineBoard board) {
         this.board = board;
         clearControlMove();
         placementBoard();
-        baseState = 1;
     }
 
     /**
@@ -63,7 +57,6 @@ public class CControlMoveGame implements Iterable<String> {
      */
     public void clearBoard() {
         board.clearBoard();
-        baseState = 0;
         curGameAction = -1;
         lstGameAction.clear();
     }
@@ -73,7 +66,6 @@ public class CControlMoveGame implements Iterable<String> {
      */
     public void placementBoard() {
         board.placementBoard();
-        baseState = 1;
         curGameAction = -1;
         lstGameAction.clear();
     }
@@ -85,29 +77,23 @@ public class CControlMoveGame implements Iterable<String> {
      */
     public void removeSpaceBoard(int x, int y) {
         String cmd = "" + CMD_REMOVE + coordIntToStr(x, true) + coordIntToStr(y,false);
-        IFigureBase oldF = board.getFigure(x, y);
-        cmd = cmd + convertFigureToStr(oldF.getTypeFigure(), oldF.getColorType());
-        board.setFigure(x, y, null, null);
-        curGameAction++;
-        lstGameAction.add(cmd);
+        cmd = cmd + convertFigureToStr(board.getF(x, y));
+        board.setF(x, y, null);
+        add(cmd);
     }
 
     /**
      * Помещает фигуру в клетку доски с заданными координатами.
-     * @param x          координата x клетка доски
-     * @param y          координата y клетка доски
-     * @param typeFigure тип помещаемой фигуры
-     * @param typeColor  цвет помещаемой фигуры
+     * @param x      координата x клетка доски
+     * @param y      координата y клетка доски
+     * @param figure помещаемая фигура
      */
-    public void setSpaceBoard(int x, int y, ETypeFigure typeFigure, ETypeColor typeColor) {
+    public void setSpaceBoard(int x, int y, CPair<ETypeFigure, ETypeColor> figure) {
         String cmd = "" + CMD_SET + coordIntToStr(x, true) + coordIntToStr(y,false);
-        cmd = cmd + convertFigureToStr(typeFigure, typeColor);
-        IFigureBase oldF = board.getFigure(x, y);
-        if (null == oldF) cmd = cmd + convertFigureToStr(null, null);
-        else cmd = cmd + convertFigureToStr(oldF.getTypeFigure(), oldF.getColorType());
-        board.setFigure(x, y, typeFigure, typeColor);
-        curGameAction++;
-        lstGameAction.add(cmd);
+        cmd = cmd + convertFigureToStr(figure);
+        cmd = cmd + convertFigureToStr(board.getF(x, y));
+        board.setF(x, y, figure);
+        add(cmd);
     }
 
     /**
@@ -122,8 +108,7 @@ public class CControlMoveGame implements Iterable<String> {
         String cmd = "" + (lstFullMove.size() > 3 ? CMD_ATTACK: CMD_MOVE);
         cmd = cmd + movePlayer(lstFullMove);
         if (lstFullMove.size() > 3) cmd = cmd + atackPlayer(lstFullMove);
-        curGameAction++;
-        lstGameAction.add(cmd);
+        add(cmd);
     }
 
     /**
@@ -131,7 +116,7 @@ public class CControlMoveGame implements Iterable<String> {
      * @return размер списка ходов
      */
     public int size() {
-        return lstGameAction.size();
+        return curGameAction + 1;
     }
 
     /**
@@ -141,13 +126,13 @@ public class CControlMoveGame implements Iterable<String> {
     public List<Integer> getListBin() {
         String cmd;
         List<Integer> binOut = new LinkedList<>();
-        binOut.add(baseState);
-        int x = lstGameAction.size();
+        int x = curGameAction + 1;
         int y = (x >> 8) & 0xff;
         x = x & 0xff;
         binOut.add(y);
         binOut.add(x);
-        for (String str: lstGameAction) {
+        for (int i = 0; i <= curGameAction; i++) {
+            String str = lstGameAction.get(i);
             cmd = str.substring(0, 1);
             binOut.add(cmd.codePointAt(0));
             str = str.substring(1);
@@ -192,9 +177,8 @@ public class CControlMoveGame implements Iterable<String> {
      */
     public int setListBin(List<Integer> inBin, int index) {
         String cmd;
-        baseState = inBin.get(index++);
         int lnLst = (inBin.get(index++) << 8) + inBin.get(index++);
-        lstGameAction.clear();
+        clearControlMove();
         for (; lnLst > 0; lnLst--) {
             cmd = new String(Character.toChars(inBin.get(index++)));
             if (CMD_REMOVE.equals(cmd)) {
@@ -213,7 +197,7 @@ public class CControlMoveGame implements Iterable<String> {
                     cmd = cmd + figureIntToStr(inBin.get(index++));
                 }
             }
-            lstGameAction.add(cmd);
+            add(cmd);
         }
         return index;
     }
@@ -224,6 +208,7 @@ public class CControlMoveGame implements Iterable<String> {
      * @return содержимое измененния
      */
     public String at(int i) {
+        if (i < 0 || i > curGameAction) return null;
         return lstGameAction.get(i);
     }
 
@@ -236,10 +221,72 @@ public class CControlMoveGame implements Iterable<String> {
         board = newBoard;
     }
 
+    /**
+     * Откат назад.
+     */
+    public void back() {
+        if (curGameAction > 0) {
+            int x, y, x2, y2;
+            ETypeFigure tf;
+            ETypeColor tc;
+            String str = lstGameAction.get(curGameAction--);
+            board.backCurrentMove();
+            String cmd = str.substring(0, 1);
+            str = str.substring(1);
+            if (CMD_REMOVE.equals(cmd)) {
+                x = coordStrToInt(str, 0);
+                y = coordStrToInt(str, 1);
+                tf = 'c' == str.charAt(2) ? ETypeFigure.CHECKERS: ETypeFigure.QUINE;
+                tc = 'b' == str.charAt(3) ? ETypeColor.BLACK: ETypeColor.WHITE;
+                board.setF(x, y, new CPair<>(tf, tc));
+            } else if (CMD_SET.equals(cmd)) {
+                x = coordStrToInt(str, 0);
+                y = coordStrToInt(str, 1);
+                tf = 'c' == str.charAt(4) ? ETypeFigure.CHECKERS: ETypeFigure.QUINE;
+                tc = 'b' == str.charAt(5) ? ETypeColor.BLACK: ETypeColor.WHITE;
+                board.setF(x, y, new CPair<>(tf, tc));
+            } else if (CMD_MOVE.equals(cmd) || CMD_ATTACK.equals(cmd)) {
+                x = coordStrToInt(str, 0);
+                y = coordStrToInt(str, 1);
+                x2 = coordStrToInt(str, 3);
+                y2 = coordStrToInt(str, 4);
+                tf = 'c' == str.charAt(6) ? ETypeFigure.CHECKERS: ETypeFigure.QUINE;
+                tc = 'b' == str.charAt(7) ? ETypeColor.BLACK: ETypeColor.WHITE;
+                tf = '!' == str.charAt(5) ? ETypeFigure.CHECKERS: tf;
+                board.setF(x2, y2, null);
+                board.setF(x, y, new CPair<>(tf, tc));
+                if (CMD_ATTACK.equals(cmd)) {
+                    str = str.substring(8);
+                    while (str.length() > 0) {
+                        x = coordStrToInt(str, 0);
+                        y = coordStrToInt(str, 1);
+                        tf = 'c' == str.charAt(4) ? ETypeFigure.CHECKERS: ETypeFigure.QUINE;
+                        tc = 'b' == str.charAt(5) ? ETypeColor.BLACK: ETypeColor.WHITE;
+                        board.setF(x, y, new CPair<>(tf, tc));
+                        str = str.substring(6);
+                    }
+                }
+            }
+        }
+    }
+
     @NotNull
     @Override
     public Iterator<String> iterator() {
         return lstGameAction.iterator();
+    }
+
+    /**
+     * Добавление нового полухода.
+     * @param cmd полуход
+     */
+    protected void add(String cmd) {
+        curGameAction++;
+        if (curGameAction < lstGameAction.size()) {
+            lstGameAction.set(curGameAction, cmd);
+        } else {
+            lstGameAction.add(cmd);
+        }
     }
 
     /**
@@ -267,14 +314,13 @@ public class CControlMoveGame implements Iterable<String> {
 
     /**
      * Преобразует тип и цвет фигуры в строку.
-     * @param typeFigure тип фигуры, или null если пустой объект
-     * @param typeColor  тип цвета
+     * @param figure фигура, или null если пустой объект
      * @return строковое представление
      */
-    protected String convertFigureToStr(ETypeFigure typeFigure, ETypeColor typeColor) {
-        if (null == typeFigure) return "--";
-        String res = ETypeFigure.CHECKERS == typeFigure ? "c": "q" ;
-        return res + (ETypeColor.WHITE == typeColor ? "w": "b");
+    protected String convertFigureToStr(CPair<ETypeFigure, ETypeColor> figure) {
+        if (null == figure) return "--";
+        String res = ETypeFigure.CHECKERS == figure.getFirst() ? "c": "q" ;
+        return res + (ETypeColor.WHITE == figure.getSecond() ? "w": "b");
     }
 
     /**
@@ -335,24 +381,16 @@ public class CControlMoveGame implements Iterable<String> {
      * @return результат преобразования
      */
     protected String movePlayer(List<CPair<Integer, Integer>> lstMove) {
-        ETypeFigure tf;
-        ETypeColor tc;
+        CPair<ETypeFigure, ETypeColor> fig;
         String cmd = "" + coordIntToStr(lstMove.get(0).getFirst(), true) + coordIntToStr(lstMove.get(0).getSecond(), false);
         cmd = cmd + (lstMove.size() > 3 ? ":": "-");
         cmd = cmd + coordIntToStr(lstMove.get(1).getFirst(), true) + coordIntToStr(lstMove.get(1).getSecond(), false);
         cmd = cmd + (lstMove.size() > 2 && null != lstMove.get(2) ? "!": " ");
-        IFigureBase oldF = board.getFigure(lstMove.get(0).getFirst(), lstMove.get(0).getSecond());
-        if (null == oldF) {
-            tf = null;
-            tc = null;
-        } else {
-            tf = oldF.getTypeFigure();
-            tc = oldF.getColorType();
-        }
-        cmd = cmd + convertFigureToStr(tf, tc);
-        board.setFigure(lstMove.get(0).getFirst(), lstMove.get(0).getSecond(), null, null);
-        if (lstMove.size() > 2 && null != lstMove.get(2)) tf = ETypeFigure.QUINE;
-        board.setFigure(lstMove.get(1).getFirst(), lstMove.get(1).getSecond(), tf, tc);
+        fig = board.getF(lstMove.get(0));
+        cmd = cmd + convertFigureToStr(fig);
+        board.setF(lstMove.get(0), null);
+        if (lstMove.size() > 2 && null != lstMove.get(2)) fig.setFirst(ETypeFigure.QUINE);
+        board.setF(lstMove.get(1), fig);
         return cmd;
     }
 
@@ -363,13 +401,13 @@ public class CControlMoveGame implements Iterable<String> {
      */
     protected String atackPlayer(List<CPair<Integer, Integer>> lstAtack) {
         String cmd = "";
-        IFigureBase oldF;
+        CPair<ETypeFigure, ETypeColor> fig;
         for (int ind = 3; ind < lstAtack.size(); ind += 2) {
             cmd = cmd + coordIntToStr(lstAtack.get(ind).getFirst(), true) + coordIntToStr(lstAtack.get(ind).getSecond(), false);
             cmd = cmd + coordIntToStr(lstAtack.get(ind + 1).getFirst(), true) + coordIntToStr(lstAtack.get(ind + 1).getSecond(), false);
-            oldF = board.getFigure(lstAtack.get(ind).getFirst(), lstAtack.get(ind).getSecond());
-            cmd = cmd + convertFigureToStr(oldF.getTypeFigure(), oldF.getColorType());
-            board.setFigure(lstAtack.get(ind).getFirst(), lstAtack.get(ind).getSecond(), null, null);
+            fig = board.getF(lstAtack.get(ind));
+            cmd = cmd + convertFigureToStr(fig);
+            board.setF(lstAtack.get(ind), null);
         }
         return cmd;
     }

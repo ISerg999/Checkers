@@ -46,7 +46,7 @@ public class CComputerGame implements Runnable {
      * @return true - обработка разрешена, false - обработка запрещена.
      */
     public boolean isMove() {
-        if (controlMoveGame.getBoard().getStateGame() && isMove) return true;
+        if (controlMoveGame.getBoard().getGameOn() && isMove) return true;
         return false;
     }
 
