@@ -16,6 +16,7 @@ public class CSMControl implements ICallableStopGame {
     private CSMControl() {
         resourse = CResourse.getInstance();
         resourse.addResourse("Resource/gameres.properties");
+        resourse.createMultiImage("Path.Image.Figures", "Info.Image.Figures.Name", "Info.Image.Figures.PlacePosition");
         cMoveGame = new CControlMoveGame(new CCheckersBoard());
         cMoveGame.getBoard().setCallableStopGame(this);
         saveBoardGame();
