@@ -11,23 +11,24 @@ import java.util.List;
 /**
  * Класс управляющий игрой на основе конечных автоматов. Оформлен как синглтон.
  */
-public class CSMControl {
+public class CSMControl implements ICallableStopGame {
 
     private CSMControl() {
-        curStateGame = null;
-        oldStateGame = null;
         resourse = CResourse.getInstance();
         resourse.addResourse("Resource/gameres.properties");
-        lstChangeState = new ArrayList<>();
         cMoveGame = new CControlMoveGame(new CCheckersBoard());
-//        oldBoard = new CCheckersBoard((CCheckersBoard) cMoveGame.getBoard());
-        computerGame = new CComputerGame(cMoveGame);
-        new Thread(computerGame).start();
-        fileName = null;
-        whosPlaying = new HashMap<>();
-        for (ETypeColor it: ETypeColor.values()) {
-            whosPlaying.put(it, true);
-        }
+        cMoveGame.getBoard().setCallableStopGame(this);
+        saveBoardGame();
+        curStateGame = null;
+        oldStateGame = null;
+        lstChangeState = new ArrayList<>();
+//        fileName = null;
+//        whosPlaying = new HashMap<>();
+//        for (ETypeColor it: ETypeColor.values()) {
+//            whosPlaying.put(it, true);
+//        }
+//        computerGame = new CComputerGame(cMoveGame);
+//        new Thread(computerGame).start();
     }
     private static class STMControlHolder {
         private static final CSMControl INSTANCE = new CSMControl();
@@ -42,16 +43,16 @@ public class CSMControl {
     protected static final Map<CPair<ETStateGame, ETActionGame>, ETStateGame> newStateGame;
     static {
         newStateGame = new Hashtable<>();
-        newStateGame.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOEDITING), ETStateGame.EDITING);
-        newStateGame.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBASE), ETStateGame.BASE);
-        newStateGame.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOGAME), ETStateGame.GAME);
-        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEDRAW), ETStateGame.BASE);
-        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEWHILE), ETStateGame.BASE);
-        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEBLACK), ETStateGame.BASE);
-        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEGAMESTOP), ETStateGame.BASE);
-        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOCHANGEMOVE), ETStateGame.GAME);
-        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TONEXTSTEPGAME), ETStateGame.GAME);
-        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TONEXTSTEPGAMEWIN), ETStateGame.GAME);
+//        newStateGame.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOEDITING), ETStateGame.EDITING);
+//        newStateGame.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBASE), ETStateGame.BASE);
+//        newStateGame.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOGAME), ETStateGame.GAME);
+//        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEDRAW), ETStateGame.BASE);
+//        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEWHILE), ETStateGame.BASE);
+//        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEBLACK), ETStateGame.BASE);
+//        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEGAMESTOP), ETStateGame.BASE);
+//        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOCHANGEMOVE), ETStateGame.GAME);
+//        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TONEXTSTEPGAME), ETStateGame.GAME);
+//        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TONEXTSTEPGAMEWIN), ETStateGame.GAME);
     }
     /**
      * Список изполняемых функций для текущего объекта
@@ -59,13 +60,13 @@ public class CSMControl {
     protected static final Map<CPair<ETStateGame, ETActionGame>, String> stateAction;
     static {
         stateAction = new Hashtable<>();
-        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVE), "saveBoard");
-        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOAD), "loadBoard");
-        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITEPLAYER), "playWhiteFromPlayer");
-        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOBLACKPLAYER), "playBlackFromPlayer");
-        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITECOMP), "playWhiteFromComp");
-        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOBLACKCOMP), "playBlackFromComp");
-        stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOGAME), "launchGameMode");
+//        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVE), "saveBoard");
+//        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOAD), "loadBoard");
+//        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITEPLAYER), "playWhiteFromPlayer");
+//        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOBLACKPLAYER), "playBlackFromPlayer");
+//        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITECOMP), "playWhiteFromComp");
+//        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOBLACKCOMP), "playBlackFromComp");
+//        stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOGAME), "launchGameMode");
     }
 
     /**
@@ -73,56 +74,51 @@ public class CSMControl {
      */
     private CResourse resourse;
     /**
-     * Список классов поддерживающих систему конечных автоматов.
+     * Объект контролирующий ходы и изменения на доске.
      */
-    List<IChangeState> lstChangeState;
+    private CControlMoveGame cMoveGame;
     /**
      * Состояния программы.
      */
     private ETStateGame curStateGame, oldStateGame;
     /**
-     * Имя файла для записи ли чтения.
-     */
-    private String fileName;
-    /**
-     * Режим редактирования.
-     */
-    private boolean isEdition;
-    /**
-     * Объект контролирующий ходы и изменения на доске.
-     */
-    private CControlMoveGame cMoveGame;
-    /**
-     * Определяет, кто ходи за соответствующий цвет. true - игрок, false - компьютер
-     */
-    protected Map<ETypeColor, Boolean> whosPlaying;
-    /**
-     * Объект ходов компьютером.
-     */
-    protected CComputerGame computerGame;
-    /**
      * Состояние доски до битвы.
      */
     protected CCheckersBoard oldBoard;
+    /**
+     * Список объектов поддерживающих систему конечных автоматов.
+     */
+    List<IChangeState> lstChangeState;
+//    /**
+//     * Имя файла для записи ли чтения.
+//     */
+//    private String fileName;
+//    /**
+//     * Режим редактирования.
+//     */
+//    private boolean isEdition;
+//    /**
+//     * Определяет, кто ходи за соответствующий цвет. true - игрок, false - компьютер
+//     */
+//    protected Map<ETypeColor, Boolean> whosPlaying;
+//    /**
+//     * Объект ходов компьютером.
+//     */
+//    protected CComputerGame computerGame;
 
+    /**
+     * Запуск игры.
+     */
     public void start() {
         EventQueue.invokeLater(() -> new JFMainWindow());
     }
 
     /**
-     * Добавление классов обрабаотывающих изменение состояния.
-     * @param obj класс обрабатывающий изменение состояния
+     * Завершение игры.
+     * @param state победитель, либо null - ничья
      */
-    public void addActionGame(IChangeState obj) {
-        lstChangeState.add(obj);
-    }
-
-    /**
-     * Возвращает объект хода за компьютер.
-     * @return объект хода за компьютер
-     */
-    public CComputerGame getComputerGame() {
-        return computerGame;
+    public void endStateGame(ETypeColor state) {
+        // TODO: Завершение игры.
     }
 
     /**
@@ -131,57 +127,6 @@ public class CSMControl {
      */
     public CControlMoveGame getCMoveGame() {
         return cMoveGame;
-    }
-
-    /**
-     * Получает ссылку на класс игры в шашки.
-     * @return
-     */
-    public CCheckersBoard getBoard() {
-        return (CCheckersBoard) cMoveGame.getBoard();
-    }
-
-    /**
-     * Устанавливает имя файла.
-     * @param fileName полное имя файла.
-     */
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-
-    /**
-     * Получает состояние режима редактирования.
-     * @return режим редактирования
-     */
-    public boolean getIsEdition() {
-        return isEdition;
-    }
-
-    /**
-     * Устанавливает состояние режима редактирования.
-     * @param edition режим редактирования
-     */
-    public void setIsEdition(boolean edition) {
-        if (getBoard().getStateGame()) return;
-        isEdition = edition;
-    }
-
-    /**
-     * Определяет, кто играет за заданный цвет
-     * @param playColor игровой цвет
-     * @return игрок играющий за данный цвет true - игрок, false - компьютер
-     */
-    public boolean getPlayForColor(ETypeColor playColor) {
-        return whosPlaying.get(playColor);
-    }
-
-    /**
-     * Задаёт игрока за выбранный цвет.
-     * @param playerForColor цвет за котороый выставляется игрок
-     * @param type           игрок: true - обычный игрок, false - компьютер
-     */
-    public void setPlayerForColor(ETypeColor playerForColor, boolean type) {
-        whosPlaying.replace(playerForColor, type);
     }
 
     /**
@@ -195,8 +140,76 @@ public class CSMControl {
      * Восстанавливает копию доски.
      */
     public void restoreBoardGame() {
-        cMoveGame.setBoard(oldBoard);
+        cMoveGame.setBoard(new CCheckersBoard(oldBoard));
+        cMoveGame.getBoard().setCallableStopGame(this);
     }
+
+    /**
+     * Получает ссылку на текущий объект игры в шашки.
+     * @return текущий объект игры в шашки
+     */
+    public CCheckersBoard getBoard() {
+        return (CCheckersBoard) cMoveGame.getBoard();
+    }
+
+    /**
+     * Добавление классов обрабаотывающих изменение состояния.
+     * @param obj класс обрабатывающий изменение состояния
+     */
+    public void addActionGame(IChangeState obj) {
+        lstChangeState.add(obj);
+    }
+
+//    /**
+//     * Возвращает объект хода за компьютер.
+//     * @return объект хода за компьютер
+//     */
+//    public CComputerGame getComputerGame() {
+//        return computerGame;
+//    }
+
+//    /**
+//     * Устанавливает имя файла.
+//     * @param fileName полное имя файла.
+//     */
+//    public void setFileName(String fileName) {
+//        this.fileName = fileName;
+//    }
+
+//    /**
+//     * Получает состояние режима редактирования.
+//     * @return режим редактирования
+//     */
+//    public boolean getIsEdition() {
+//        return isEdition;
+//    }
+
+//    /**
+//     * Устанавливает состояние режима редактирования.
+//     * @param edition режим редактирования
+//     */
+//    public void setIsEdition(boolean edition) {
+//        if (getBoard().getStateGame()) return;
+//        isEdition = edition;
+//    }
+
+//    /**
+//     * Определяет, кто играет за заданный цвет
+//     * @param playColor игровой цвет
+//     * @return игрок играющий за данный цвет true - игрок, false - компьютер
+//     */
+//    public boolean getPlayForColor(ETypeColor playColor) {
+//        return whosPlaying.get(playColor);
+//    }
+
+//    /**
+//     * Задаёт игрока за выбранный цвет.
+//     * @param playerForColor цвет за котороый выставляется игрок
+//     * @param type           игрок: true - обычный игрок, false - компьютер
+//     */
+//    public void setPlayerForColor(ETypeColor playerForColor, boolean type) {
+//        whosPlaying.replace(playerForColor, type);
+//    }
 
     /**
      * Базовый метод управления работой программы.
@@ -236,93 +249,93 @@ public class CSMControl {
 
 // ------------------------------ Методы обрабатывающиеся контроллером переходов состояний -----------------------------
 
-    /**
-     * Запись игрового состояния в файл.
-     */
-    protected void saveBoard() {
-        if (null != fileName) {
-            List<Integer> bin = new LinkedList<>();
-            String title = resourse.getResStr("Board.File.Title");
-//            bin.addAll(getBoard().getBinaryBoardFigure());
-//            bin.addAll(getBoard().getBinaryBoardState());
-//            bin.addAll(getCMoveGame().getListBin());
-//            try (OutputStream os = new FileOutputStream(fileName);) {
-//                for (byte cb: title.getBytes()) {
-//                    os.write(cb);
-//                }
-//                for (Integer code: bin) {
-//                    os.write(code);
-//                }
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-            makeChangesState(ETActionGame.TOSAVEOK, true);
-        }
-    }
+//    /**
+//     * Запись игрового состояния в файл.
+//     */
+//    protected void saveBoard() {
+//        if (null != fileName) {
+//            List<Integer> bin = new LinkedList<>();
+//            String title = resourse.getResStr("Board.File.Title");
+////            bin.addAll(getBoard().getBinaryBoardFigure());
+////            bin.addAll(getBoard().getBinaryBoardState());
+////            bin.addAll(getCMoveGame().getListBin());
+////            try (OutputStream os = new FileOutputStream(fileName);) {
+////                for (byte cb: title.getBytes()) {
+////                    os.write(cb);
+////                }
+////                for (Integer code: bin) {
+////                    os.write(code);
+////                }
+////            } catch (IOException e) {
+////                e.printStackTrace();
+////            }
+//            makeChangesState(ETActionGame.TOSAVEOK, true);
+//        }
+//    }
 
-    /**
-     * Чтение из файла состояния игры.
-     */
-    protected void loadBoard() {
-        if (null != fileName) {
-            int k = 0;
-            List<Integer> bin = new LinkedList<>();
-            String title = resourse.getResStr("Board.File.Title");
-//            try (InputStream is = new FileInputStream(fileName);) {
-//                int byteRead;
-//                while (((byteRead = is.read()) != -1) && k < title.length()) {
-//                    if (byteRead != title.charAt(k)) {
-//                        throw new IOException("Ошибка в заголовке файла");
-//                    }
-//                    else k++;
-//                }
-//                bin.add(byteRead);
-//                while ((byteRead = is.read()) != -1) {
-//                    bin.add(byteRead);
-//                }
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//            k = getBoard().setBinaryBoardFigure(bin, 0);
-//            k = getBoard().setBinaryBoardState(bin, k);
-//            getCMoveGame().setListBin(bin, k);
-            makeChangesState(ETActionGame.TOLOADOK, true);
-        }
-    }
+//    /**
+//     * Чтение из файла состояния игры.
+//     */
+//    protected void loadBoard() {
+//        if (null != fileName) {
+//            int k = 0;
+//            List<Integer> bin = new LinkedList<>();
+//            String title = resourse.getResStr("Board.File.Title");
+////            try (InputStream is = new FileInputStream(fileName);) {
+////                int byteRead;
+////                while (((byteRead = is.read()) != -1) && k < title.length()) {
+////                    if (byteRead != title.charAt(k)) {
+////                        throw new IOException("Ошибка в заголовке файла");
+////                    }
+////                    else k++;
+////                }
+////                bin.add(byteRead);
+////                while ((byteRead = is.read()) != -1) {
+////                    bin.add(byteRead);
+////                }
+////            } catch (IOException e) {
+////                e.printStackTrace();
+////            }
+////            k = getBoard().setBinaryBoardFigure(bin, 0);
+////            k = getBoard().setBinaryBoardState(bin, k);
+////            getCMoveGame().setListBin(bin, k);
+//            makeChangesState(ETActionGame.TOLOADOK, true);
+//        }
+//    }
 
-    /**
-     * Установка игры белых за игрока.
-     */
-    protected void playWhiteFromPlayer() {
-        setPlayerForColor(ETypeColor.WHITE, true);
-    }
+//    /**
+//     * Установка игры белых за игрока.
+//     */
+//    protected void playWhiteFromPlayer() {
+//        setPlayerForColor(ETypeColor.WHITE, true);
+//    }
 
-    /**
-     * Установка игры белых за компьютер.
-     */
-    protected void playWhiteFromComp() {
-        setPlayerForColor(ETypeColor.WHITE, false);
-    }
+//    /**
+//     * Установка игры белых за компьютер.
+//     */
+//    protected void playWhiteFromComp() {
+//        setPlayerForColor(ETypeColor.WHITE, false);
+//    }
 
-    /**
-     * Установка игры чёрных за игрока.
-     */
-    protected void playBlackFromPlayer() {
-        setPlayerForColor(ETypeColor.BLACK, true);
-    }
+//    /**
+//     * Установка игры чёрных за игрока.
+//     */
+//    protected void playBlackFromPlayer() {
+//        setPlayerForColor(ETypeColor.BLACK, true);
+//    }
 
-    /**
-     * Установка игры чёрных за компьютер.
-     */
-    protected void playBlackFromComp() {
-        setPlayerForColor(ETypeColor.BLACK, false);
-    }
+//    /**
+//     * Установка игры чёрных за компьютер.
+//     */
+//    protected void playBlackFromComp() {
+//        setPlayerForColor(ETypeColor.BLACK, false);
+//    }
 
-    /**
-     * Переход в состяния игры.
-     */
-    protected void launchGameMode() {
-        restoreBoardGame();
-        makeChangesState(ETActionGame.TONEXTSTEPGAME, false);
-    }
+//    /**
+//     * Переход в состяния игры.
+//     */
+//    protected void launchGameMode() {
+//        restoreBoardGame();
+//        makeChangesState(ETActionGame.TONEXTSTEPGAME, false);
+//    }
 }
