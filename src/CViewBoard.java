@@ -1,3 +1,4 @@
+import CheckersEngine.BaseEngine.CFactoryFigure;
 import CheckersEngine.BaseEngine.CPair;
 import CheckersEngine.BaseEngine.ETypeColor;
 import CheckersEngine.BaseEngine.ETypeFigure;
@@ -30,11 +31,25 @@ public class CViewBoard extends JPanel implements IChangeState {
             new Color(CResourse.getInstance().getResInt("Board.Space.Color.Intermediate")), // Промежуточный.
             new Color(CResourse.getInstance().getResInt("Board.Space.Color.End"))           // Конечный.
     };
-
-//    /**
-//     * Ключ изображения доски
-//     */
-//    static final protected String strBoard = "Path.Image.Board";
+    /**
+     * Смещение рисуемых элементов на доске.
+     */
+    protected static final int offsetBaseX = CResourse.getInstance().getResInt("Board.Margin.Left");
+    protected static final int offsetBaseY = CResourse.getInstance().getResInt("Board.Margin.Top");
+    /**
+     * Размеры одной клетки доски.
+     */
+    protected static final int spaceW = CResourse.getInstance().getResInt("Board.Space.Width");
+    protected static final int spaceH = CResourse.getInstance().getResInt("Board.Space.Height");
+    /**
+     * Смещение вывода фигуры внутри клетки.
+     */
+    protected static final int imgDX = CResourse.getInstance().getResInt("Board.Space.Margin.Left");
+    protected static final int imgDY = CResourse.getInstance().getResInt("Board.Space.Margin.Top");
+    /**
+     * Ключ изображения доски
+     */
+    protected static final String strBoard = "Path.Image.Board";
 //    /**
 //     * Ключ изображения фигур.
 //     */
@@ -48,22 +63,10 @@ public class CViewBoard extends JPanel implements IChangeState {
      * Доступ к классу контроллера.
      */
     protected CSMControl csmControl;
-//    /**
-//     * Смещение рисуемых элементов на доске.
-//     */
-//    protected int offsetBaseX, offsetBaseY;
-//    /**
-//     * Размеры одной клетки доски.
-//     */
-//    protected int spaceW, spaceH;
-//    /**
-//     * Смещение вывода фигуры внутри клетки.
-//     */
-//    protected int imgDX, imgDY;
-//    /**
-//     * Массив клеток доски.
-//     */
-//    protected Color[][] boardSpacesColor;
+    /**
+     * Массив цвета рамок клеток доски.
+     */
+    protected Color[][] boardSpacesColor;
 //    /**
 //     * Выбранная клетка при редактировании.
 //     */
@@ -97,35 +100,33 @@ public class CViewBoard extends JPanel implements IChangeState {
     public void paint(Graphics g) {
         Graphics2D g2 = (Graphics2D) g;
         // Рисуем доску.
-//        g.drawImage(resourse.getImage(strBoard).getImage(), 0, 0, null);
-//        g2.drawRect(0, 0, resourse.getImage(strBoard).getImage().getWidth(null) - 1,
-//                resourse.getImage(strBoard).getImage().getHeight(null) - 1);
-////        BufferedImage img = new BufferedImage(50, 50, BufferedImage.TYPE_INT_ARGB);
-//        g2.setStroke(new BasicStroke(2));
-//        int imgW = resourse.getImage(strFigures).getImage().getWidth(null) / 4;
-//        int imgH = resourse.getImage(strFigures).getImage().getHeight(null);
-//        // Рисуем квадраты доски и фигуры в них.
-//        for (int y = 0; y < 8; y++) {
-//            for (int x = 0; x < 4; x++) {
-//                int rx = 2 * x + y % 2;
-//                int grX = offsetBaseX + rx * spaceW;
-//                int grY = offsetBaseY + (7 - y) * spaceH;
-//                IFigureBase fig = csmControl.getBoard().getFigure(rx, y);
-//                if (fig != null) {
-//                    int iDx = figureOffsetImage(fig);
-//                    g2.drawImage(resourse.getImage(strFigures).getImage(), grX + imgDX, grY + imgDY, grX + imgDX + imgW, grY + imgDY + imgH, iDx, 0, iDx + imgW, imgH, null);
-//                }
-//                if (csmControl.getIsEdition()) {
-//                    // Рисуем цвет квадратов в режиме редактирования.
+        g.drawImage(resourse.getImage(strBoard).getImage(), 0, 0, null);
+        g2.drawRect(0, 0, resourse.getImage(strBoard).getImage().getWidth(null) - 1,
+                resourse.getImage(strBoard).getImage().getHeight(null) - 1);
+//        BufferedImage img = new BufferedImage(50, 50, BufferedImage.TYPE_INT_ARGB);
+        g2.setStroke(new BasicStroke(2));
+        // Рисуем квадраты доски и фигуры в них.
+        for (int y = 0; y < 8; y++) {
+            for (int x = 0; x < 4; x++) {
+                int rx = 2 * x + y % 2;
+                int grX = offsetBaseX + rx * spaceW;
+                int grY = offsetBaseY + (7 - y) * spaceH;
+                CPair<ETypeFigure, ETypeColor> fig = csmControl.getBoard().getF(rx, y);
+                if (fig != null) {
+                    ImageIcon img = CFactoryFigure.getInstance().getImageFigure(fig);
+                    g2.drawImage(img.getImage(), grX + imgDX, grY + imgDY, null);
+                }
+                if (csmControl.getStateGame() < 0) {
+                    // Рисуем цвет квадратов в режиме редактирования.
 //                    if (selectedX == rx && selectedY == y) g2.setColor(spaceFrameColor[1]);
 //                    else g2.setColor(spaceFrameColor[0]);
-//                } else {
-//                    // Рисуем цвет квадратов в других режимах.
-//                    g2.setColor(boardSpacesColor[y][x]);
-//                }
-//                g2.drawRect(grX, grY, spaceW - 1, spaceH - 1);
-//            }
-//        }
+                } else {
+                    // Рисуем цвет квадратов в других режимах.
+                    g2.setColor(boardSpacesColor[y][x]);
+                }
+                g2.drawRect(grX, grY, spaceW - 1, spaceH - 1);
+            }
+        }
     }
 
     /**
@@ -162,36 +163,41 @@ public class CViewBoard extends JPanel implements IChangeState {
         csmControl = csmControl.getInstance();
         csmControl.addActionGame(this);
         resourse = CResourse.getInstance();
-//        boardSpacesColor = new Color[8][4];
-//        clearBoardSpacesColor();
-//        offsetBaseX = resourse.getResInt("Board.Margin.Left");
-//        offsetBaseY = resourse.getResInt("Board.Margin.Top");
-//        spaceW = resourse.getResInt("Board.Space.Width");
-//        spaceH = resourse.getResInt("Board.Space.Height");
-//        imgDX = resourse.getResInt("Board.Space.Margin.Left");
-//        imgDY = resourse.getResInt("Board.Space.Margin.Top");
+        boardSpacesColor = new Color[8][4];
+        clearBoardSpacesColor();
 //        rPanelEdition = null;
-//
-//        // Создание интерфейса.
-//        int width = resourse.getImage(strBoard).getImage().getWidth(null);
-//        int height = resourse.getImage(strBoard).getImage().getHeight(null);
-//        setMinimumSize(new Dimension(width, height));
-//        setMaximumSize(new Dimension(width, height));
-//        setBounds(0, 0, width, height);
-//
-//        addMouseListener(new MouseAdapter() {
-//            @Override
-//            public void mousePressed(MouseEvent e) {
-//                super.mousePressed(e);
-//                mouseAction(e, true);
-//            }
-//
-//            @Override
-//            public void mouseReleased(MouseEvent e) {
-//                super.mouseReleased(e);
-//                mouseAction(e, false);
-//            }
-//        });
+
+        // Создание интерфейса.
+        int width = resourse.getImage(strBoard).getImage().getWidth(null);
+        int height = resourse.getImage(strBoard).getImage().getHeight(null);
+        setMinimumSize(new Dimension(width, height));
+        setMaximumSize(new Dimension(width, height));
+        setBounds(0, 0, width, height);
+
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                super.mousePressed(e);
+                mouseAction(e, true);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                super.mouseReleased(e);
+                mouseAction(e, false);
+            }
+        });
+    }
+
+    /**
+     * Цвет всех рамок переходит в базовое состояни.
+     */
+    protected void clearBoardSpacesColor() {
+        for (int y = 0; y < 8; y++) {
+            for (int x = 0; x < 4; x++) {
+                boardSpacesColor[y][x] = spaceFrameColor[0];
+            }
+        }
     }
 
 //    /**
@@ -252,17 +258,6 @@ public class CViewBoard extends JPanel implements IChangeState {
 //            }
 //        }
     }
-
-//    /**
-//     * Цвет всех рамок переходит в базовое состояни.
-//     */
-//    protected void clearBoardSpacesColor() {
-//        for (int y = 0; y < 8; y++) {
-//            for (int x = 0; x < 4; x++) {
-//                boardSpacesColor[y][x] = spaceFrameColor[0];
-//            }
-//        }
-//    }
 
 //    /**
 //     * Возвращает смещение в изображении фигур.

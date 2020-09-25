@@ -17,12 +17,17 @@ public class CSMControl implements ICallableStopGame {
         resourse = CResourse.getInstance();
         resourse.addResourse("Resource/gameres.properties");
         resourse.createMultiImage("Path.Image.Figures", "Info.Image.Figures.Name", "Info.Image.Figures.PlacePosition");
+        CFactoryFigure.getInstance().setImageFigure(ETypeFigure.CHECKERS, ETypeColor.WHITE, resourse.getImage("Path.Image.Figure.WC"));
+        CFactoryFigure.getInstance().setImageFigure(ETypeFigure.QUINE, ETypeColor.WHITE, resourse.getImage("Path.Image.Figure.WQ"));
+        CFactoryFigure.getInstance().setImageFigure(ETypeFigure.CHECKERS, ETypeColor.BLACK, resourse.getImage("Path.Image.Figure.BC"));
+        CFactoryFigure.getInstance().setImageFigure(ETypeFigure.QUINE, ETypeColor.BLACK, resourse.getImage("Path.Image.Figure.BQ"));
         cMoveGame = new CControlMoveGame(new CCheckersBoard());
         cMoveGame.getBoard().setCallableStopGame(this);
         saveBoardGame();
         curStateGame = null;
         oldStateGame = null;
         lstChangeState = new ArrayList<>();
+        isEdition = false;
 //        fileName = null;
 //        whosPlaying = new HashMap<>();
 //        for (ETypeColor it: ETypeColor.values()) {
@@ -89,15 +94,15 @@ public class CSMControl implements ICallableStopGame {
     /**
      * Список объектов поддерживающих систему конечных автоматов.
      */
-    List<IChangeState> lstChangeState;
+    protected List<IChangeState> lstChangeState;
+    /**
+     * Режим редактирования.
+     */
+    protected boolean isEdition;
 //    /**
 //     * Имя файла для записи ли чтения.
 //     */
 //    private String fileName;
-//    /**
-//     * Режим редактирования.
-//     */
-//    private boolean isEdition;
 //    /**
 //     * Определяет, кто ходи за соответствующий цвет. true - игрок, false - компьютер
 //     */
@@ -161,6 +166,16 @@ public class CSMControl implements ICallableStopGame {
         lstChangeState.add(obj);
     }
 
+    /**
+     * Возвращает текущий режим игры.
+     * @return текущий режим игры, -1 - редактирование, 0 - базовый, 1 - режим игры
+     */
+    public int getStateGame() {
+        if (isEdition) return -1;
+        if (cMoveGame.getBoard().getGameOn()) return 1;
+        return 0;
+    }
+
 //    /**
 //     * Возвращает объект хода за компьютер.
 //     * @return объект хода за компьютер
@@ -175,14 +190,6 @@ public class CSMControl implements ICallableStopGame {
 //     */
 //    public void setFileName(String fileName) {
 //        this.fileName = fileName;
-//    }
-
-//    /**
-//     * Получает состояние режима редактирования.
-//     * @return режим редактирования
-//     */
-//    public boolean getIsEdition() {
-//        return isEdition;
 //    }
 
 //    /**

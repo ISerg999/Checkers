@@ -231,7 +231,7 @@ public class CResourse {
             Graphics g = bImg.getGraphics();
             g.drawImage(fullImage.getImage(), 0, 0, w, h, x, y, x + w, y + h, null);
             g.dispose();
-            cacheImage.put(pref, new ImageIcon(fullImage.getImage()));
+            cacheImage.put(pref, new ImageIcon(bImg));
         }
     }
 }

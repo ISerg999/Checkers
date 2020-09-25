@@ -56,10 +56,10 @@ public class JFMainWindow extends JFrame implements IChangeState {
      * Нижняя строка информации.
      */
     protected JLabel lblBottom;
-//    /**
-//     * Панель изображения и управления игровой доской и фигур на ней.
-//     */
-//    protected CViewBoard viewBoard;
+    /**
+     * Панель изображения и управления игровой доской и фигур на ней.
+     */
+    protected CViewBoard viewBoard;
 //    /**
 //     * Вспомогательная панель.
 //     */
@@ -160,8 +160,8 @@ public class JFMainWindow extends JFrame implements IChangeState {
         mb.repaint();
 
         // -------- Создание игровой доски. --------
-//        viewBoard = new CViewBoard();
-//        add(viewBoard);
+        viewBoard = new CViewBoard();
+        add(viewBoard);
 
         // -------- Создание правой информационной панели. --------
         createRightPanel();
