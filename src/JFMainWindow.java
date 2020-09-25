@@ -19,7 +19,7 @@ public class JFMainWindow extends JFrame implements IChangeState {
     private static final Map<CPair<ETStateGame, ETActionGame>, String> stateAction;
     static {
         stateAction = new Hashtable<>();
-//        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOABOUT), "viewDialogAbout");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOABOUT), "viewDialogAbout");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVE), "viewDialogSave");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOAD), "viewDialogLoad");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVEOK), "viewSaveFileOK");
@@ -60,10 +60,10 @@ public class JFMainWindow extends JFrame implements IChangeState {
      * Панель изображения и управления игровой доской и фигур на ней.
      */
     protected CViewBoard viewBoard;
-//    /**
-//     * Вспомогательная панель.
-//     */
-//    CSwitchingPanel rightPanel;
+    /**
+     * Вспомогательная панель.
+     */
+    CSwitchingPanel rightSwitchingPanel;
 //    /**
 //     * Правая панель редактирования.
 //     */
@@ -72,10 +72,6 @@ public class JFMainWindow extends JFrame implements IChangeState {
 //     * Правая игровая панель
 //     */
 //    CRightPanelGaming rPanelGaming;
-//    /**
-//     * Текст выводимый внизу.
-//     */
-//    String txtMsgDown;
 
     public JFMainWindow() throws HeadlessException {
         resourse = CResourse.getInstance();
@@ -87,7 +83,7 @@ public class JFMainWindow extends JFrame implements IChangeState {
             @Override
             public void keyPressed(KeyEvent e) {
                 super.keyPressed(e);
-//                keyAction(e);
+                keyAction(e);
             }
         });
 
@@ -96,13 +92,13 @@ public class JFMainWindow extends JFrame implements IChangeState {
 //        csmControl.makeChangesState(ETActionGame.TOBLACKPLAYER, true);
     }
 
-//    /**
-//     * Установка содрежримого нижнего текстового поля.
-//     * @param txtMsgDown текстовое содержимое
-//     */
-//    public void setTxtMsgDown(String txtMsgDown) {
-//        this.txtMsgDown = txtMsgDown;
-//    }
+    /**
+     * Установка содрежримого нижнего текстового поля.
+     * @param txtMsgDown текстовое содержимое
+     */
+    public void setTxtMsgDown(String txtMsgDown) {
+        lblBottom.setText(txtMsgDown);
+    }
 
     @Override
     public void makeChangesState(CPair<ETStateGame, ETActionGame> pStM) {
@@ -168,7 +164,7 @@ public class JFMainWindow extends JFrame implements IChangeState {
 
         // -------- Создание нижней информационной строки. --------
         createLabelBottom();
-//        setTxtMsgDown(resourse.getResStr("Msg.Base.Info"));
+        setTxtMsgDown(resourse.getResStr("Msg.Base.Info"));
     }
 
     /**
@@ -314,7 +310,7 @@ public class JFMainWindow extends JFrame implements IChangeState {
         JMenu mInfo = new JMenu(resourse.getResStr("MenuName.Info"));
 
         JMenuItem miInfoAbout = new JMenuItem(resourse.getResStr("MenuName.Info.About"));
-//        miInfoAbout.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOABOUT, true));
+        miInfoAbout.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOABOUT, true));
         mInfo.add(miInfoAbout);
 
         return mInfo;
@@ -324,15 +320,15 @@ public class JFMainWindow extends JFrame implements IChangeState {
      * Создание правых панелей.
      */
     protected void createRightPanel() {
-//        rightPanel = new CSwitchingPanel(viewBoard.getWidth() + 1, 0);
-//        add(rightPanel);
-//
-//        // Создание панели для режима редактирования.
+        rightSwitchingPanel = new CSwitchingPanel(viewBoard.getWidth() + 1, 0);
+        add(rightSwitchingPanel);
+
+        // Создание панели для режима редактирования.
 //        rPanelEdition = new CRightPanelEdition();
 //        rightPanel.append(rPanelEdition);
 //        viewBoard.setPanelEdition(rPanelEdition);
-//
-//        // Создание панели для режима игры.
+
+        // Создание панели для режима игры.
 //        rPanelGaming = new CRightPanelGaming();
 //        rightPanel.append(rPanelGaming);
     }
@@ -344,8 +340,8 @@ public class JFMainWindow extends JFrame implements IChangeState {
         lblBottom = new JLabel(resourse.getResStr("Msg.Base.Info"));
         lblBottom.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED),
                 BorderFactory.createEmptyBorder(25, 25, 25, 25)));
-//        lblBottom.setBounds(1, viewBoard.getHeight() + 1, resourse.getResInt("Window.Width") - 4, 24);
-//        add(lblBottom);
+        lblBottom.setBounds(1, viewBoard.getHeight() + 1, resourse.getResInt("Window.Width") - 4, 24);
+        add(lblBottom);
     }
 
     protected void exitWindow() {
@@ -354,18 +350,19 @@ public class JFMainWindow extends JFrame implements IChangeState {
 
     }
 
-//    /**
-//     * Обработка событий нажатий на клавиатуре.
-//     * @param e событие клавиатуры
-//     */
-//    protected void keyAction(KeyEvent e) {
-//        if (csmControl.getIsEdition()) {
+    /**
+     * Обработка событий нажатий на клавиатуре.
+     * @param e событие клавиатуры
+     */
+    protected void keyAction(KeyEvent e) {
+        int state = csmControl.getStateGame();
+        if (state < 0) {
 //            rPanelEdition.keyAction(e);
 //            viewBoard.keyActionEdition(e);
-//        } else if (csmControl.getBoard().getStateGame()) {
-//            // TODO: Обработка нажатий клавиатуры для режима игры.
-//        }
-//    }
+        } else if (state > 0) {
+            // TODO: Обработка нажатий клавиатуры для режима игры.
+        }
+    }
 
     /**
      * Включение и выключение элементов меню. Обобщённый метод.
@@ -398,18 +395,17 @@ public class JFMainWindow extends JFrame implements IChangeState {
                 "MenuName.Editing.End", "MenuName.Editing.Placemant", "MenuName.Editing.Clear"
         };
         selectedViewMenu(deactivate);
-//        lblBottom.setText(txtMsgDown);
-//        csmControl.setIsEdition(false);
-//        rightPanel.setSelectedIndex(-1);
+        csmControl.editModeOff();
+        rightSwitchingPanel.setSelectedIndex(-1);
         repaint();
     }
 
-//    /**
-//     * Вывод диалогового окна: О программе.
-//     */
-//    protected void viewDialogAbout() {
-//        viewDialog(resourse.getResStr("MenuName.Info.About"), resourse.getResStr("Mag.Base.DlgAbout.Info"));
-//    }
+    /**
+     * Вывод диалогового окна: О программе.
+     */
+    protected void viewDialogAbout() {
+        viewDialog(resourse.getResStr("MenuName.Info.About"), resourse.getResStr("Mag.Base.DlgAbout.Info"));
+    }
 
 //    /**
 //     * Диалоговое окно сохранения игры.

@@ -176,6 +176,21 @@ public class CSMControl implements ICallableStopGame {
         return 0;
     }
 
+    /**
+     * Включение режима редактирования.
+     */
+    public void editModeOn() {
+        if (getStateGame() > 0) return;
+        isEdition = true;
+    }
+
+    /**
+     * Выключение режима редактирования.
+     */
+    public void editModeOff() {
+        isEdition = false;
+    }
+
 //    /**
 //     * Возвращает объект хода за компьютер.
 //     * @return объект хода за компьютер
@@ -190,15 +205,6 @@ public class CSMControl implements ICallableStopGame {
 //     */
 //    public void setFileName(String fileName) {
 //        this.fileName = fileName;
-//    }
-
-//    /**
-//     * Устанавливает состояние режима редактирования.
-//     * @param edition режим редактирования
-//     */
-//    public void setIsEdition(boolean edition) {
-//        if (getBoard().getStateGame()) return;
-//        isEdition = edition;
 //    }
 
 //    /**
