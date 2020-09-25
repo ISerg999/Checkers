@@ -49,8 +49,8 @@ public class CSMControl implements ICallableStopGame {
     protected static final Map<CPair<ETStateGame, ETActionGame>, ETStateGame> newStateGame;
     static {
         newStateGame = new Hashtable<>();
-//        newStateGame.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOEDITING), ETStateGame.EDITING);
-//        newStateGame.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBASE), ETStateGame.BASE);
+        newStateGame.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOEDITING), ETStateGame.EDITING);
+        newStateGame.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBASE), ETStateGame.BASE);
 //        newStateGame.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOGAME), ETStateGame.GAME);
 //        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEDRAW), ETStateGame.BASE);
 //        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEWHILE), ETStateGame.BASE);
@@ -66,6 +66,8 @@ public class CSMControl implements ICallableStopGame {
     protected static final Map<CPair<ETStateGame, ETActionGame>, String> stateAction;
     static {
         stateAction = new Hashtable<>();
+        stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOEDITING), "initEditingMode");
+        stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBASE), "closeEdition");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVE), "saveBoard");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOAD), "loadBoard");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITEPLAYER), "playWhiteFromPlayer");
@@ -191,6 +193,14 @@ public class CSMControl implements ICallableStopGame {
         isEdition = false;
     }
 
+    /**
+     * Выход из режима редактирования.
+     */
+    protected void closeEdition() {
+        saveBoardGame();
+        getCMoveGame().clearControlMove();
+    }
+
 //    /**
 //     * Возвращает объект хода за компьютер.
 //     * @return объект хода за компьютер
@@ -262,6 +272,14 @@ public class CSMControl implements ICallableStopGame {
     }
 
 // ------------------------------ Методы обрабатывающиеся контроллером переходов состояний -----------------------------
+
+    /**
+     * Переход в режим редактирования.
+     */
+    protected void initEditingMode() {
+        editModeOn();
+        getCMoveGame().clearControlMove();
+    }
 
 //    /**
 //     * Запись игрового состояния в файл.

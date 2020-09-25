@@ -20,14 +20,14 @@ public class JFMainWindow extends JFrame implements IChangeState {
     static {
         stateAction = new Hashtable<>();
         stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOABOUT), "viewDialogAbout");
+        stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOEDITING), "initEditingMode");
+        stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBOARDPLACEMANT), "placemantBoard");
+        stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBOARDCLEAR), "clearBoard");
+        stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBASE), "closeEdition");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVE), "viewDialogSave");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOAD), "viewDialogLoad");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVEOK), "viewSaveFileOK");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOADOK), "viewLoadFileOk");
-//        stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOEDITING), "initEditingMode");
-//        stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBOARDPLACEMANT), "placemantBoard");
-//        stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBOARDCLEAR), "clearBoard");
-//        stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBASE), "stepToBaseFromEdition");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITEPLAYER), "playWhiteFromPlayer");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOBLACKPLAYER), "playBlackFromPlayer");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITECOMP), "playWhiteFromComp");
@@ -64,10 +64,10 @@ public class JFMainWindow extends JFrame implements IChangeState {
      * Вспомогательная панель.
      */
     CSwitchingPanel rightSwitchingPanel;
-//    /**
-//     * Правая панель редактирования.
-//     */
-//    CRightPanelEdition rPanelEdition;
+    /**
+     * Правая панель редактирования.
+     */
+    CRightPanelEdition rPanelEdition;
 //    /**
 //     * Правая игровая панель
 //     */
@@ -277,25 +277,25 @@ public class JFMainWindow extends JFrame implements IChangeState {
 
         JMenuItem miBeginEdit = new JMenuItem(resourse.getResStr("MenuName.Editing.Begin"));
         miBeginEdit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, ActionEvent.ALT_MASK + ActionEvent.CTRL_MASK));
-//        miBeginEdit.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOEDITING, false));
+        miBeginEdit.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOEDITING, false));
         mEditing.add(miBeginEdit);
         mActionMenu.put("MenuName.Editing.Begin", miBeginEdit);
 
         JMenuItem miEndEdit = new JMenuItem(resourse.getResStr("MenuName.Editing.End"));
         miEndEdit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, ActionEvent.ALT_MASK + ActionEvent.CTRL_MASK));
-//        miEndEdit.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOBASE, false));
+        miEndEdit.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOBASE, false));
         mEditing.add(miEndEdit);
         mActionMenu.put("MenuName.Editing.End", miEndEdit);
 
         mEditing.addSeparator();
 
         JMenuItem miPlacemantBoard = new JMenuItem(resourse.getResStr("MenuName.Editing.Placemant"));
-//        miPlacemantBoard.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOBOARDPLACEMANT, false));
+        miPlacemantBoard.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOBOARDPLACEMANT, false));
         mEditing.add(miPlacemantBoard);
         mActionMenu.put("MenuName.Editing.Placemant", miPlacemantBoard);
 
         JMenuItem miClearBoard = new JMenuItem(resourse.getResStr("MenuName.Editing.Clear"));
-//        miClearBoard.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOBOARDCLEAR, false));
+        miClearBoard.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOBOARDCLEAR, false));
         mEditing.add(miClearBoard);
         mActionMenu.put("MenuName.Editing.Clear", miClearBoard);
 
@@ -324,9 +324,9 @@ public class JFMainWindow extends JFrame implements IChangeState {
         add(rightSwitchingPanel);
 
         // Создание панели для режима редактирования.
-//        rPanelEdition = new CRightPanelEdition();
-//        rightPanel.append(rPanelEdition);
-//        viewBoard.setPanelEdition(rPanelEdition);
+        rPanelEdition = new CRightPanelEdition();
+        rightSwitchingPanel.append(rPanelEdition);
+        viewBoard.setPanelEdition(rPanelEdition);
 
         // Создание панели для режима игры.
 //        rPanelGaming = new CRightPanelGaming();
@@ -357,8 +357,8 @@ public class JFMainWindow extends JFrame implements IChangeState {
     protected void keyAction(KeyEvent e) {
         int state = csmControl.getStateGame();
         if (state < 0) {
-//            rPanelEdition.keyAction(e);
-//            viewBoard.keyActionEdition(e);
+            rPanelEdition.keyAction(e);
+            viewBoard.keyActionEdition(e);
         } else if (state > 0) {
             // TODO: Обработка нажатий клавиатуры для режима игры.
         }
@@ -405,6 +405,44 @@ public class JFMainWindow extends JFrame implements IChangeState {
      */
     protected void viewDialogAbout() {
         viewDialog(resourse.getResStr("MenuName.Info.About"), resourse.getResStr("Mag.Base.DlgAbout.Info"));
+    }
+
+    /**
+     * Инициализация при переходе в режим редактирования.
+     */
+    protected void initEditingMode() {
+        String[] deactivate = {
+                "MenuName.File.Save", "MenuName.File.Open", "MenuName.Game.Start", "MenuName.Game.Continue", "MenuName.Game.Stop",
+                "MenuName.Game.Back", "MenuName.Settings.While.Player", "MenuName.Settings.While.Comp", "MenuName.Settings.Black.Player",
+                "MenuName.Settings.Black.Comp", "MenuName.Editing.Begin"
+        };
+        selectedViewMenu(deactivate);
+        lblBottom.setText(resourse.getResStr("Msg.Editing.Info"));
+        rightSwitchingPanel.setSelectedIndex(0);
+    }
+
+    /**
+     * Базовая разстановка фигур на доске.
+     */
+    protected void placemantBoard() {
+        csmControl.getCMoveGame().placementBoard();
+        viewBoard.repaint();
+    }
+
+    /**
+     * Очистка доски.
+     */
+    protected void clearBoard() {
+        csmControl.getCMoveGame().clearBoard();
+        viewBoard.repaint();
+    }
+
+    /**
+     * Выход из режима редактирования.
+     */
+    protected void closeEdition() {
+        stepToBase();
+        lblBottom.setText(resourse.getResStr("Msg.Base.Info"));
     }
 
 //    /**
@@ -455,47 +493,6 @@ public class JFMainWindow extends JFrame implements IChangeState {
 //    protected void viewSaveFileOK() {
 //        viewBoard.repaint();
 //        viewDialog("", resourse.getResStr("Msg.Base.DlgOK.Save"));
-//    }
-
-//    /**
-//     * Инициализация при переходе в режим редактирования.
-//     */
-//    protected void initEditingMode() {
-//        String[] deactivate = {
-//                "MenuName.File.Save", "MenuName.File.Open", "MenuName.Game.Start", "MenuName.Game.Continue", "MenuName.Game.Stop",
-//                "MenuName.Game.Back", "MenuName.Settings.While.Player", "MenuName.Settings.While.Comp", "MenuName.Settings.Black.Player",
-//                "MenuName.Settings.Black.Comp", "MenuName.Editing.Begin"
-//        };
-//        selectedViewMenu(deactivate);
-//        lblBottom.setText(resourse.getResStr("Msg.Editing.Info"));
-//        csmControl.setIsEdition(true);
-//        rightPanel.setSelectedIndex(0);
-//        csmControl.getCMoveGame().clearControlMove();
-//    }
-
-//    /**
-//     * Выход из режима редактирования.
-//     */
-//    protected void stepToBaseFromEdition() {
-//        csmControl.saveBoardGame();
-//        stepToBase();
-//        csmControl.getCMoveGame().clearControlMove();
-//    }
-
-//    /**
-//     * Базовая разстановка фигур на доске.
-//     */
-//    protected void placemantBoard() {
-//        csmControl.getCMoveGame().placementBoard();
-//        viewBoard.repaint();
-//    }
-
-//    /**
-//     * Очистка доски.
-//     */
-//    protected void clearBoard() {
-//        csmControl.getCMoveGame().clearBoard();
-//        viewBoard.repaint();
 //    }
 
 //    /**

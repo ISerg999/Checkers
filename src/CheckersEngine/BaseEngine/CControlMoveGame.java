@@ -225,7 +225,7 @@ public class CControlMoveGame implements Iterable<String> {
      * Откат назад.
      */
     public void back() {
-        if (curGameAction > 0) {
+        if (curGameAction >= 0) {
             int x, y, x2, y2;
             ETypeFigure tf;
             ETypeColor tc;

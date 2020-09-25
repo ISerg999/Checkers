@@ -11,7 +11,6 @@ import java.awt.event.MouseEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -22,7 +21,7 @@ public class CViewBoard extends JPanel implements IChangeState {
     private static final Map<CPair<ETStateGame, ETActionGame>, String> stateAction;
     static {
         stateAction = new Hashtable<>();
-//        stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOEDITING), "initEditingMode");
+        stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOEDITING), "initEditingMode");
 //        stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TONEXTSTEPGAME), "nextStepGame");
     }
     static final protected Color[] spaceFrameColor = {
@@ -50,10 +49,6 @@ public class CViewBoard extends JPanel implements IChangeState {
      * Ключ изображения доски
      */
     protected static final String strBoard = "Path.Image.Board";
-//    /**
-//     * Ключ изображения фигур.
-//     */
-//    static final protected String strFigures = "Path.Image.Figures";
 
     /**
      * Доступ к классу ресурсов.
@@ -67,14 +62,14 @@ public class CViewBoard extends JPanel implements IChangeState {
      * Массив цвета рамок клеток доски.
      */
     protected Color[][] boardSpacesColor;
-//    /**
-//     * Выбранная клетка при редактировании.
-//     */
-//    protected int selectedX, selectedY;
-//    /**
-//     * Ссылка на объект правой панели режима редактирования.
-//     */
-//    protected CRightPanelEdition rPanelEdition;
+    /**
+     * Выбранная клетка при редактировании.
+     */
+    protected int selectedX, selectedY;
+    /**
+     * Ссылка на объект правой панели режима редактирования.
+     */
+    protected CRightPanelEdition rPanelEdition;
 //    /**
 //     * Начальные выбранные координаты в режиме игры.
 //     */
@@ -118,8 +113,8 @@ public class CViewBoard extends JPanel implements IChangeState {
                 }
                 if (csmControl.getStateGame() < 0) {
                     // Рисуем цвет квадратов в режиме редактирования.
-//                    if (selectedX == rx && selectedY == y) g2.setColor(spaceFrameColor[1]);
-//                    else g2.setColor(spaceFrameColor[0]);
+                    if (selectedX == rx && selectedY == y) g2.setColor(spaceFrameColor[1]);
+                    else g2.setColor(spaceFrameColor[0]);
                 } else {
                     // Рисуем цвет квадратов в других режимах.
                     g2.setColor(boardSpacesColor[y][x]);
@@ -134,10 +129,12 @@ public class CViewBoard extends JPanel implements IChangeState {
      * @param e событие клавиатуры.
      */
     public void keyActionEdition(KeyEvent e) {
-//        if (KeyEvent.VK_DELETE == e.getKeyCode() && selectedX >= 0 && selectedY >= 0) {
-//            csmControl.getCMoveGame().setSpaceBoard(selectedX, selectedY, null, null);
-//            repaint();
-//        }
+        if (KeyEvent.VK_DELETE == e.getKeyCode() && selectedX >= 0 && selectedY >= 0) {
+            csmControl.getCMoveGame().removeSpaceBoard(selectedX, selectedY);
+        } else if (KeyEvent.VK_BACK_SPACE == e.getKeyCode()) {
+            csmControl.getCMoveGame().back();
+        }
+        repaint();
     }
 
     @Override
@@ -156,6 +153,14 @@ public class CViewBoard extends JPanel implements IChangeState {
     }
 
     /**
+     * Добавляет объект правой панели редактирования.
+     * @param rPanelEdition правая панель редактирования
+     */
+    public void setPanelEdition(CRightPanelEdition rPanelEdition) {
+        this.rPanelEdition = rPanelEdition;
+    }
+
+    /**
      * Начальная инициализация класса.
      */
     protected void initViewBoard() {
@@ -165,7 +170,7 @@ public class CViewBoard extends JPanel implements IChangeState {
         resourse = CResourse.getInstance();
         boardSpacesColor = new Color[8][4];
         clearBoardSpacesColor();
-//        rPanelEdition = null;
+        rPanelEdition = null;
 
         // Создание интерфейса.
         int width = resourse.getImage(strBoard).getImage().getWidth(null);
@@ -200,25 +205,17 @@ public class CViewBoard extends JPanel implements IChangeState {
         }
     }
 
-//    /**
-//     * Добавляет объект правой панели редактирования.
-//     * @param rPanelEdition правая панель редактирования
-//     */
-//    protected void setPanelEdition(CRightPanelEdition rPanelEdition) {
-//        this.rPanelEdition = rPanelEdition;
-//    }
-
-//    /**
-//     * Преобразует координаты экрана в координаты доски.
-//     * @param x координата x экрана
-//     * @param y координата y экрана
-//     * @return Pair с координатами доски
-//     */
-//    protected CPair<Integer, Integer> coordImgToBoard(int x, int y) {
-//        int bx = (x - offsetBaseX) / spaceW;
-//        int by = 7 - (y - offsetBaseY) / spaceH;
-//        return new CPair<>(bx, by);
-//    }
+    /**
+     * Преобразует координаты экрана в координаты доски.
+     * @param x координата x экрана
+     * @param y координата y экрана
+     * @return Pair с координатами доски
+     */
+    protected CPair<Integer, Integer> coordImgToBoard(int x, int y) {
+        int bx = (x - offsetBaseX) / spaceW;
+        int by = 7 - (y - offsetBaseY) / spaceH;
+        return new CPair<>(bx, by);
+    }
 
     /**
      * Обработка нажатий клавишы мыши на доске.
@@ -226,23 +223,21 @@ public class CViewBoard extends JPanel implements IChangeState {
      * @param isClick true - мышь нажата, false - мышь отпущена
      */
     protected void mouseAction(MouseEvent e, boolean isClick) {
-//        CPair<Integer, Integer> pos = coordImgToBoard(e.getX(), e.getY());
-//        int bx = pos.getFirst();
-//        int by = pos.getSecond();
-//        if (!csmControl.getBoard().aField(bx, by)) return;
-//
-//        if (csmControl.getIsEdition()) {
-//            if (isClick) {
-//                selectedX = bx;
-//                selectedY = by;
-//                if (null != rPanelEdition) {
-//                    CPair<ETypeFigure, ETypeColor> cp = rPanelEdition.selectedFigure();
-//                    if (null == cp) return;
-//                    csmControl.getCMoveGame().setSpaceBoard(bx, by, cp.getFirst(), cp.getSecond());
-//                }
-//            }
-//            repaint();
-//        } else if (csmControl.getBoard().getStateGame()) {
+        CPair<Integer, Integer> pos = coordImgToBoard(e.getX(), e.getY());
+        if (!CFactoryFigure.getInstance().aPosition(pos)) return;
+        int sg = csmControl.getStateGame();
+        if (sg < 0) {
+            if (isClick) {
+                selectedX = pos.getFirst();
+                selectedY = pos.getSecond();
+                if (null != rPanelEdition) {
+                    CPair<ETypeFigure, ETypeColor> cp = rPanelEdition.selectedFigure();
+                    if (null == cp) return;
+                    csmControl.getCMoveGame().setSpaceBoard(selectedX, selectedY, cp);
+                }
+            }
+            repaint();
+        } else if (sg > 0) {
 //            if (!csmControl.getPlayForColor(csmControl.getBoard().getCurMove())) return;
 //            if (!isClick) return;
 //            if (csmControl.getBoard().lstStartMoveGameField().contains(pos)) {
@@ -256,19 +251,8 @@ public class CViewBoard extends JPanel implements IChangeState {
 //                if (csmControl.getBoard().getStateGame())
 //                    csmControl.makeChangesState(ETActionGame.TONEXTSTEPGAMEWIN, false);
 //            }
-//        }
+        }
     }
-
-//    /**
-//     * Возвращает смещение в изображении фигур.
-//     * @param fig объект фигуры
-//     * @return смещение
-//     */
-//    protected int figureOffsetImage(IFigureBase fig) {
-//        int r = fig.getColorType() == ETypeColor.WHITE ? 0: 120;
-//        r += fig.getTypeFigure() == ETypeFigure.CHECKERS ? 0: 60;
-//        return r;
-//    }
 
 //    /**
 //     * Выбирает цвет рамки поля игры в режиме игры.
@@ -298,13 +282,13 @@ public class CViewBoard extends JPanel implements IChangeState {
 
     // ---------------------------- Методы обрабатывающиеся контроллером переходов состояний ---------------------------
 
-//    /**
-//     * Инициализация при переходе в режим редактирования.
-//     */
-//    protected void initEditingMode() {
-//        selectedX = -1;
-//        selectedY = -1;
-//    }
+    /**
+     * Инициализация при переходе в режим редактирования.
+     */
+    protected void initEditingMode() {
+        selectedX = -1;
+        selectedY = -1;
+    }
 
 //    /**
 //     * Переход к следующему ходу.

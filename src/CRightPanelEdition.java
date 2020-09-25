@@ -1,3 +1,4 @@
+import CheckersEngine.BaseEngine.CFactoryFigure;
 import CheckersEngine.BaseEngine.CPair;
 import CheckersEngine.BaseEngine.ETypeColor;
 import CheckersEngine.BaseEngine.ETypeFigure;
@@ -20,6 +21,11 @@ public class CRightPanelEdition extends JPanel {
             {128, 64},
             {128, 66 + CResourse.getInstance().getResInt("Board.Space.Height")}
     };
+    /**
+     * Размеры ячейки фигуры.
+     */
+    int fullW = CResourse.getInstance().getResInt("Board.Space.Width");
+    int fullH = CResourse.getInstance().getResInt("Board.Space.Height");
 
     /**
      * Доступ к классу ресурсов.
@@ -32,15 +38,7 @@ public class CRightPanelEdition extends JPanel {
     /**
      * Задаёт выбранную фигуру.
      */
-    protected int selectedF;
-    /**
-     * Ключ изображения фигур.
-     */
-    static final protected String strFigures = "Path.Image.Figures";
-    /**
-     * Размеры ячейки фигуры.
-     */
-    int fullW, fullH;
+    protected CPair<ETypeFigure, ETypeColor> selectedF;
 
     public CRightPanelEdition(LayoutManager layout, boolean isDoubleBuffered) {
         super(layout, isDoubleBuffered);
@@ -59,13 +57,14 @@ public class CRightPanelEdition extends JPanel {
         initUI();
     }
 
+    /**
+     * Инициализация интерфейса панели.
+     */
     protected void initUI() {
         // Базовые настройки.
         csmControl = csmControl.getInstance();
         resourse = CResourse.getInstance();
-        selectedF = -1;
-        fullW = resourse.getResInt("Board.Space.Width");
-        fullH = resourse.getResInt("Board.Space.Height");
+        selectedF = null;
         int rPW = resourse.getResInt("Window.RightPanel.Width");
         int rPH = resourse.getResInt("Window.RightPanel.Height");
 
@@ -82,10 +81,13 @@ public class CRightPanelEdition extends JPanel {
         add(lblUp);
 
         // Создание нижней надписи.
-        JLabel lblDown = new JLabel(resourse.getResStr("Msg.Right.Edition.Info.Del"));
-        lblDown.setBounds(2, 66 + CResourse.getInstance().getResInt("Board.Space.Height") * 5 / 2, rPW - 4, 48);
-        lblDown.setHorizontalAlignment(JLabel.LEFT);
-        add(lblDown);
+        JLabel lblDown1 = new JLabel(resourse.getResStr("Msg.Right.Edition.Info.Del"));
+        lblDown1.setBounds(2, 66 + CResourse.getInstance().getResInt("Board.Space.Height") * 5 / 2, rPW - 4, 48);
+        lblDown1.setHorizontalAlignment(JLabel.LEFT);
+        add(lblDown1);
+        JLabel lblDown2 = new JLabel((resourse.getResStr("Msg.Right.Edition.Info.BackSpace")));
+        lblDown2.setBounds(2, 114 + CResourse.getInstance().getResInt("Board.Space.Height") * 5 / 2, rPW - 4, 48);
+        add(lblDown2);
 
         addMouseListener(new MouseAdapter() {
             @Override
@@ -94,8 +96,9 @@ public class CRightPanelEdition extends JPanel {
                 for (int i = 0; i < 4; i++) {
                     if (e.getX() >= posFigures[i][0] && e.getX() < posFigures[i][0] + fullW
                             && e.getY() >= posFigures[i][1] && e.getY() < posFigures[i][1] + fullH) {
-                        if (i == selectedF) selectedF = -1;
-                        else selectedF = i;
+                        CPair<ETypeFigure, ETypeColor> newF = getFigure(i);
+                        if (null != selectedF && selectedF.equals(newF)) selectedF = null;
+                        else selectedF = newF;
                         repaint();
                         return;
                     }
@@ -116,31 +119,40 @@ public class CRightPanelEdition extends JPanel {
         else if (KeyEvent.VK_3 == e.getKeyCode()) i = 2;
         else if (KeyEvent.VK_4 == e.getKeyCode()) i = 3;
         if (-2 == i) return;
-        if (i == selectedF) i = -1;
-        selectedF = i;
+        CPair<ETypeFigure, ETypeColor> newF = getFigure(i);
+        if (null != selectedF && selectedF.equals(newF)) selectedF = null;
+        else selectedF = newF;
         repaint();
     }
 
     public CPair<ETypeFigure, ETypeColor> selectedFigure() {
-        if (selectedF < 0 || selectedF > 3) return null;
-        ETypeColor tc = selectedF < 2 ? ETypeColor.WHITE: ETypeColor.BLACK;
-        ETypeFigure tf = selectedF % 2 == 0 ? ETypeFigure.CHECKERS: ETypeFigure.QUINE;
-        return new CPair<>(tf, tc);
+        return selectedF;
     }
 
     public void paint(Graphics g) {
         super.paint(g);
         Graphics2D g2 = (Graphics2D) g;
-        int imgW = resourse.getImage(strFigures).getImage().getWidth(null) / 4;
-        int imgH = resourse.getImage(strFigures).getImage().getHeight(null);
         int dd = 3;
         for (int i = 0; i < 4; i++) {
-            g2.drawImage(resourse.getImage(strFigures).getImage(), posFigures[i][0] + dd, posFigures[i][1] + dd,
-                    posFigures[i][0] + imgW + dd, posFigures[i][1] + imgH + dd, i * 60, 0, i * 60 + imgW, imgH, null);
-            if (i == selectedF) {
+            CPair<ETypeFigure, ETypeColor> newF = getFigure(i);
+            ImageIcon img = CFactoryFigure.getInstance().getImageFigure(newF);
+            g2.drawImage(img.getImage(), posFigures[i][0] + dd, posFigures[i][1] + dd, null);
+            if (null != selectedF && selectedF.equals(newF)) {
                 g2.drawRect(posFigures[i][0], posFigures[i][1], fullW, fullH);
             }
         }
+    }
+
+    /**
+     * Получение фигуры по номеру разположения.
+     * @param i номер фигуры
+     * @return изображаемая фигура
+     */
+    protected CPair<ETypeFigure, ETypeColor> getFigure(int i) {
+        if (i < 0 || i > 3) return null;
+        ETypeFigure tf = i % 2 == 0 ? ETypeFigure.CHECKERS: ETypeFigure.QUINE;
+        ETypeColor tc = i < 2 ? ETypeColor.WHITE: ETypeColor.BLACK;
+        return new CPair<>(tf, tc);
     }
 
 }
