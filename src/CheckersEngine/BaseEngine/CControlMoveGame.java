@@ -1,8 +1,5 @@
 package CheckersEngine.BaseEngine;
 
-import org.jetbrains.annotations.NotNull;
-
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -10,7 +7,7 @@ import java.util.List;
  * Класс контролирующий проделанные ходы и изменения на игровой доске.
  * Класс очищается если начинается новая игра.
  */
-public class CControlMoveGame implements Iterable<String> {
+public class CControlMoveGame {
 
     static protected final String CMD_REMOVE = "r";     // Удаление фигуры на доске по координатам x, y.
     static protected final String CMD_SET = "s";        // Установка фигуры на доске по координатам x, y. Фигура по её типу и цвету.
@@ -225,55 +222,53 @@ public class CControlMoveGame implements Iterable<String> {
      * Откат назад.
      */
     public void back() {
-        if (curGameAction >= 0) {
-            int x, y, x2, y2;
-            ETypeFigure tf;
-            ETypeColor tc;
-            String str = lstGameAction.get(curGameAction--);
-            board.backCurrentMove();
-            String cmd = str.substring(0, 1);
-            str = str.substring(1);
-            if (CMD_REMOVE.equals(cmd)) {
-                x = coordStrToInt(str, 0);
-                y = coordStrToInt(str, 1);
-                tf = 'c' == str.charAt(2) ? ETypeFigure.CHECKERS: ETypeFigure.QUINE;
-                tc = 'b' == str.charAt(3) ? ETypeColor.BLACK: ETypeColor.WHITE;
+        if (curGameAction < 0) return;
+        int x, y, x2, y2;
+        ETypeFigure tf;
+        ETypeColor tc;
+        String strAction = lstGameAction.get(curGameAction);
+        curGameAction--;
+        String cmd = strAction.substring(0, 1);
+        strAction = strAction.substring(1);
+        if (CMD_REMOVE.equals(cmd)) {
+            x = coordStrToInt(strAction, 0);
+            y = coordStrToInt(strAction, 1);
+            if ('-' == strAction.charAt(2)) board.setF(x, y, null);
+            else {
+                tf = 'q' == strAction.charAt(2) ? ETypeFigure.QUINE: ETypeFigure.CHECKERS;
+                tc = 'w' == strAction.charAt(3) ? ETypeColor.WHITE: ETypeColor.BLACK;
                 board.setF(x, y, new CPair<>(tf, tc));
-            } else if (CMD_SET.equals(cmd)) {
-                x = coordStrToInt(str, 0);
-                y = coordStrToInt(str, 1);
-                tf = 'c' == str.charAt(4) ? ETypeFigure.CHECKERS: ETypeFigure.QUINE;
-                tc = 'b' == str.charAt(5) ? ETypeColor.BLACK: ETypeColor.WHITE;
+            }
+        } else if (CMD_SET.equals(cmd)) {
+            x = coordStrToInt(strAction, 0);
+            y = coordStrToInt(strAction, 1);
+            if ('-' == strAction.charAt(4)) board.setF(x, y, null);
+            else {
+                tf = 'q' == strAction.charAt(4) ? ETypeFigure.QUINE: ETypeFigure.CHECKERS;
+                tc = 'w' == strAction.charAt(5) ? ETypeColor.WHITE: ETypeColor.BLACK;
                 board.setF(x, y, new CPair<>(tf, tc));
-            } else if (CMD_MOVE.equals(cmd) || CMD_ATTACK.equals(cmd)) {
-                x = coordStrToInt(str, 0);
-                y = coordStrToInt(str, 1);
-                x2 = coordStrToInt(str, 3);
-                y2 = coordStrToInt(str, 4);
-                tf = 'c' == str.charAt(6) ? ETypeFigure.CHECKERS: ETypeFigure.QUINE;
-                tc = 'b' == str.charAt(7) ? ETypeColor.BLACK: ETypeColor.WHITE;
-                tf = '!' == str.charAt(5) ? ETypeFigure.CHECKERS: tf;
-                board.setF(x2, y2, null);
-                board.setF(x, y, new CPair<>(tf, tc));
-                if (CMD_ATTACK.equals(cmd)) {
-                    str = str.substring(8);
-                    while (str.length() > 0) {
-                        x = coordStrToInt(str, 0);
-                        y = coordStrToInt(str, 1);
-                        tf = 'c' == str.charAt(4) ? ETypeFigure.CHECKERS: ETypeFigure.QUINE;
-                        tc = 'b' == str.charAt(5) ? ETypeColor.BLACK: ETypeColor.WHITE;
-                        board.setF(x, y, new CPair<>(tf, tc));
-                        str = str.substring(6);
-                    }
+            }
+        } else if (CMD_MOVE.equals(cmd) || CMD_ATTACK.equals(cmd)) {
+            x = coordStrToInt(strAction, 0);
+            y = coordStrToInt(strAction, 1);
+            x2 = coordStrToInt(strAction, 3);
+            y2 = coordStrToInt(strAction, 4);
+            tf = 'q' == strAction.charAt(6) ? ETypeFigure.QUINE: ETypeFigure.CHECKERS;
+            tc = 'w' == strAction.charAt(7) ? ETypeColor.WHITE: ETypeColor.BLACK;
+            board.setF(x2, y2, null);
+            board.setF(x, y, new CPair<>(tf, tc));
+            if (CMD_ATTACK.equals(cmd)) {
+                strAction = strAction.substring(8);
+                while (strAction.length() > 0) {
+                    x = coordStrToInt(strAction, 0);
+                    y = coordStrToInt(strAction, 1);
+                    tf = 'q' == strAction.charAt(4) ? ETypeFigure.QUINE: ETypeFigure.CHECKERS;
+                    tc = 'w' == strAction.charAt(5) ? ETypeColor.WHITE: ETypeColor.BLACK;
+                    board.setF(x, y, new CPair<>(tf, tc));
+                    strAction = strAction.substring(6);
                 }
             }
         }
-    }
-
-    @NotNull
-    @Override
-    public Iterator<String> iterator() {
-        return lstGameAction.iterator();
     }
 
     /**

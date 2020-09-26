@@ -28,11 +28,11 @@ public class CSMControl implements ICallableStopGame {
         oldStateGame = null;
         lstChangeState = new ArrayList<>();
         isEdition = false;
+        whosPlaying = new HashMap<>();
+        for (ETypeColor it: ETypeColor.values()) {
+            whosPlaying.put(it, true);
+        }
 //        fileName = null;
-//        whosPlaying = new HashMap<>();
-//        for (ETypeColor it: ETypeColor.values()) {
-//            whosPlaying.put(it, true);
-//        }
 //        computerGame = new CComputerGame(cMoveGame);
 //        new Thread(computerGame).start();
     }
@@ -51,14 +51,12 @@ public class CSMControl implements ICallableStopGame {
         newStateGame = new Hashtable<>();
         newStateGame.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOEDITING), ETStateGame.EDITING);
         newStateGame.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBASE), ETStateGame.BASE);
-//        newStateGame.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOGAME), ETStateGame.GAME);
-//        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEDRAW), ETStateGame.BASE);
-//        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEWHILE), ETStateGame.BASE);
-//        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEBLACK), ETStateGame.BASE);
-//        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEGAMESTOP), ETStateGame.BASE);
-//        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOCHANGEMOVE), ETStateGame.GAME);
-//        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TONEXTSTEPGAME), ETStateGame.GAME);
-//        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TONEXTSTEPGAMEWIN), ETStateGame.GAME);
+        newStateGame.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOGAME), ETStateGame.GAME);
+        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEGAMESTOP), ETStateGame.BASE);
+        newStateGame.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOCONTINUEGAME), ETStateGame.GAME);
+        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEDRAW), ETStateGame.BASE);
+        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEWHILE), ETStateGame.BASE);
+        newStateGame.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEBLACK), ETStateGame.BASE);
     }
     /**
      * Список изполняемых функций для текущего объекта
@@ -68,13 +66,15 @@ public class CSMControl implements ICallableStopGame {
         stateAction = new Hashtable<>();
         stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOEDITING), "initEditingMode");
         stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBASE), "closeEdition");
+        stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOGAME), "launchGameMode");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.BACKSPACEMOVEGAME), "backspaceMoveGame");
+        stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOCONTINUEGAME), "continueGameMode");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVE), "saveBoard");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOAD), "loadBoard");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITEPLAYER), "playWhiteFromPlayer");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOBLACKPLAYER), "playBlackFromPlayer");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITECOMP), "playWhiteFromComp");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOBLACKCOMP), "playBlackFromComp");
-//        stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOGAME), "launchGameMode");
     }
 
     /**
@@ -101,14 +101,14 @@ public class CSMControl implements ICallableStopGame {
      * Режим редактирования.
      */
     protected boolean isEdition;
+    /**
+     * Определяет, кто ходи за соответствующий цвет. true - игрок, false - компьютер
+     */
+    protected Map<ETypeColor, Boolean> whosPlaying;
 //    /**
 //     * Имя файла для записи ли чтения.
 //     */
 //    private String fileName;
-//    /**
-//     * Определяет, кто ходи за соответствующий цвет. true - игрок, false - компьютер
-//     */
-//    protected Map<ETypeColor, Boolean> whosPlaying;
 //    /**
 //     * Объект ходов компьютером.
 //     */
@@ -126,7 +126,9 @@ public class CSMControl implements ICallableStopGame {
      * @param state победитель, либо null - ничья
      */
     public void endStateGame(ETypeColor state) {
-        // TODO: Завершение игры.
+        if (null == state) makeChangesState(ETActionGame.TOBASEFROMGAMEDRAW, false);
+        else if (ETypeColor.WHITE == state) makeChangesState(ETActionGame.TOBASEFROMGAMEWHILE, false);
+        else makeChangesState(ETActionGame.TOBASEFROMGAMEBLACK, false);
     }
 
     /**
@@ -194,11 +196,21 @@ public class CSMControl implements ICallableStopGame {
     }
 
     /**
-     * Выход из режима редактирования.
+     * Определяет, кто играет за заданный цвет
+     * @param playColor игровой цвет
+     * @return игрок играющий за данный цвет true - игрок, false - компьютер
      */
-    protected void closeEdition() {
-        saveBoardGame();
-        getCMoveGame().clearControlMove();
+    public boolean getPlayForColor(ETypeColor playColor) {
+        return whosPlaying.get(playColor);
+    }
+
+    /**
+     * Задаёт игрока за выбранный цвет.
+     * @param playerForColor цвет за котороый выставляется игрок
+     * @param type           игрок: true - обычный игрок, false - компьютер
+     */
+    public void setPlayerForColor(ETypeColor playerForColor, boolean type) {
+        whosPlaying.replace(playerForColor, type);
     }
 
 //    /**
@@ -215,24 +227,6 @@ public class CSMControl implements ICallableStopGame {
 //     */
 //    public void setFileName(String fileName) {
 //        this.fileName = fileName;
-//    }
-
-//    /**
-//     * Определяет, кто играет за заданный цвет
-//     * @param playColor игровой цвет
-//     * @return игрок играющий за данный цвет true - игрок, false - компьютер
-//     */
-//    public boolean getPlayForColor(ETypeColor playColor) {
-//        return whosPlaying.get(playColor);
-//    }
-
-//    /**
-//     * Задаёт игрока за выбранный цвет.
-//     * @param playerForColor цвет за котороый выставляется игрок
-//     * @param type           игрок: true - обычный игрок, false - компьютер
-//     */
-//    public void setPlayerForColor(ETypeColor playerForColor, boolean type) {
-//        whosPlaying.replace(playerForColor, type);
 //    }
 
     /**
@@ -279,6 +273,47 @@ public class CSMControl implements ICallableStopGame {
     protected void initEditingMode() {
         editModeOn();
         getCMoveGame().clearControlMove();
+    }
+
+    /**
+     * Выход из режима редактирования.
+     */
+    protected void closeEdition() {
+        saveBoardGame();
+        getCMoveGame().clearControlMove();
+    }
+
+    /**
+     * Переход в состяния игры.
+     */
+    protected void launchGameMode() {
+        restoreBoardGame();
+        cMoveGame.clearControlMove();
+        makeChangesState(ETActionGame.TONEXTSTEPGAME, false);
+    }
+
+    /**
+     * Возврат на шаг в объекте сделанных ходов или изменений на игровом поле.
+     */
+    protected void backspaceMoveGame() {
+        int n = 1;
+        if (getStateGame() > 0) {
+            ETypeColor tc = cMoveGame.getBoard().getCurrentMove().neg();
+            if (!getPlayForColor(tc)) n = 2;
+        }
+        if (cMoveGame.size() < n) return;
+        for (; n > 0; n--) {
+            getCMoveGame().back();
+        }
+        makeChangesState(ETActionGame.TOREPAIN, true);
+    }
+
+    /**
+     * Продолжение остановленной игры.
+     */
+    protected void continueGameMode() {
+        if (getBoard().getEndState() >= 0) launchGameMode();
+        else makeChangesState(ETActionGame.TONEXTSTEPGAME, false);
     }
 
 //    /**
@@ -361,13 +396,5 @@ public class CSMControl implements ICallableStopGame {
 //     */
 //    protected void playBlackFromComp() {
 //        setPlayerForColor(ETypeColor.BLACK, false);
-//    }
-
-//    /**
-//     * Переход в состяния игры.
-//     */
-//    protected void launchGameMode() {
-//        restoreBoardGame();
-//        makeChangesState(ETActionGame.TONEXTSTEPGAME, false);
 //    }
 }

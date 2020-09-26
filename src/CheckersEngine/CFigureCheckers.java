@@ -73,30 +73,20 @@ public class CFigureCheckers extends CFigureParent {
             curPos = stack.getPos();
             oneStep = stack.getOneStep();
             stack.pop();
+            isTest = true;
+            tmpLstSteps = null;
             if (ETypeFigure.QUINE == curBoard.get(curPos).getFirst()) {
                 // Атака фигуры как дамки.
                 tmpLstSteps = CFactoryFigure.getInstance().getFigure(ETypeFigure.QUINE).searchAttack(curBoard, curPos);
-                if (tmpLstSteps.size() > 0) {
-                    for (List<CPair<Integer, Integer>> elOneStep: tmpLstSteps) {
-                        if (null == elOneStep || 0 == elOneStep.size()) continue;
-                        tmpOneStep = new LinkedList<>();
-                        tmpOneStep.add(elOneStep.get(elOneStep.size() - 1));
-                        tmpOneStep.add(oneStep.get(oneStep.size() - 1));
-                        tmpOneStep.addAll(oneStep);
-                        tmpOneStep.addAll(elOneStep.subList(2, elOneStep.size()));
-                        lstSteps.add(tmpOneStep);
-                    }
-                }
             } else {
-                isTest = true;
-                for (int[] delta: BASE_PATH_OPTION) {
+                for (int[] delta : BASE_PATH_OPTION) {
                     nextPos = new CPair<>(curPos.getFirst() + delta[0], curPos.getSecond() + delta[1]);
                     if (CFactoryFigure.getInstance().aPosition(nextPos) && null != curBoard.getOrDefault(nextPos, null) && tc != curBoard.get(nextPos).getSecond()) {
                         endPos = new CPair<>(nextPos.getFirst() + delta[0], nextPos.getSecond() + delta[1]);
                         if (CFactoryFigure.getInstance().aPosition(endPos) && null == curBoard.getOrDefault(endPos, null)) {
                             isTest = false;
                             tmpBoard = new HashMap<>(curBoard);
-                            tf = 1 == testMove(endPos, tmpBoard, tc) ? ETypeFigure.QUINE: ETypeFigure.CHECKERS;
+                            tf = 1 == testMove(endPos, tmpBoard, tc) ? ETypeFigure.QUINE : ETypeFigure.CHECKERS;
                             tmpBoard.remove(curPos);
                             tmpBoard.remove(nextPos);
                             tmpBoard.put(endPos, new CPair<>(tf, tc));
@@ -107,12 +97,23 @@ public class CFigureCheckers extends CFigureParent {
                         }
                     }
                 }
-                if (isTest) {
-                    if (oneStep.size() > 0) {
+            }
+            if (isTest) {
+                if (oneStep.size() == 0) continue;
+                if (null == tmpLstSteps || 0 == tmpLstSteps.size()) {
+                    tmpOneStep = new LinkedList<>();
+                    tmpOneStep.add(oneStep.get(oneStep.size() - 1));
+                    tmpOneStep.add(null == tmpLstSteps ? null: tmpOneStep.get(0));
+                    tmpOneStep.addAll(oneStep);
+                    lstSteps.add(tmpOneStep);
+                } else {
+                    for (List<CPair<Integer, Integer>> elOneStep: tmpLstSteps) {
+                        if (null == elOneStep || 0 == elOneStep.size()) continue;
                         tmpOneStep = new LinkedList<>();
+                        tmpOneStep.add(elOneStep.get(elOneStep.size() - 1));
                         tmpOneStep.add(oneStep.get(oneStep.size() - 1));
-                        tmpOneStep.add(null);
                         tmpOneStep.addAll(oneStep);
+                        tmpOneStep.addAll(elOneStep.subList(2, elOneStep.size()));
                         lstSteps.add(tmpOneStep);
                     }
                 }

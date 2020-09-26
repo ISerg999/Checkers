@@ -68,8 +68,8 @@ public abstract class CEngineBoard {
         gameOn = old.gameOn;
         curMove = old.curMove;
         possibleCurrentMoves = new HashMap<>();
-        callableStopGame = old.callableStopGame;
         endState = old.endState;
+        callableStopGame = null;
         factoryFigure = CFactoryFigure.getInstance();
     }
 
@@ -130,13 +130,6 @@ public abstract class CEngineBoard {
             gameOn = true;
         }
         testNewStep();
-    }
-
-    /**
-     * Меняет ход игрока на предыдущий.
-     */
-    public synchronized void backCurrentMove() {
-        curMove = curMove.neg();
     }
 
     /**
@@ -234,54 +227,22 @@ public abstract class CEngineBoard {
      */
     public synchronized void stopGamePlay() {
         gameOn = false;
-        // TODO: Действия при окончании игры.
     }
 
     /**
      * Поиск возможных ходов, а также проверка на окончание игры.
      */
     public synchronized void testNewStep() {
-        analisysPossibleMoves();
-        endState = analisysEndState();
+        possibleCurrentMoves = analisysPossibleMoves();
+        analisysEndState();
         if (endState >= 0) {
-            gameOn = false;
+            stopGamePlay();
             if (null != callableStopGame) {
                 ETypeColor tc = null;
                 if (endState > 0) tc = endState == 1 ? ETypeColor.WHITE: ETypeColor.BLACK;
                 callableStopGame.endStateGame(tc);
             }
         }
-    }
-
-    /**
-     * Анализ доступных ходов.
-     */
-    public synchronized void analisysPossibleMoves() {
-        possibleCurrentMoves.clear();
-        // Анализ возможных атак.
-        for (CPair<Integer, Integer> pos: board.keySet()) {
-            CPair<ETypeFigure, ETypeColor> figure = board.get(pos);
-            if (figure.getSecond() == curMove) {
-                List<List<CPair<Integer, Integer>>> tmp = factoryFigure.getFigure(figure.getFirst()).searchAttack(board, pos);
-                if (tmp.size() > 0) {
-                    possibleCurrentMoves.put(pos, tmp);
-                }
-            }
-        }
-
-        if (0 == possibleCurrentMoves.size()) {
-            // Анализ возможных ходов.
-            for (CPair<Integer, Integer> pos: board.keySet()) {
-                CPair<ETypeFigure, ETypeColor> figure = board.get(pos);
-                if (figure.getSecond() == curMove) {
-                    List<List<CPair<Integer, Integer>>> tmp = factoryFigure.getFigure(figure.getFirst()).searchMove(board, pos);
-                    if (tmp.size() > 0) {
-                        possibleCurrentMoves.put(pos, tmp);
-                    }
-                }
-            }
-        }
-
     }
 
     /**
@@ -296,23 +257,26 @@ public abstract class CEngineBoard {
      * Анализ конечного игрового состояния.
      * @return 0 - ничья, 1 - выйграли белые, 2 - выйграли чёрные, меньше нуля - все остальные состояния.
      */
-    public synchronized int analisysEndState() {
-        if (!gameOn) return -1;
+    public synchronized void analisysEndState() {
+        endState = -1;
+        if (!gameOn) return;
         int countW = 0, countB = 0;
         for (CPair<Integer, Integer> pos: board.keySet()) {
             CPair<ETypeFigure, ETypeColor> figure = board.get(pos);
             if (ETypeColor.BLACK == figure.getSecond()) countB++;
             else countW++;
         }
-        if (countB == 0) return 1;
-        if (countW == 0) return 2;
-        int count = ETypeColor.BLACK == curMove ? countW: countB;
-        if (count > 0 && possibleCurrentMoves.size() > 0) return -1;
-        CEngineBoard nextBoard = new CCheckersBoard((CCheckersBoard) this);
-        nextBoard.setCallableStopGame(null);
-        nextBoard.reverseCurrentMove();
-        if (0 == possibleCurrentMoves.size() && 0 == nextBoard.sizePossibleCurrentMoves()) return 0;
-        return -1;
+        if (0 == countB || 0 == countW) {
+            if (0 == countB && 0 == countW) endState = 0;
+            else if (0 == countB) endState = 1;
+            else if (0 == countW) endState = 2;
+        }
+        else {
+            if (possibleCurrentMoves.size() > 0) return;
+            Map<CPair<Integer, Integer>, List<List<CPair<Integer, Integer>>>> pcm = analisysPossibleMoves(curMove.neg());
+            if (0 == pcm.size()) endState = 0;
+            else endState = ETypeColor.WHITE == curMove ? 2: 1;
+        }
     }
 
     /**
@@ -391,4 +355,48 @@ public abstract class CEngineBoard {
         }
         return null;
     }
+
+    /**
+     * Анализ возможных атак и ходов для заданного цвета.
+     * @param curColor цвет фигур
+     * @return список возможных атак или ходов
+     */
+    protected synchronized Map<CPair<Integer, Integer>, List<List<CPair<Integer, Integer>>>> analisysPossibleMoves(ETypeColor curColor) {
+        Map<CPair<Integer, Integer>, List<List<CPair<Integer, Integer>>>> pcm = new HashMap<>();
+
+        // Анализ возможных атак.
+        for (CPair<Integer, Integer> pos: board.keySet()) {
+            CPair<ETypeFigure, ETypeColor> figure = board.get(pos);
+            if (figure.getSecond() == curColor) {
+                List<List<CPair<Integer, Integer>>> tmp = factoryFigure.getFigure(figure.getFirst()).searchAttack(board, pos);
+                if (tmp.size() > 0) {
+                    pcm.put(pos, tmp);
+                }
+            }
+        }
+
+        if (0 == pcm.size()) {
+            // Анализ возможных ходов.
+            for (CPair<Integer, Integer> pos: board.keySet()) {
+                CPair<ETypeFigure, ETypeColor> figure = board.get(pos);
+                if (figure.getSecond() == curColor) {
+                    List<List<CPair<Integer, Integer>>> tmp = factoryFigure.getFigure(figure.getFirst()).searchMove(board, pos);
+                    if (tmp.size() > 0) {
+                        pcm.put(pos, tmp);
+                    }
+                }
+            }
+        }
+
+        return pcm;
+    }
+
+    /**
+     * Анализ возможных атак и ходов для текущего цвета.
+     * @return список возможных атак или ходов
+     */
+    protected Map<CPair<Integer, Integer>, List<List<CPair<Integer, Integer>>>> analisysPossibleMoves() {
+        return analisysPossibleMoves(curMove);
+    }
+
 }

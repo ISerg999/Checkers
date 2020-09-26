@@ -24,6 +24,14 @@ public class JFMainWindow extends JFrame implements IChangeState {
         stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBOARDPLACEMANT), "placemantBoard");
         stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBOARDCLEAR), "clearBoard");
         stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.TOBASE), "closeEdition");
+        stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOGAME), "initGameMode");
+        stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TONEXTSTEPGAMEWIN), "nextStepGame");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOREPAIN), "repainWindow");
+        stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEGAMESTOP), "endGameFromStop");
+        stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOCONTINUEGAME), "initGameMode");
+        stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEDRAW), "endGameFromDraw");
+        stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEWHILE), "endGameFromWinWhile");
+        stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEBLACK), "endGameFromWinBlack");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVE), "viewDialogSave");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOAD), "viewDialogLoad");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVEOK), "viewSaveFileOK");
@@ -32,12 +40,6 @@ public class JFMainWindow extends JFrame implements IChangeState {
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOBLACKPLAYER), "playBlackFromPlayer");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITECOMP), "playWhiteFromComp");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOBLACKCOMP), "playBlackFromComp");
-//        stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOGAME), "initGameMode");
-//        stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TONEXTSTEPGAMEWIN), "nextStepGame");
-//        stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEDRAW), "endGameFromDraw");
-//        stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEWHILE), "endGameFromWinWhile");
-//        stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEBLACK), "endGameFromWinBlack");
-//        stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEGAMESTOP), "endGameFromStop");
     }
 
     /**
@@ -68,10 +70,14 @@ public class JFMainWindow extends JFrame implements IChangeState {
      * Правая панель редактирования.
      */
     CRightPanelEdition rPanelEdition;
-//    /**
-//     * Правая игровая панель
-//     */
-//    CRightPanelGaming rPanelGaming;
+    /**
+     * Правая игровая панель
+     */
+    CRightPanelGaming rPanelGaming;
+    /**
+     * Позволяет узнать игра только началась, или она продолжается.
+     */
+    boolean isStart;
 
     public JFMainWindow() throws HeadlessException {
         resourse = CResourse.getInstance();
@@ -86,7 +92,7 @@ public class JFMainWindow extends JFrame implements IChangeState {
                 keyAction(e);
             }
         });
-
+        isStart = true;
         csmControl.makeChangesState(ETActionGame.TOBASE, false);
 //        csmControl.makeChangesState(ETActionGame.TOWHITEPLAYER, true);
 //        csmControl.makeChangesState(ETActionGame.TOBLACKPLAYER, true);
@@ -205,29 +211,21 @@ public class JFMainWindow extends JFrame implements IChangeState {
 
         JMenuItem miStart = new JMenuItem(resourse.getResStr("MenuName.Game.Start"));
         miStart.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, ActionEvent.CTRL_MASK));
-//        miStart.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOGAME, false));
+        miStart.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOGAME, false));
         mGame.add(miStart);
         mActionMenu.put("MenuName.Game.Start", miStart);
 
         JMenuItem miContinue = new JMenuItem(resourse.getResStr("MenuName.Game.Continue"));
         miContinue.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.CTRL_MASK));
-        // miContinue.addActionListener(this);
+        miContinue.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOCONTINUEGAME, false));
         mGame.add(miContinue);
         mActionMenu.put("MenuName.Game.Continue", miContinue);
 
         JMenuItem miStop = new JMenuItem(resourse.getResStr("MenuName.Game.Stop"));
         miStop.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, ActionEvent.CTRL_MASK));
-//        miStop.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOBASEGAMESTOP, false));
+        miStop.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOBASEGAMESTOP, false));
         mGame.add(miStop);
         mActionMenu.put("MenuName.Game.Stop", miStop);
-
-        mGame.addSeparator();
-
-        JMenuItem miBack = new JMenuItem(resourse.getResStr("MenuName.Game.Back"));
-        miBack.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, ActionEvent.CTRL_MASK));
-        // miBack.addActionListener(this);
-        mGame.add(miBack);
-        mActionMenu.put("MenuName.Game.Back", miBack);
 
         return mGame;
     }
@@ -259,11 +257,19 @@ public class JFMainWindow extends JFrame implements IChangeState {
         mSettings.add(miBlackPlayer);
         mActionMenu.put("MenuName.Settings.Black.Player", miBlackPlayer);
 
-        JMenuItem mBlackComp = new JMenuItem(resourse.getResStr("MenuName.Settings.Black.Comp"));
-        mBlackComp.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_K, ActionEvent.ALT_MASK + ActionEvent.CTRL_MASK));
+        JMenuItem miBlackComp = new JMenuItem(resourse.getResStr("MenuName.Settings.Black.Comp"));
+        miBlackComp.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_K, ActionEvent.ALT_MASK + ActionEvent.CTRL_MASK));
 //        mBlackComp.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOBLACKCOMP, true));
-        mSettings.add(mBlackComp);
-        mActionMenu.put("MenuName.Settings.Black.Comp", mBlackComp);
+        mSettings.add(miBlackComp);
+        mActionMenu.put("MenuName.Settings.Black.Comp", miBlackComp);
+
+        mSettings.addSeparator();
+
+        JMenuItem miBack = new JMenuItem(resourse.getResStr("MenuName.Settings.Back"));
+        miBack.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0));
+        miBack.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.BACKSPACEMOVEGAME, true));
+        mSettings.add(miBack);
+        mActionMenu.put("MenuName.Settings.Back", miBack);
 
         return mSettings;
     }
@@ -329,8 +335,8 @@ public class JFMainWindow extends JFrame implements IChangeState {
         viewBoard.setPanelEdition(rPanelEdition);
 
         // Создание панели для режима игры.
-//        rPanelGaming = new CRightPanelGaming();
-//        rightPanel.append(rPanelGaming);
+        rPanelGaming = new CRightPanelGaming();
+        rightSwitchingPanel.append(rPanelGaming);
     }
 
     /**
@@ -359,8 +365,6 @@ public class JFMainWindow extends JFrame implements IChangeState {
         if (state < 0) {
             rPanelEdition.keyAction(e);
             viewBoard.keyActionEdition(e);
-        } else if (state > 0) {
-            // TODO: Обработка нажатий клавиатуры для режима игры.
         }
     }
 
@@ -381,7 +385,25 @@ public class JFMainWindow extends JFrame implements IChangeState {
      */
     protected void viewDialog(String title, String text) {
         JOptionPane.showMessageDialog(null, text, title, JOptionPane.INFORMATION_MESSAGE);
-        csmControl.makeChangesState(ETActionGame.TORETURN, true);
+    }
+
+    /**
+     * Вывод информации о текущем ходе.
+     */
+    protected void viewInfoCurrentPlayer() {
+        ETypeColor tc = csmControl.getBoard().getCurrentMove();
+        String txt = "" + (tc == ETypeColor.WHITE ?  resourse.getResStr("Msg.Game.Play.White"): resourse.getResStr("Msg.Game.Play.Black"));
+        txt = txt + " " + (csmControl.getPlayForColor(tc) ?  resourse.getResStr("Msg.Game.Play.Player"): resourse.getResStr("Msg.Game.Play.Computer"));
+        setTxtMsgDown(txt);
+    }
+
+    /**
+     * Общий метод для всех видов остановок игры.
+     */
+    protected void stopGameAll() {
+        viewBoard.clearBoardSpacesColor();
+        viewBoard.repaint();
+        stepToBase();
     }
 
     // ---------------------------- Методы обрабатывающиеся контроллером переходов состояний ---------------------------
@@ -391,12 +413,17 @@ public class JFMainWindow extends JFrame implements IChangeState {
      */
     protected void stepToBase() {
         String[] deactivate = {
-                "MenuName.Game.Continue", "MenuName.Game.Stop", "MenuName.Game.Back",
-                "MenuName.Editing.End", "MenuName.Editing.Placemant", "MenuName.Editing.Clear"
+                "MenuName.Game.Stop", "MenuName.Settings.Back", "MenuName.Editing.End",
+                "MenuName.Editing.Placemant", "MenuName.Editing.Clear"
         };
         selectedViewMenu(deactivate);
+        if (isStart) {
+            mActionMenu.get("MenuName.Game.Continue").setEnabled(false);
+            isStart = false;
+        }
         csmControl.editModeOff();
         rightSwitchingPanel.setSelectedIndex(-1);
+        setTxtMsgDown(resourse.getResStr("Msg.Base.Info"));
         repaint();
     }
 
@@ -413,7 +440,7 @@ public class JFMainWindow extends JFrame implements IChangeState {
     protected void initEditingMode() {
         String[] deactivate = {
                 "MenuName.File.Save", "MenuName.File.Open", "MenuName.Game.Start", "MenuName.Game.Continue", "MenuName.Game.Stop",
-                "MenuName.Game.Back", "MenuName.Settings.While.Player", "MenuName.Settings.While.Comp", "MenuName.Settings.Black.Player",
+                "MenuName.Settings.While.Player", "MenuName.Settings.While.Comp", "MenuName.Settings.Black.Player",
                 "MenuName.Settings.Black.Comp", "MenuName.Editing.Begin"
         };
         selectedViewMenu(deactivate);
@@ -442,7 +469,74 @@ public class JFMainWindow extends JFrame implements IChangeState {
      */
     protected void closeEdition() {
         stepToBase();
-        lblBottom.setText(resourse.getResStr("Msg.Base.Info"));
+        setTxtMsgDown(resourse.getResStr("Msg.Base.Info"));
+    }
+
+    /**
+     * Переход в режим игры.
+     */
+    protected void initGameMode() {
+        String[] deactivate = {
+                "MenuName.File.Open", "MenuName.Game.Start", "MenuName.Game.Continue", "MenuName.Settings.While.Player",
+                "MenuName.Settings.While.Comp", "MenuName.Settings.Black.Player", "MenuName.Settings.Black.Comp", "MenuName.Editing.Begin",
+                "MenuName.Editing.End", "MenuName.Editing.Placemant", "MenuName.Editing.Clear"
+        };
+        selectedViewMenu(deactivate);
+        viewInfoCurrentPlayer();
+        rightSwitchingPanel.setSelectedIndex(1);
+    }
+
+    /**
+     * Переход к следующему ходу.
+     */
+    protected void nextStepGame() {
+        viewInfoCurrentPlayer();
+        repaint();
+    }
+
+    /**
+     * Перерисовка изображения доски.
+     */
+    protected void repainWindow() {
+        viewInfoCurrentPlayer();
+        repaint();
+        if (csmControl.getStateGame() > 0) {
+            viewBoard.nextStepGame();
+            rPanelGaming.repaint();
+        }
+    }
+
+    /**
+     * Остановка игры по требованию игрока.
+     */
+    protected void endGameFromStop() {
+        viewDialog(resourse.getResStr("Msg.GameOver.Title"), resourse.getResStr("Msg.GameOver.FromPlayer"));
+        csmControl.getBoard().stopGamePlay();
+        stopGameAll();
+    }
+
+    /**
+     * Остановка игры в результате ничьей.
+     */
+    protected void endGameFromDraw() {
+        viewDialog(resourse.getResStr("Msg.GameOver.Title"), resourse.getResStr("Msg.GameOver.Draw"));
+        stopGameAll();
+    }
+
+    /**
+     * Остановка игры при выйгрыше белых.
+     */
+    protected void endGameFromWinWhile() {
+        viewDialog(resourse.getResStr("Msg.GameOver.Title"), resourse.getResStr("Msg.GameOver.While"));
+        stopGameAll();
+    }
+
+    /**
+     * Остановка игры при выйгрыше чёрных.
+     */
+    protected void endGameFromWinBlack() {
+        viewDialog(resourse.getResStr("Msg.GameOver.Title"), resourse.getResStr("Msg.GameOver.Black"));
+        stopGameAll();
     }
 
 //    /**
@@ -527,49 +621,4 @@ public class JFMainWindow extends JFrame implements IChangeState {
 //        mActionMenu.get("MenuName.Settings.Black.Comp").setEnabled(false);
 //    }
 
-//    /**
-//     * Переход в режим игры.
-//     */
-//    protected void initGameMode() {
-//        String[] deactivate = {
-//                "MenuName.File.Open", "MenuName.Game.Start", "MenuName.Game.Continue", "MenuName.Settings.While.Player",
-//                "MenuName.Settings.While.Comp", "MenuName.Settings.Black.Player", "MenuName.Settings.Black.Comp", "MenuName.Editing.Begin",
-//                "MenuName.Editing.End", "MenuName.Editing.Placemant", "MenuName.Editing.Clear"
-//        };
-//        selectedViewMenu(deactivate);
-//        ETypeColor tc = csmControl.getBoard().getCurMove();
-//        String txt = "" + (tc == ETypeColor.WHITE ?  resourse.getResStr("Msg.Game.Play.White"): resourse.getResStr("Msg.Game.Play.Black"));
-//        txt = txt + " " + (csmControl.getPlayForColor(tc) ?  resourse.getResStr("Msg.Game.Play.Player"): resourse.getResStr("Msg.Game.Play.Computer"));
-//        lblBottom.setText(txt);
-//        rightPanel.setSelectedIndex(1);
-//        csmControl.getCMoveGame().clearControlMove();
-//    }
-
-//    protected void nextStepGame() {
-//        ETypeColor tc = csmControl.getBoard().getCurMove();
-//        String txt = "" + (tc == ETypeColor.WHITE ?  resourse.getResStr("Msg.Game.Play.White"): resourse.getResStr("Msg.Game.Play.Black"));
-//        txt = txt + " " + (csmControl.getPlayForColor(tc) ?  resourse.getResStr("Msg.Game.Play.Player"): resourse.getResStr("Msg.Game.Play.Computer"));
-//        lblBottom.setText(txt);
-//        repaint();
-//    }
-
-//    protected void endGameFromDraw() {
-//        viewDialog(resourse.getResStr("Msg.GameOver.Title"), resourse.getResStr("Msg.GameOver.Draw"));
-//        stepToBase();
-//    }
-
-//    protected void endGameFromWinWhile() {
-//        viewDialog(resourse.getResStr("Msg.GameOver.Title"), resourse.getResStr("Msg.GameOver.While"));
-//        stepToBase();
-//    }
-
-//    protected void endGameFromWinBlack() {
-//        viewDialog(resourse.getResStr("Msg.GameOver.Title"), resourse.getResStr("Msg.GameOver.Black"));
-//        stepToBase();
-//    }
-
-//    protected void endGameFromStop() {
-//        viewDialog(resourse.getResStr("Msg.GameOver.Title"), resourse.getResStr("Msg.GameOver.FromPlayer"));
-//        stepToBase();
-//    }
 }

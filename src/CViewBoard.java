@@ -11,6 +11,7 @@ import java.awt.event.MouseEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -22,7 +23,7 @@ public class CViewBoard extends JPanel implements IChangeState {
     static {
         stateAction = new Hashtable<>();
         stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOEDITING), "initEditingMode");
-//        stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TONEXTSTEPGAME), "nextStepGame");
+        stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TONEXTSTEPGAME), "nextStepGame");
     }
     static final protected Color[] spaceFrameColor = {
             Color.black,                                                                         // Стандартный.
@@ -70,10 +71,10 @@ public class CViewBoard extends JPanel implements IChangeState {
      * Ссылка на объект правой панели режима редактирования.
      */
     protected CRightPanelEdition rPanelEdition;
-//    /**
-//     * Начальные выбранные координаты в режиме игры.
-//     */
-//    protected CPair<Integer, Integer> firstPos;
+    /**
+     * Начальные выбранные координаты в режиме игры.
+     */
+    protected CPair<Integer, Integer> firstPos;
 
     public CViewBoard(LayoutManager layout, boolean isDoubleBuffered) {
         super(layout, isDoubleBuffered);
@@ -129,10 +130,9 @@ public class CViewBoard extends JPanel implements IChangeState {
      * @param e событие клавиатуры.
      */
     public void keyActionEdition(KeyEvent e) {
+        if (csmControl.getStateGame() >= 0) return;
         if (KeyEvent.VK_DELETE == e.getKeyCode() && selectedX >= 0 && selectedY >= 0) {
             csmControl.getCMoveGame().removeSpaceBoard(selectedX, selectedY);
-        } else if (KeyEvent.VK_BACK_SPACE == e.getKeyCode()) {
-            csmControl.getCMoveGame().back();
         }
         repaint();
     }
@@ -238,47 +238,46 @@ public class CViewBoard extends JPanel implements IChangeState {
             }
             repaint();
         } else if (sg > 0) {
-//            if (!csmControl.getPlayForColor(csmControl.getBoard().getCurMove())) return;
-//            if (!isClick) return;
-//            if (csmControl.getBoard().lstStartMoveGameField().contains(pos)) {
-//                firstPos = pos;
-//                choiceColorFrame();
-//                repaint();
-//            } else if (null != firstPos && csmControl.getBoard().lstEndMoveGameField(firstPos.getFirst(), firstPos.getSecond()).contains(pos)) {
-//                List<CPair<Integer, Integer>> newStep = csmControl.getBoard().lstGameStepInfo(firstPos, pos);
-//                csmControl.getCMoveGame().gameMoveFigure(newStep);
-//                csmControl.makeChangesState(ETActionGame.TONEXTSTEPGAME, false);
-//                if (csmControl.getBoard().getStateGame())
-//                    csmControl.makeChangesState(ETActionGame.TONEXTSTEPGAMEWIN, false);
-//            }
+            if (!csmControl.getPlayForColor(csmControl.getBoard().getCurrentMove())) return;
+            if (!isClick) return;
+            if (csmControl.getBoard().lstStartMoveGameField().contains(pos)) {
+                firstPos = pos;
+                choiceColorFrame();
+                repaint();
+            } else if (null != firstPos && csmControl.getBoard().lstEndMoveGameField(firstPos.getFirst(), firstPos.getSecond()).contains(pos)) {
+                List<CPair<Integer, Integer>> newStep = csmControl.getBoard().lstGameStepInfo(firstPos, pos);
+                csmControl.getCMoveGame().gameMoveFigure(newStep);
+                csmControl.makeChangesState(ETActionGame.TONEXTSTEPGAME, false);
+                if (csmControl.getStateGame() > 0) csmControl.makeChangesState(ETActionGame.TONEXTSTEPGAMEWIN, false);
+            }
         }
     }
 
-//    /**
-//     * Выбирает цвет рамки поля игры в режиме игры.
-//     */
-//    protected void choiceColorFrame() {
-//        clearBoardSpacesColor();
-//        List<CPair<Integer, Integer>> lst = csmControl.getBoard().lstStartMoveGameField();
-//        if (null == lst) return;
-//        for (CPair<Integer, Integer> el: lst) {
-//            if (null == firstPos || (el.equals(firstPos)))
-//                boardSpacesColor[el.getSecond()][el.getFirst() / 2] = spaceFrameColor[1];
-//        }
-//        if (null == firstPos) return;
-//        lst = csmControl.getBoard().lstIntermediateMoveGameField(firstPos.getFirst(), firstPos.getSecond());
-//        if (null != lst && lst.size() > 0) {
-//            for (CPair<Integer, Integer> el: lst) {
-//                boardSpacesColor[el.getSecond()][el.getFirst() / 2] = spaceFrameColor[2];
-//            }
-//        }
-//        lst = csmControl.getBoard().lstEndMoveGameField(firstPos.getFirst(), firstPos.getSecond());
-//        if (null != lst) {
-//            for (CPair<Integer, Integer> el: lst) {
-//                boardSpacesColor[el.getSecond()][el.getFirst() / 2] = spaceFrameColor[3];
-//            }
-//        }
-//    }
+    /**
+     * Выбирает цвет рамки поля игры в режиме игры.
+     */
+    protected void choiceColorFrame() {
+        clearBoardSpacesColor();
+        List<CPair<Integer, Integer>> lst = csmControl.getBoard().lstStartMoveGameField();
+        if (null == lst) return;
+        for (CPair<Integer, Integer> el: lst) {
+            if (null == firstPos || (el.equals(firstPos)))
+                boardSpacesColor[el.getSecond()][el.getFirst() / 2] = spaceFrameColor[1];
+        }
+        if (null == firstPos) return;
+        lst = csmControl.getBoard().lstIntermediateMoveGameField(firstPos.getFirst(), firstPos.getSecond());
+        if (null != lst && lst.size() > 0) {
+            for (CPair<Integer, Integer> el: lst) {
+                boardSpacesColor[el.getSecond()][el.getFirst() / 2] = spaceFrameColor[2];
+            }
+        }
+        lst = csmControl.getBoard().lstEndMoveGameField(firstPos.getFirst(), firstPos.getSecond());
+        if (null != lst) {
+            for (CPair<Integer, Integer> el: lst) {
+                boardSpacesColor[el.getSecond()][el.getFirst() / 2] = spaceFrameColor[3];
+            }
+        }
+    }
 
     // ---------------------------- Методы обрабатывающиеся контроллером переходов состояний ---------------------------
 
@@ -290,25 +289,18 @@ public class CViewBoard extends JPanel implements IChangeState {
         selectedY = -1;
     }
 
-//    /**
-//     * Переход к следующему ходу.
-//     */
-//    public void nextStepGame() {
-//        firstPos = null;
-//        clearBoardSpacesColor();
-//        csmControl.getBoard().nextStep();
-//        if (csmControl.getBoard().getStateGame()) {
-//            if (csmControl.getPlayForColor(csmControl.getBoard().getCurMove())) {
-//                choiceColorFrame();
-//            }
-//        } else {
-//            int r = csmControl.getBoard().getStateGameStop();
-//            if (r == 0) csmControl.makeChangesState(ETActionGame.TOBASEFROMGAMEDRAW, false);
-//            else if (r == 1) csmControl.makeChangesState(ETActionGame.TOBASEFROMGAMEWHILE, false);
-//            else if (r == 2) csmControl.makeChangesState(ETActionGame.TOBASEFROMGAMEBLACK, false);
-//        }
-//        repaint();
-//    }
+    /**
+     * Переход к следующему ходу.
+     */
+    public void nextStepGame() {
+        firstPos = null;
+        clearBoardSpacesColor();
+        csmControl.getBoard().reverseCurrentMove();
+        if (csmControl.getStateGame() > 0 && csmControl.getPlayForColor(csmControl.getBoard().getCurrentMove())) {
+            choiceColorFrame();
+        }
+        repaint();
+    }
 
 //    /**
 //     * Выход из режима игры.
