@@ -99,7 +99,6 @@ public class CViewBoard extends JPanel implements IChangeState {
         g.drawImage(resourse.getImage(strBoard).getImage(), 0, 0, null);
         g2.drawRect(0, 0, resourse.getImage(strBoard).getImage().getWidth(null) - 1,
                 resourse.getImage(strBoard).getImage().getHeight(null) - 1);
-//        BufferedImage img = new BufferedImage(50, 50, BufferedImage.TYPE_INT_ARGB);
         g2.setStroke(new BasicStroke(2));
         // Рисуем квадраты доски и фигуры в них.
         for (int y = 0; y < 8; y++) {
@@ -301,12 +300,5 @@ public class CViewBoard extends JPanel implements IChangeState {
         }
         repaint();
     }
-
-//    /**
-//     * Выход из режима игры.
-//     */
-//    protected void closeGameMode() {
-//        clearBoardSpacesColor();
-//    }
 
 }

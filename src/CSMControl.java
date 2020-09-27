@@ -69,6 +69,8 @@ public class CSMControl implements ICallableStopGame {
         stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOGAME), "launchGameMode");
         stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.BACKSPACEMOVEGAME), "backspaceMoveGame");
         stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOCONTINUEGAME), "continueGameMode");
+        stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.SELECTEDSTEPWHITE), "stepToWhite");
+        stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.SELECTEDSTEPBLACK), "stepToBlack");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVE), "saveBoard");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOAD), "loadBoard");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITEPLAYER), "playWhiteFromPlayer");
@@ -314,6 +316,20 @@ public class CSMControl implements ICallableStopGame {
     protected void continueGameMode() {
         if (getBoard().getEndState() >= 0) launchGameMode();
         else makeChangesState(ETActionGame.TONEXTSTEPGAME, false);
+    }
+
+    /**
+     * Выбор хода за белых.
+     */
+    protected void stepToWhite() {
+        getBoard().setMoveWhile();
+    }
+
+    /**
+     * Выбор хода за чёрных.
+     */
+    protected void stepToBlack() {
+        getBoard().setMoveBlack();
     }
 
 //    /**

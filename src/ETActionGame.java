@@ -8,6 +8,8 @@ public enum ETActionGame {
     TOEDITING,              // Переход в режим редактирования.
     TOBOARDPLACEMANT,       // Базовая разстановка фигур на доске.
     TOBOARDCLEAR,           // Очистка доски.
+    TOENDGAMEWHILE,         // Окончание игры. Белые выйграли.
+    TOENDGAMEBLACK,         // Окончание игры. Чёрные выйграли.
     TOGAME,                 // Переход в режим игры.
     TONEXTSTEPGAME,         // К следующему ходу игры.
     TONEXTSTEPGAMEWIN,      // К следующему ходу игры для основного окна.
@@ -17,6 +19,8 @@ public enum ETActionGame {
     TOBASEFROMGAMEDRAW,     // Конец игры. Ничья.
     TOBASEFROMGAMEWHILE,    // Конец игры. Белые выйграли.
     TOBASEFROMGAMEBLACK,    // Конец игры. Чёрные выйграли выйграли.
+    SELECTEDSTEPWHITE,      // Выбор хода за белых.
+    SELECTEDSTEPBLACK,      // Выбор хода за чёрных.
 //    TOSAVE,                 // Сохранение содержимого доски и состояния игры.
 //    TOSAVEOK,               // Сообщение о том, что произошло сохранение данных на диск.
 //    TOLOAD,                 // Загрузка содержимого доски и состояния игры.

@@ -32,6 +32,8 @@ public class JFMainWindow extends JFrame implements IChangeState {
         stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEDRAW), "endGameFromDraw");
         stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEWHILE), "endGameFromWinWhile");
         stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEBLACK), "endGameFromWinBlack");
+        stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.SELECTEDSTEPWHITE), "stepToWhite");
+        stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.SELECTEDSTEPBLACK), "stepToBlack");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVE), "viewDialogSave");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOAD), "viewDialogLoad");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVEOK), "viewSaveFileOK");
@@ -305,6 +307,20 @@ public class JFMainWindow extends JFrame implements IChangeState {
         mEditing.add(miClearBoard);
         mActionMenu.put("MenuName.Editing.Clear", miClearBoard);
 
+        mEditing.addSeparator();
+
+        JMenuItem miStepToWhite = new JMenuItem(resourse.getResStr("MenuName.Editing.StepWhite"));
+        miStepToWhite.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W, ActionEvent.CTRL_MASK + ActionEvent.SHIFT_MASK));
+        miStepToWhite.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.SELECTEDSTEPWHITE, false));
+        mEditing.add(miStepToWhite);
+        mActionMenu.put("MenuName.Editing.StepWhite", miStepToWhite);
+
+        JMenuItem miStepToBlack = new JMenuItem(resourse.getResStr("MenuName.Editing.StepBlack"));
+        miStepToBlack.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, ActionEvent.CTRL_MASK + ActionEvent.SHIFT_MASK));
+        miStepToBlack.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.SELECTEDSTEPBLACK, false));
+        mEditing.add(miStepToBlack);
+        mActionMenu.put("MenuName.Editing.StepBlack", miStepToBlack);
+
         return mEditing;
     }
 
@@ -375,6 +391,8 @@ public class JFMainWindow extends JFrame implements IChangeState {
         for (JMenuItem mi: mActionMenu.values()) {
             mi.setEnabled(true);
         }
+        if (ETypeColor.WHITE == csmControl.getBoard().getCurrentMove()) mActionMenu.get("MenuName.Editing.StepWhite").setEnabled(false);
+        else mActionMenu.get("MenuName.Editing.StepBlack").setEnabled(false);
         for (String nm: disablMenuItems) mActionMenu.get(nm).setEnabled(false);
     }
 
@@ -413,8 +431,8 @@ public class JFMainWindow extends JFrame implements IChangeState {
      */
     protected void stepToBase() {
         String[] deactivate = {
-                "MenuName.Game.Stop", "MenuName.Settings.Back", "MenuName.Editing.End",
-                "MenuName.Editing.Placemant", "MenuName.Editing.Clear"
+                "MenuName.Game.Stop", "MenuName.Settings.Back", "MenuName.Editing.End", "MenuName.Editing.Placemant",
+                "MenuName.Editing.Clear", "MenuName.Editing.StepWhite", "MenuName.Editing.StepBlack",
         };
         selectedViewMenu(deactivate);
         if (isStart) {
@@ -444,7 +462,7 @@ public class JFMainWindow extends JFrame implements IChangeState {
                 "MenuName.Settings.Black.Comp", "MenuName.Editing.Begin"
         };
         selectedViewMenu(deactivate);
-        lblBottom.setText(resourse.getResStr("Msg.Editing.Info"));
+        setTxtMsgDown(resourse.getResStr("Msg.Editing.Info"));
         rightSwitchingPanel.setSelectedIndex(0);
     }
 
@@ -479,7 +497,7 @@ public class JFMainWindow extends JFrame implements IChangeState {
         String[] deactivate = {
                 "MenuName.File.Open", "MenuName.Game.Start", "MenuName.Game.Continue", "MenuName.Settings.While.Player",
                 "MenuName.Settings.While.Comp", "MenuName.Settings.Black.Player", "MenuName.Settings.Black.Comp", "MenuName.Editing.Begin",
-                "MenuName.Editing.End", "MenuName.Editing.Placemant", "MenuName.Editing.Clear"
+                "MenuName.Editing.End", "MenuName.Editing.Placemant", "MenuName.Editing.Clear", "MenuName.Editing.StepWhite", "MenuName.Editing.StepBlack",
         };
         selectedViewMenu(deactivate);
         viewInfoCurrentPlayer();
@@ -537,6 +555,22 @@ public class JFMainWindow extends JFrame implements IChangeState {
     protected void endGameFromWinBlack() {
         viewDialog(resourse.getResStr("Msg.GameOver.Title"), resourse.getResStr("Msg.GameOver.Black"));
         stopGameAll();
+    }
+
+    /**
+     * Выбор хода за белых.
+     */
+    protected void stepToWhite() {
+        mActionMenu.get("MenuName.Editing.StepWhite").setEnabled(false);
+        mActionMenu.get("MenuName.Editing.StepBlack").setEnabled(true);
+    }
+
+    /**
+     * Выбор хода за чёрных.
+     */
+    protected void stepToBlack() {
+        mActionMenu.get("MenuName.Editing.StepWhite").setEnabled(true);
+        mActionMenu.get("MenuName.Editing.StepBlack").setEnabled(false);
     }
 
 //    /**
