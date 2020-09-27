@@ -32,7 +32,7 @@ public class CSMControl implements ICallableStopGame {
         for (ETypeColor it: ETypeColor.values()) {
             whosPlaying.put(it, true);
         }
-//        fileName = null;
+        fileName = null;
 //        computerGame = new CComputerGame(cMoveGame);
 //        new Thread(computerGame).start();
     }
@@ -71,8 +71,8 @@ public class CSMControl implements ICallableStopGame {
         stateAction.put(new CPair<>(ETStateGame.BASE, ETActionGame.TOCONTINUEGAME), "continueGameMode");
         stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.SELECTEDSTEPWHITE), "stepToWhite");
         stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.SELECTEDSTEPBLACK), "stepToBlack");
-//        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVE), "saveBoard");
-//        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOAD), "loadBoard");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVE), "saveBoard");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOAD), "loadBoard");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITEPLAYER), "playWhiteFromPlayer");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOBLACKPLAYER), "playBlackFromPlayer");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITECOMP), "playWhiteFromComp");
@@ -107,10 +107,10 @@ public class CSMControl implements ICallableStopGame {
      * Определяет, кто ходи за соответствующий цвет. true - игрок, false - компьютер
      */
     protected Map<ETypeColor, Boolean> whosPlaying;
-//    /**
-//     * Имя файла для записи ли чтения.
-//     */
-//    private String fileName;
+    /**
+     * Имя файла для записи ли чтения.
+     */
+    private String fileName;
 //    /**
 //     * Объект ходов компьютером.
 //     */
@@ -223,13 +223,13 @@ public class CSMControl implements ICallableStopGame {
 //        return computerGame;
 //    }
 
-//    /**
-//     * Устанавливает имя файла.
-//     * @param fileName полное имя файла.
-//     */
-//    public void setFileName(String fileName) {
-//        this.fileName = fileName;
-//    }
+    /**
+     * Устанавливает имя файла.
+     * @param fileName полное имя файла.
+     */
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
 
     /**
      * Базовый метод управления работой программы.
@@ -332,59 +332,59 @@ public class CSMControl implements ICallableStopGame {
         getBoard().setMoveBlack();
     }
 
-//    /**
-//     * Запись игрового состояния в файл.
-//     */
-//    protected void saveBoard() {
-//        if (null != fileName) {
-//            List<Integer> bin = new LinkedList<>();
-//            String title = resourse.getResStr("Board.File.Title");
-////            bin.addAll(getBoard().getBinaryBoardFigure());
-////            bin.addAll(getBoard().getBinaryBoardState());
-////            bin.addAll(getCMoveGame().getListBin());
-////            try (OutputStream os = new FileOutputStream(fileName);) {
-////                for (byte cb: title.getBytes()) {
-////                    os.write(cb);
-////                }
-////                for (Integer code: bin) {
-////                    os.write(code);
-////                }
-////            } catch (IOException e) {
-////                e.printStackTrace();
-////            }
-//            makeChangesState(ETActionGame.TOSAVEOK, true);
-//        }
-//    }
+    /**
+     * Запись игрового состояния в файл.
+     */
+    protected void saveBoard() {
+        if (null != fileName) {
+            int i;
+            List<Integer> bin = new LinkedList<>();
+            String title = resourse.getResStr("Board.File.Title");
+            for (i = 0; i < title.length(); i++) {
+                bin.add(title.codePointAt(i));
+            }
+            bin.addAll(getBoard().getBinaryRepresentationBoard());
+            bin.addAll(getBoard().getBinaryParametrsGame());
+            bin.addAll(getCMoveGame().getListBin());
+            try (OutputStream os = new FileOutputStream(fileName);) {
+                for (Integer code: bin) {
+                    os.write(code);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            makeChangesState(ETActionGame.TOSAVEOK, true);
+        }
+    }
 
-//    /**
-//     * Чтение из файла состояния игры.
-//     */
-//    protected void loadBoard() {
-//        if (null != fileName) {
-//            int k = 0;
-//            List<Integer> bin = new LinkedList<>();
-//            String title = resourse.getResStr("Board.File.Title");
-////            try (InputStream is = new FileInputStream(fileName);) {
-////                int byteRead;
-////                while (((byteRead = is.read()) != -1) && k < title.length()) {
-////                    if (byteRead != title.charAt(k)) {
-////                        throw new IOException("Ошибка в заголовке файла");
-////                    }
-////                    else k++;
-////                }
-////                bin.add(byteRead);
-////                while ((byteRead = is.read()) != -1) {
-////                    bin.add(byteRead);
-////                }
-////            } catch (IOException e) {
-////                e.printStackTrace();
-////            }
-////            k = getBoard().setBinaryBoardFigure(bin, 0);
-////            k = getBoard().setBinaryBoardState(bin, k);
-////            getCMoveGame().setListBin(bin, k);
-//            makeChangesState(ETActionGame.TOLOADOK, true);
-//        }
-//    }
+    /**
+     * Чтение из файла состояния игры.
+     */
+    protected void loadBoard() {
+        if (null != fileName) {
+            int k = 0;
+            List<Integer> bin = new LinkedList<>();
+            String title = resourse.getResStr("Board.File.Title");
+            try (InputStream is = new FileInputStream(fileName);) {
+                int byteRead;
+                while (((byteRead = is.read()) != -1) && k < title.length()) {
+                    if (byteRead != title.charAt(k)) {
+                        throw new IOException("Ошибка в заголовке файла");
+                    } else k++;
+                }
+                bin.add(byteRead);
+                while ((byteRead = is.read()) != -1) {
+                    bin.add(byteRead);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            k = getBoard().setBinaryRepresentationBoard(bin, 0);
+            k = getBoard().setBinaryParametrsGame(bin, k);
+            getCMoveGame().setListBin(bin, k);
+            makeChangesState(ETActionGame.TOLOADOK, true);
+        }
+    }
 
 //    /**
 //     * Установка игры белых за игрока.

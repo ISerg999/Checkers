@@ -34,10 +34,10 @@ public class JFMainWindow extends JFrame implements IChangeState {
         stateAction.put(new CPair<>(ETStateGame.GAME, ETActionGame.TOBASEFROMGAMEBLACK), "endGameFromWinBlack");
         stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.SELECTEDSTEPWHITE), "stepToWhite");
         stateAction.put(new CPair<>(ETStateGame.EDITING, ETActionGame.SELECTEDSTEPBLACK), "stepToBlack");
-//        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVE), "viewDialogSave");
-//        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOAD), "viewDialogLoad");
-//        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVEOK), "viewSaveFileOK");
-//        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOADOK), "viewLoadFileOk");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVE), "viewDialogSave");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOAD), "viewDialogLoad");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOSAVEOK), "viewSaveFileOK");
+        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOLOADOK), "viewLoadFileOk");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITEPLAYER), "playWhiteFromPlayer");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOBLACKPLAYER), "playBlackFromPlayer");
 //        stateAction.put(new CPair<>(ETStateGame.NONE, ETActionGame.TOWHITECOMP), "playWhiteFromComp");
@@ -184,13 +184,13 @@ public class JFMainWindow extends JFrame implements IChangeState {
 
         JMenuItem miOpen = new JMenuItem(resourse.getResStr("MenuName.File.Open"));
         miOpen.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, ActionEvent.CTRL_MASK));
-//        miOpen.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOLOAD, true));
+        miOpen.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOLOAD, true));
         mFile.add(miOpen);
         mActionMenu.put("MenuName.File.Open", miOpen);
 
         JMenuItem miSave = new JMenuItem(resourse.getResStr("MenuName.File.Save"));
         miSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.CTRL_MASK));
-//        miSave.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOSAVE, true));
+        miSave.addActionListener(actionEvent -> csmControl.makeChangesState(ETActionGame.TOSAVE, true));
         mFile.add(miSave);
         mActionMenu.put("MenuName.File.Save", miSave);
 
@@ -573,55 +573,55 @@ public class JFMainWindow extends JFrame implements IChangeState {
         mActionMenu.get("MenuName.Editing.StepBlack").setEnabled(false);
     }
 
-//    /**
-//     * Диалоговое окно сохранения игры.
-//     */
-//    protected void viewDialogSave() {
-//        String fileName = null;
-//        JFileChooser fileChooser = new JFileChooser();
-//        fileChooser.setDialogTitle("Сохранение игрового файла");
-//        FileNameExtensionFilter filter = new FileNameExtensionFilter(resourse.getResStr("File.Filter.Description"),
-//                resourse.getResStr("File.Filter.Extension"));
-//        fileChooser.setFileFilter(filter);
-//        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-//        int result = fileChooser.showSaveDialog(JFMainWindow.this);
-//        if (result == JFileChooser.APPROVE_OPTION) fileName = fileChooser.getSelectedFile().getAbsolutePath();
-//        csmControl.setFileName(fileName);
-//        csmControl.makeChangesState(ETActionGame.TORETURN, true);
-//    }
+    /**
+     * Диалоговое окно сохранения игры.
+     */
+    protected void viewDialogSave() {
+        String fileName = null;
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Сохранение игрового файла");
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(resourse.getResStr("File.Filter.Description"),
+                resourse.getResStr("File.Filter.Extension"));
+        fileChooser.setFileFilter(filter);
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        int result = fileChooser.showSaveDialog(JFMainWindow.this);
+        if (result == JFileChooser.APPROVE_OPTION) fileName = fileChooser.getSelectedFile().getAbsolutePath();
+        csmControl.setFileName(fileName);
+        csmControl.makeChangesState(ETActionGame.TORETURN, true);
+    }
 
-//    /**
-//     * Диалоговое окно загрузки игры.
-//     */
-//    protected void viewDialogLoad() {
-//        String fileName = null;
-//        JFileChooser fileChooser = new JFileChooser();
-//        fileChooser.setDialogTitle("Загрузка игрового файла");
-//        FileNameExtensionFilter filter = new FileNameExtensionFilter(resourse.getResStr("File.Filter.Description"),
-//                resourse.getResStr("File.Filter.Extension"));
-//        fileChooser.setFileFilter(filter);
-//        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-//        int result = fileChooser.showOpenDialog(JFMainWindow.this);
-//        if (result == JFileChooser.APPROVE_OPTION) fileName = fileChooser.getSelectedFile().getAbsolutePath();
-//        csmControl.setFileName(fileName);
-//        csmControl.makeChangesState(ETActionGame.TORETURN, true);
-//    }
+    /**
+     * Диалоговое окно загрузки игры.
+     */
+    protected void viewDialogLoad() {
+        String fileName = null;
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Загрузка игрового файла");
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(resourse.getResStr("File.Filter.Description"),
+                resourse.getResStr("File.Filter.Extension"));
+        fileChooser.setFileFilter(filter);
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        int result = fileChooser.showOpenDialog(JFMainWindow.this);
+        if (result == JFileChooser.APPROVE_OPTION) fileName = fileChooser.getSelectedFile().getAbsolutePath();
+        csmControl.setFileName(fileName);
+        csmControl.makeChangesState(ETActionGame.TORETURN, true);
+    }
 
-//    /**
-//     * Диалоговое окно, сообщения о том, что загрузка закончилась.
-//     */
-//    protected void viewLoadFileOk() {
-//        viewBoard.repaint();
-//        viewDialog("", resourse.getResStr("Msg.Base.DlgOK.Load"));
-//    }
+    /**
+     * Диалоговое окно, сообщения о том, что загрузка закончилась.
+     */
+    protected void viewLoadFileOk() {
+        viewBoard.repaint();
+        viewDialog("", resourse.getResStr("Msg.Base.DlgOK.Load"));
+    }
 
-//    /**
-//     * Диалоговое окно, сообщения о том, что сохранение закончилось.
-//     */
-//    protected void viewSaveFileOK() {
-//        viewBoard.repaint();
-//        viewDialog("", resourse.getResStr("Msg.Base.DlgOK.Save"));
-//    }
+    /**
+     * Диалоговое окно, сообщения о том, что сохранение закончилось.
+     */
+    protected void viewSaveFileOK() {
+        viewBoard.repaint();
+        viewDialog("", resourse.getResStr("Msg.Base.DlgOK.Save"));
+    }
 
 //    /**
 //     * Установка игры белых за игрока.
